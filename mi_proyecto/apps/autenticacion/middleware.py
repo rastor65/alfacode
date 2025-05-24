@@ -7,4 +7,3 @@ class JWTAuthCookieMiddleware:
         if token:
             request.META['HTTP_AUTHORIZATION'] = f'Bearer {token}'
         return self.get_response(request)
-

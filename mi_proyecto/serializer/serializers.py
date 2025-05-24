@@ -1,37 +1,33 @@
+# Imports:
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from apps.autenticacion.models import *
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model
+Usuario = get_user_model()
 
 # REGISTRO
 class RegisterSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
-    email = serializers.EmailField(write_only=True)
 
     class Meta:
         model = Usuario
-        fields = ['username', 'password', 'email', 'nombres', 'apellidos', 'promedio', 'disponibilidad']
+        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'promedio', 'disponibilidad']
 
     def create(self, validated_data):
-        username = validated_data.pop('username')
-        password = validated_data.pop('password')
-        email = validated_data.pop('email')
-
-        user = User.objects.create_user(username=username, password=password, email=email)
-        
-        try:
-            rol_estudiante = Rol.objects.get(nombre__iexact="Usuario")
-        except Rol.DoesNotExist:
-            raise serializers.ValidationError("El rol 'Usuario' no está configurado en el sistema.")
-
-        usuario = Usuario.objects.create(
-            user=user,
-            rol=rol_estudiante,
-            **validated_data
+        user = Usuario.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            password=validated_data['password'],
+            promedio=validated_data.get('promedio', None),
+            disponibilidad=validated_data.get('disponibilidad', True),
         )
 
-        return usuario
+        rol_usuario, created = Rol.objects.get_or_create(nombre='Usuario')
+        UsuarioRol.objects.create(usuario=user, rol=rol_usuario)
+
+        return user
 
 # USUARIO
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -42,7 +38,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = [
-            'id', 'nombres', 'apellidos', 'promedio', 'disponibilidad',
+            'id', 'username', 'first_name', 'last_name', 'promedio', 'disponibilidad',
             'rol_id', 'rol_nombre', 'roles'
         ]
 
@@ -67,7 +63,6 @@ class RolSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rol
         fields = ['id', 'nombre']
-
 # ROL COMPLETO
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
@@ -82,3 +77,15 @@ class UsuarioRolSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsuarioRol
         fields = ['id', 'usuario', 'rol', 'asignado_en']
+
+#RECURSO
+class RecursoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recurso
+        fields = ['id', 'nombre', 'url']
+
+#RECURSOXROL
+class RecursoRolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecursoRol
+        fields = ['id', 'rol', 'recurso', 'asignado_en']

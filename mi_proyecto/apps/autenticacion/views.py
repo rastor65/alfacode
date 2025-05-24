@@ -1,14 +1,14 @@
+# Importaciones: 
 from rest_framework import generics, permissions, status
 from .models import Usuario
 from serializer.serializers import *
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from .permissions import IsAdminRole
+from apps.autenticacion.permissions import TieneAccesoRecurso, IsAdminRole
 
 # REGISTRO DE USUARIOS
 class RegisterView(generics.CreateAPIView):
@@ -18,8 +18,7 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        usuario = serializer.save()
-        user = usuario.user
+        user = serializer.save()  # 'user' es la instancia de Usuario
 
         refresh = RefreshToken.for_user(user)
 
@@ -30,8 +29,8 @@ class RegisterView(generics.CreateAPIView):
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
-                'nombres': usuario.nombres,
-                'apellidos': usuario.apellidos,
+                'nombres': user.first_name,
+                'apellidos': user.last_name,
             }
         })
 
@@ -39,11 +38,12 @@ class RegisterView(generics.CreateAPIView):
 class UsuarioListView(generics.ListAPIView):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    permission_classes = [IsAuthenticated, IsAdminRole]
+    permission_classes = [IsAuthenticated, TieneAccesoRecurso]
 
 class UsuarioRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated, TieneAccesoRecurso]
 
 # INICIAR SESION
 class CookieLoginView(APIView):
@@ -105,14 +105,41 @@ class LogoutView(APIView):
 class RolListCreateView(generics.ListCreateAPIView):
     queryset = Rol.objects.all()
     serializer_class = RolSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminRole]
 
 class RolRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Rol.objects.all()
     serializer_class = RolSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminRole]
 
 class UsuarioRolCreateView(generics.CreateAPIView):
     queryset = UsuarioRol.objects.all()
     serializer_class = UsuarioRolSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+# Listar y crear recursos
+class RecursoListCreateView(generics.ListCreateAPIView):
+    queryset = Recurso.objects.all()
+    serializer_class = RecursoSerializer
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+# Ver, actualizar o eliminar un recurso
+class RecursoRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Recurso.objects.all()
+    serializer_class = RecursoSerializer
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+# Asignar recursos a roles
+class RecursoRolCreateView(generics.CreateAPIView):
+    queryset = RecursoRol.objects.all()
+    serializer_class = RecursoRolSerializer
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+# Listar todos los recursos por rol
+class RecursosPorRolListView(generics.ListAPIView):
+    serializer_class = RecursoSerializer
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get_queryset(self):
+        rol_id = self.kwargs['rol_id']
+        return Recurso.objects.filter(roles__rol_id=rol_id)
