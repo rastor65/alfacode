@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from apps.autenticacion.models import *
+from apps.productos.models import *
 from django.contrib.auth import get_user_model
 Usuario = get_user_model()
 
@@ -89,3 +90,9 @@ class RecursoRolSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecursoRol
         fields = ['id', 'rol', 'recurso', 'asignado_en']
+
+#PRODUCTOS
+class ProductoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Productos
+        fields = ['id', 'nombre', 'precio']
