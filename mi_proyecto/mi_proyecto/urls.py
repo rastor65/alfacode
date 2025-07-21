@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/autenticacion/', include('apps.autenticacion.urls')),
+    path('api/funcionalidad/', include('apps.funcionalidad.urls')),
 
     path('usuarios/', UsuarioListView.as_view(), name='usuario-list-create'),
     path('usuarios/<int:pk>/', UsuarioRetrieveUpdateDestroyView.as_view(), name='usuario-detail'),

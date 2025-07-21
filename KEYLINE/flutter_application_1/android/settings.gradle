@@ -1,0 +1,8 @@
+include ':app'
+
+def flutterProjectRoot = rootDir.parentFile.toPath()
+
+def flutterSettingsGradle = new File(flutterProjectRoot.toFile(), 'flutter_application_1/.dart_tool/flutter_settings.gradle')
+if (flutterSettingsGradle.exists()) {
+    apply from: flutterSettingsGradle
+}

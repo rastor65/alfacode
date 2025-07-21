@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "306870133552",
+    "project_id": "app-ganadera-9436d",
+    "storage_bucket": "app-ganadera-9436d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:306870133552:android:90fcaaa210d6188fbedef5",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlcLcFFkLuDw9HH2Eth8dQUaLWjSpeojE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
