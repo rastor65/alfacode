@@ -1,0 +1,3 @@
+[submodule "funguaccion-web"]
+	path = funguaccion-web
+	url = https://github.com/ivnmtz09/funguaccion-web.git
