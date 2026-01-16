@@ -110,12 +110,12 @@ class RolListCreateView(generics.ListCreateAPIView):
 class RolRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Rol.objects.all()
     serializer_class = RolSerializer
-    permission_classes = [IsAuthenticated, IsAdminRole]
+    permission_classes = [IsAuthenticated, TieneAccesoRecurso]
 
 class UsuarioRolCreateView(generics.CreateAPIView):
     queryset = UsuarioRol.objects.all()
     serializer_class = UsuarioRolSerializer
-    permission_classes = [IsAuthenticated, IsAdminRole]
+    permission_classes = [IsAuthenticated, TieneAccesoRecurso]
 
 # Listar y crear recursos
 class RecursoListCreateView(generics.ListCreateAPIView):

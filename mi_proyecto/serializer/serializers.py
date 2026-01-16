@@ -27,7 +27,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         rol_usuario, created = Rol.objects.get_or_create(nombre='Usuario')
         UsuarioRol.objects.create(usuario=user, rol=rol_usuario)
-
         return user
 
 # USUARIO
