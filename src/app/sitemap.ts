@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 
 import { siteConfig } from "@/config/site";
-import { projects } from "@/features/projects/data/project-seed";
+import { getPublicProjectSlugs } from "@/features/projects/services/project-repository";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const projectSlugs = await getPublicProjectSlugs();
   const staticRoutes = [
     "",
     "/proyectos",
@@ -18,8 +19,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${siteConfig.url}${route}`,
       lastModified: new Date(),
     })),
-    ...projects.map((project) => ({
-      url: `${siteConfig.url}/proyectos/${project.slug}`,
+    ...projectSlugs.map((slug) => ({
+      url: `${siteConfig.url}/proyectos/${slug}`,
       lastModified: new Date(),
     })),
   ];

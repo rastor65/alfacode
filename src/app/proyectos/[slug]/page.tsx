@@ -2,19 +2,26 @@ import { notFound } from "next/navigation";
 
 import { PublicHeader } from "@/components/layout/public-header";
 import { Badge } from "@/components/ui/badge";
-import { projects } from "@/features/projects/data/project-seed";
+import {
+  getPublicProjectBySlug,
+  getPublicProjectSlugs,
+} from "@/features/projects/services/project-repository";
+
+export const revalidate = 60;
+export const dynamicParams = true;
 
 type ProjectDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
 export async function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }));
+  const slugs = await getPublicProjectSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: ProjectDetailPageProps) {
   const { slug } = await params;
-  const project = projects.find((item) => item.slug === slug);
+  const project = await getPublicProjectBySlug(slug);
 
   return {
     title: project?.name ?? "Proyecto",
@@ -26,7 +33,7 @@ export default async function ProjectDetailPage({
   params,
 }: ProjectDetailPageProps) {
   const { slug } = await params;
-  const project = projects.find((item) => item.slug === slug);
+  const project = await getPublicProjectBySlug(slug);
 
   if (!project) {
     notFound();
@@ -58,6 +65,13 @@ export default async function ProjectDetailPage({
             </p>
           </section>
         </div>
+
+        <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.04] p-6">
+          <h2 className="text-lg font-semibold text-white">Solucion</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-300">
+            {project.solution}
+          </p>
+        </section>
 
         <section className="mt-8 rounded-lg border border-white/10 bg-white/[0.04] p-6">
           <h2 className="text-lg font-semibold text-white">Tecnologias</h2>

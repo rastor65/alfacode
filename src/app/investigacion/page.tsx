@@ -1,7 +1,11 @@
 import { PublicHeader } from "@/components/layout/public-header";
-import { researchLines } from "@/features/projects/data/project-seed";
+import { getPublicResearchLines } from "@/features/research/services/research-repository";
 
-export default function ResearchPage() {
+export const revalidate = 60;
+
+export default async function ResearchPage() {
+  const researchLines = await getPublicResearchLines();
+
   return (
     <div className="min-h-screen bg-[#05080d]">
       <PublicHeader />

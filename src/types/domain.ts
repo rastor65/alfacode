@@ -32,6 +32,7 @@ export type Project = {
   summary: string;
   problemStatement: string;
   objective: string;
+  solution: string;
   status: ProjectStatus;
   visibility: Visibility;
   researchLines: ResearchLine[];

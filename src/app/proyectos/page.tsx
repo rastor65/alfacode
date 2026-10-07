@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 
 import { PublicHeader } from "@/components/layout/public-header";
 import { ProjectCard } from "@/features/projects/components/project-card";
-import { projects } from "@/features/projects/data/project-seed";
+import { getPublicProjects } from "@/features/projects/services/project-repository";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Proyectos",
   description: "Proyectos publicos de investigacion y desarrollo de AlfaCode.",
 };
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const projects = await getPublicProjects();
+
   return (
     <div className="min-h-screen bg-[#05080d]">
       <PublicHeader />

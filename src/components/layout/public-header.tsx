@@ -6,10 +6,10 @@ import { ButtonLink } from "@/components/ui/button-link";
 
 export function PublicHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#05080d]/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="fixed inset-x-0 top-4 z-40 px-4 sm:px-6 lg:px-8">
+      <div className="glass-panel mx-auto flex h-16 max-w-7xl items-center justify-between rounded-lg px-3 sm:px-5">
         <Link href="/" className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-md border border-cyan-100/20 bg-cyan-100/10 text-[#e1feff]">
+          <span className="flex size-10 items-center justify-center rounded-md border border-cyan-100/20 bg-[#e1feff]/10 text-[#e1feff] shadow-[0_0_28px_rgba(70,158,180,0.22)]">
             <Atom size={18} aria-hidden="true" />
           </span>
           <span>
@@ -26,15 +26,15 @@ export function PublicHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm text-slate-300 transition hover:text-white"
+              className="rounded-md px-1 py-2 text-sm text-slate-300 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e1feff]"
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <ButtonLink href="/app/dashboard" variant="secondary" className="gap-2">
+        <ButtonLink href="/login" variant="secondary" className="gap-2">
           <LogIn size={16} aria-hidden="true" />
-          App
+          Plataforma
         </ButtonLink>
       </div>
     </header>

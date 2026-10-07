@@ -1,8 +1,12 @@
 export const permissions = {
+  dashboardRead: "dashboard.read",
   projectsRead: "projects.read",
   projectsCreate: "projects.create",
   projectsUpdate: "projects.update",
   projectsPublish: "projects.publish",
+  rolesRead: "roles.read",
+  rolesManage: "roles.manage",
+  usersRead: "users.read",
   membersManage: "members.manage",
   siteManage: "site.manage",
   usersManage: "users.manage",

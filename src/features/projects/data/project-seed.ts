@@ -47,6 +47,8 @@ export const projects: Project[] = [
       "La toma de decisiones sobre bienestar requiere datos oportunos, trazables y comprensibles.",
     objective:
       "Integrar software, sensores y analitica para apoyar procesos de seguimiento fisico.",
+    solution:
+      "Sistema web con captura de datos, almacenamiento historico, visualizacion y analitica.",
     status: "RESEARCH",
     visibility: "PUBLIC",
     researchLines: [researchLines[1], researchLines[2], researchLines[3]],
@@ -62,6 +64,8 @@ export const projects: Project[] = [
       "La informacion hotelera fragmentada reduce eficiencia y trazabilidad operativa.",
     objective:
       "Centralizar procesos clave en una experiencia web clara, segura y responsiva.",
+    solution:
+      "Aplicacion web administrativa con modulos de informacion, roles y reportes operativos.",
     status: "DEVELOPMENT",
     visibility: "PUBLIC",
     researchLines: [researchLines[0], researchLines[3]],
@@ -77,6 +81,8 @@ export const projects: Project[] = [
       "La baja motivacion limita la continuidad de procesos de aprendizaje autonomo.",
     objective:
       "Aplicar mecanicas de juego para mejorar participacion y seguimiento pedagogico.",
+    solution:
+      "Plataforma con retos, progreso, logros, retroalimentacion y seguimiento docente.",
     status: "DESIGN",
     visibility: "PUBLIC",
     researchLines: [researchLines[0], researchLines[3]],
@@ -92,6 +98,8 @@ export const projects: Project[] = [
       "Los entornos educativos necesitan apoyo personalizado sin perder trazabilidad academica.",
     objective:
       "Explorar LLM y MCP para mejorar acompanamiento, evaluacion y acceso a recursos.",
+    solution:
+      "Asistente educativo conectado a herramientas y fuentes academicas controladas.",
     status: "RESEARCH",
     visibility: "PUBLIC",
     researchLines: [researchLines[1], researchLines[3]],
@@ -107,6 +115,8 @@ export const projects: Project[] = [
       "El acceso limitado por dispositivo reduce disponibilidad y continuidad de uso.",
     objective:
       "Construir una experiencia web adaptable, accesible y eficiente para multiples pantallas.",
+    solution:
+      "Frontend responsivo orientado a accesibilidad, rendimiento y compatibilidad multidispositivo.",
     status: "VALIDATION",
     visibility: "PUBLIC",
     researchLines: [researchLines[0], researchLines[3]],

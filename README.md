@@ -27,6 +27,11 @@ npm run dev
 npm run lint
 npm run build
 npm run start
+npm run db:migrate
+npm run db:seed
+npm run db:check
+npm run db:create-admin
+npm run db:rbac
 ```
 
 ## Variables de entorno
@@ -39,6 +44,9 @@ DATABASE_URL=
 BLOB_READ_WRITE_TOKEN=
 AUTH_SECRET=
 AUTH_URL=http://localhost:3000
+ADMIN_EMAIL=admin@alfacode.dev
+ADMIN_PASSWORD=
+ADMIN_NAME=Administrador AlfaCode
 ```
 
 ## Estructura
@@ -62,6 +70,36 @@ Context/
 ## Base de datos
 
 La primera migracion esta en `db/migrations/0001_initial.sql`. Incluye las entidades del MVP, enums, relaciones, indices y primeras politicas RLS conceptuales para PostgreSQL.
+
+Para aplicarla en Neon, agrega `DATABASE_URL` en `.env.local` y ejecuta:
+
+```bash
+npm run db:migrate
+```
+
+Para cargar datos iniciales:
+
+```bash
+npm run db:seed
+```
+
+Para verificar conteos de tablas principales:
+
+```bash
+npm run db:check
+```
+
+Para crear o actualizar el primer administrador, define `ADMIN_EMAIL` y `ADMIN_PASSWORD` en `.env.local` y ejecuta:
+
+```bash
+npm run db:create-admin
+```
+
+Para auditar recursos RBAC y permisos por rol:
+
+```bash
+npm run db:rbac
+```
 
 ## Estado actual
 
