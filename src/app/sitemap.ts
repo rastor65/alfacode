@@ -3,6 +3,8 @@ import type { MetadataRoute } from "next";
 import { siteConfig } from "@/config/site";
 import { getPublicProjectSlugs } from "@/features/projects/services/project-repository";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const projectSlugs = await getPublicProjectSlugs();
   const staticRoutes = [
