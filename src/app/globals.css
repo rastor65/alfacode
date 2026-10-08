@@ -85,10 +85,10 @@ body::after {
 
 .node-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(225, 254, 255, 0.12) 1px, transparent 0),
-    linear-gradient(135deg, rgba(70, 158, 180, 0.18), transparent 40%),
-    linear-gradient(225deg, rgba(126, 212, 232, 0.1), transparent 45%);
-  background-size: 40px 40px, 100% 100%, 100% 100%;
+    radial-gradient(circle at 1px 1px, rgba(126, 212, 232, 0.06) 1px, transparent 0),
+    linear-gradient(135deg, rgba(70, 158, 180, 0.12), transparent 40%),
+    linear-gradient(225deg, rgba(126, 212, 232, 0.07), transparent 45%);
+  background-size: 36px 36px, 100% 100%, 100% 100%;
 }
 
 .glow-ambient-cyan {
