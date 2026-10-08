@@ -1,92 +1,85 @@
 import { ArrowRight } from "lucide-react";
 
 import { ButtonLink } from "@/components/ui/button-link";
-import { homeStats, processSteps } from "@/features/home/data/home-content";
+import { homeStats } from "@/features/home/data/home-content";
+import { HomeHeroPipeline } from "@/features/home/components/home-hero-pipeline";
 
 export function HomeHeroSection() {
   return (
-    <section className="node-grid relative overflow-hidden border-b border-white/10 pt-24">
+    <section className="node-grid relative overflow-hidden border-b border-cyan-500/10 pt-28 pb-16 lg:pt-32 lg:pb-24">
+      {/* Soft gradient bottom blend */}
       <div
-        className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#071018] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#071018] via-[#071018]/80 to-transparent"
         aria-hidden="true"
       />
-      <div className="relative mx-auto grid min-h-[calc(100vh-6rem)] max-w-7xl content-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:px-8">
-        <div className="max-w-4xl">
-          <p className="inline-flex rounded-full border border-cyan-100/15 bg-cyan-100/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#9de8f5]">
-            Research & Software Lab
-          </p>
-          <h1 className="text-balance mt-7 max-w-4xl text-5xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
-            Investigamos problemas. Construimos soluciones.
+
+      {/* Ambient background glows */}
+      <div
+        className="pointer-events-none absolute left-1/4 top-10 size-96 rounded-full bg-[#469eb4]/15 blur-3xl"
+        aria-hidden="true"
+      />
+
+      <div className="relative mx-auto grid max-w-7xl content-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8">
+        {/* Left Column: Vision & Action */}
+        <div className="flex flex-col justify-center">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/50 px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.2)]">
+              <span className="size-2 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true" />
+              Research & Software Lab
+            </span>
+          </div>
+
+          <h1 className="text-balance mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-6xl xl:text-7xl">
+            Investigamos problemas.{" "}
+            <span className="block bg-gradient-to-r from-white via-cyan-100 to-[#7ed4e8] bg-clip-text text-transparent">
+              Construimos soluciones.
+            </span>
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-            Desarrollo de software, inteligencia artificial e investigacion
-            aplicada para transformar problemas reales en soluciones
-            tecnologicas funcionales, medibles y publicables.
+
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            Desarrollo de software de vanguardia, inteligencia artificial e investigación aplicada. Transformamos desafíos reales en soluciones tecnológicas funcionales, medibles y transferibles a la sociedad.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/proyectos" className="gap-2">
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <ButtonLink href="/proyectos" variant="primary" className="gap-2.5">
               Explorar proyectos
-              <ArrowRight size={16} aria-hidden="true" />
+              <ArrowRight size={17} aria-hidden="true" />
             </ButtonLink>
             <ButtonLink href="/investigacion" variant="secondary">
-              Conocer AlfaCode
+              Líneas de investigación
             </ButtonLink>
           </div>
-          <dl className="mt-12 grid max-w-2xl grid-cols-3 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
-            {homeStats.map((stat) => (
-              <div key={stat.label} className="bg-[#071018]/80 p-4">
-                <dt className="text-xs uppercase tracking-[0.16em] text-slate-400">
-                  {stat.label}
-                </dt>
-                <dd className="mt-2 text-3xl font-semibold text-[#e1feff]">
-                  {stat.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+
+          {/* Stats Bar */}
+          <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {homeStats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={stat.label}
+                  className="glass-card-interactive rounded-xl p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-2xl font-bold text-[#e1feff]">
+                      {stat.value}
+                    </span>
+                    <Icon size={18} className="text-[#7ed4e8]" aria-hidden="true" />
+                  </div>
+                  <p className="mt-2 text-xs font-semibold text-slate-200">
+                    {stat.label}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">
+                    {stat.sublabel}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="glass-panel relative rounded-lg p-5">
-          <div
-            className="absolute inset-4 rounded-lg border border-cyan-100/10"
-            aria-hidden="true"
-          />
-          <div className="relative">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  Arquitectura de impacto
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  Problema a solucion tecnologica
-                </p>
-              </div>
-              <span className="rounded-full border border-[#469eb4]/30 bg-[#469eb4]/10 px-3 py-1 text-xs text-[#e1feff]">
-                sistema vivo
-              </span>
-            </div>
-            <div className="space-y-3">
-              {processSteps.map((step, index) => (
-                <div
-                  key={step}
-                  className="grid grid-cols-[2.5rem_1fr] items-center gap-3"
-                >
-                  <div className="relative flex size-10 items-center justify-center rounded-md border border-cyan-100/15 bg-slate-950/70 text-xs font-semibold text-[#e1feff]">
-                    {String(index + 1).padStart(2, "0")}
-                    {index < processSteps.length - 1 ? (
-                      <span
-                        className="absolute left-1/2 top-full h-3 w-px bg-[#469eb4]/60"
-                        aria-hidden="true"
-                      />
-                    ) : null}
-                  </div>
-                  <div className="rounded-md border border-white/10 bg-white/[0.055] px-4 py-3 transition hover:border-[#469eb4]/50 hover:bg-white/[0.08]">
-                    <p className="text-sm font-medium text-white">{step}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Right Column: Interactive Lifecycle Pipeline */}
+        <div className="flex flex-col justify-center">
+          <HomeHeroPipeline />
         </div>
       </div>
     </section>
