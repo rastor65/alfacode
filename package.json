@@ -1,47 +1,15 @@
 {
-  "name": "alfacode",
+  "name": "alfacode-hub",
   "version": "0.1.0",
   "private": true,
+  "description": "AlfaCode HUB monorepo with separated frontend and backend applications.",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "db:migrate": "node scripts/db-migrate.mjs",
-    "db:seed": "node scripts/db-seed.mjs",
-    "db:check": "node scripts/db-check.mjs",
-    "db:create-admin": "node scripts/db-create-admin.mjs",
-    "db:rbac": "node scripts/db-rbac-check.mjs"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.9.1",
-    "@neondatabase/serverless": "^1.2.0",
-    "@tanstack/react-query": "^5.104.1",
-    "@vercel/blob": "^2.8.1",
-    "bcryptjs": "^3.0.3",
-    "bcryptjs": "^3.0.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.52.0",
-    "next": "16.4.0",
-    "next-auth": "^4.24.15",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-hook-form": "^7.89.0",
-    "tailwind-merge": "^3.7.0",
-    "zod": "^4.6.5",
-    "zustand": "^5.0.15"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "dotenv": "^18.0.6",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.0",
-    "postgres": "^3.4.9",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:lint": "npm --prefix frontend run lint",
+    "frontend:start": "npm --prefix frontend run start",
+    "backend:dev": "npm --prefix backend run start:dev",
+    "backend:build": "npm --prefix backend run build",
+    "backend:typecheck": "npm --prefix backend run typecheck"
   }
 }

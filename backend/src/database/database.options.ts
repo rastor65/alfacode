@@ -1,0 +1,81 @@
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+
+import type { DataSourceOptions } from "typeorm";
+
+import { SchemaBootstrap1728690000000 } from "./migrations/1728690000000-schema-bootstrap";
+
+const migrations = [SchemaBootstrap1728690000000];
+
+function loadEnvFile(filePath: string) {
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  const content = readFileSync(filePath, "utf8");
+
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+
+    const separator = trimmed.indexOf("=");
+
+    if (separator === -1) {
+      continue;
+    }
+
+    const key = trimmed.slice(0, separator).trim();
+    const value = trimmed.slice(separator + 1).trim().replace(/^["']|["']$/g, "");
+
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+}
+
+export function loadDatabaseEnv() {
+  loadEnvFile(resolve(process.cwd(), ".env.local"));
+  loadEnvFile(resolve(process.cwd(), ".env"));
+}
+
+export function createDataSourceOptions(): DataSourceOptions {
+  loadDatabaseEnv();
+
+  const dbType = process.env.DB_TYPE ?? "sqlite";
+
+  if (dbType === "postgres") {
+    const url = process.env.DATABASE_URL;
+
+    if (!url) {
+      throw new Error("DATABASE_URL is required when DB_TYPE=postgres");
+    }
+
+    return {
+      type: "postgres",
+      url,
+      entities: [],
+      migrations,
+      synchronize: false,
+    };
+  }
+
+  if (dbType === "sqlite") {
+    const sqlitePath = process.env.SQLITE_PATH ?? "./data/alfacode-hub.sqlite";
+    const database = resolve(process.cwd(), sqlitePath);
+
+    mkdirSync(dirname(database), { recursive: true });
+
+    return {
+      type: "better-sqlite3",
+      database,
+      entities: [],
+      migrations,
+      synchronize: false,
+    };
+  }
+
+  throw new Error(`Unsupported DB_TYPE: ${dbType}`);
+}
