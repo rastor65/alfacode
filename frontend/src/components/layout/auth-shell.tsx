@@ -31,7 +31,7 @@ export async function AuthShell({
   footer,
   badge = "Acceso Institucional",
   heroHeadline = "AlfaCode HUB",
-  heroSubheadline = "Semillero de Investigación en Computación Avanzada · Universidad de La Guajira.",
+  heroSubheadline = "Semillero de Investigación en Ingeniería de Sistemas y Computación · Universidad de La Guajira.",
 }: AuthShellProps) {
   const theme = await getThemePreference();
 
@@ -143,11 +143,11 @@ export async function AuthShell({
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-300 backdrop-blur-md">
                     <Code2 size={12} className="text-cyan-400 shrink-0" aria-hidden="true" />
-                    Ingeniería de Software
+                    Desarrollo de Software
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-300 backdrop-blur-md">
                     <ShieldCheck size={12} className="text-cyan-400 shrink-0" aria-hidden="true" />
-                    Semillero Uniguajira
+                    IOT
                   </span>
                 </div>
               </div>
