@@ -36,8 +36,8 @@ export async function AuthShell({
   const theme = await getThemePreference();
 
   return (
-    <ThemeProvider initialTheme={theme} className="public-site flex min-h-screen flex-col justify-between">
-      <div className="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-site-page text-hub-text selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-300">
+    <ThemeProvider initialTheme={theme} className="public-site flex min-h-screen w-full max-w-full flex-col justify-between overflow-x-hidden">
+      <div className="relative flex min-h-screen w-full max-w-full flex-col justify-between overflow-x-hidden bg-site-page text-hub-text selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-300">
         {/* Atmósfera Ambiental: Nebulosas en capas */}
         <div
           className="pointer-events-none absolute -top-48 -left-48 size-[650px] rounded-full bg-gradient-to-br from-cyan-500/15 via-sky-500/10 to-transparent blur-[160px]"
@@ -69,24 +69,24 @@ export async function AuthShell({
         />
 
         {/* Cabecera superior con barra translúcida institucional */}
-        <header className="relative z-20 mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-2 backdrop-blur-xl shadow-site-header transition-colors">
+        <header className="relative z-20 mx-auto w-full max-w-7xl px-3 py-2.5 sm:px-6 sm:py-3 lg:px-8">
+          <div className="flex items-center justify-between gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-1.5 sm:px-4 sm:py-2 backdrop-blur-xl shadow-site-header transition-colors">
             <Link
               href="/"
-              className="group flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="group flex items-center gap-2.5 sm:gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
-              <span className="flex size-9 items-center justify-center rounded-xl border border-cyan-400/35 bg-cyan-950/70 p-1.5 shadow-[0_0_20px_rgba(3,130,161,0.3)] transition-transform duration-300 group-hover:scale-105">
+              <span className="flex size-8 sm:size-9 items-center justify-center rounded-xl border border-cyan-400/35 bg-cyan-950/70 p-1 sm:p-1.5 shadow-[0_0_20px_rgba(3,130,161,0.3)] transition-transform duration-300 group-hover:scale-105">
                 <AlfaCodeSymbol className="size-full" />
               </span>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold tracking-tight text-white">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-sm sm:text-base font-bold tracking-tight text-white">
                   Alfa<span className="text-hub-accent">Code</span>{" "}
-                  <span className="font-mono text-xs font-semibold text-hub-muted">HUB</span>
+                  <span className="font-mono text-[10px] sm:text-xs font-semibold text-hub-muted">HUB</span>
                 </span>
               </div>
             </Link>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/"
                 className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-cyan-400/40 hover:bg-cyan-950/50 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
@@ -100,27 +100,27 @@ export async function AuthShell({
         </header>
 
         {/* Contenido principal: Grid cinematográfico de 2 columnas */}
-        <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid w-full items-center gap-10 lg:grid-cols-12 lg:gap-14">
+        <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="grid w-full min-w-0 max-w-full items-center gap-8 sm:gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Columna Izquierda: Escenario 3D del Isotipo Oficial y Ecosistema de Investigación */}
-            <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
+            <div className="flex w-full min-w-0 max-w-full flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
               {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode a tamaño heroico */}
-              <div className="relative w-full max-w-[680px] h-[380px] sm:h-[460px] lg:h-[520px] flex items-center justify-center">
+              <div className="relative w-full max-w-[680px] h-[280px] sm:h-[400px] lg:h-[520px] flex items-center justify-center min-w-0">
                 {/* Halo de resplandor ambiental y pedestal luminoso */}
                 <div
-                  className="pointer-events-none absolute inset-x-12 inset-y-8 rounded-full bg-gradient-to-tr from-cyan-500/20 via-teal-500/15 to-transparent blur-[100px]"
+                  className="pointer-events-none absolute inset-x-8 sm:inset-x-12 inset-y-6 sm:inset-y-8 rounded-full bg-gradient-to-tr from-cyan-500/20 via-teal-500/15 to-transparent blur-[80px] sm:blur-[100px]"
                   aria-hidden="true"
                 />
                 <div
-                  className="pointer-events-none absolute bottom-4 w-3/4 h-16 rounded-full bg-cyan-400/25 blur-[50px]"
+                  className="pointer-events-none absolute bottom-2 sm:bottom-4 w-3/4 h-12 sm:h-16 rounded-full bg-cyan-400/25 blur-[40px] sm:blur-[50px]"
                   aria-hidden="true"
                 />
                 <Auth3DScene />
               </div>
 
               {/* Identidad y foco institucional */}
-              <div className="space-y-2.5 max-w-xl w-full pt-2">
-                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-tight">
+              <div className="space-y-2 max-w-xl w-full pt-1 sm:pt-2 px-1 sm:px-0">
+                <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-tight">
                   {heroHeadline === "AlfaCode HUB" ? (
                     <>
                       Alfa<span className="text-hub-accent">Code</span>{" "}
@@ -131,22 +131,22 @@ export async function AuthShell({
                   )}
                 </h1>
 
-                <p className="text-sm sm:text-base leading-relaxed text-slate-300">
+                <p className="text-xs sm:text-base leading-relaxed text-slate-300 max-w-lg mx-auto lg:mx-0">
                   {heroSubheadline}
                 </p>
 
                 {/* 3 Pills minimalistas con áreas de enfoque */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
-                    <Cpu size={13} className="text-cyan-400" aria-hidden="true" />
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2 pt-1 sm:pt-1.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <Cpu size={12} className="text-cyan-400 shrink-0" aria-hidden="true" />
                     Inteligencia Artificial
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
-                    <Code2 size={13} className="text-cyan-400" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <Code2 size={12} className="text-cyan-400 shrink-0" aria-hidden="true" />
                     Ingeniería de Software
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
-                    <ShieldCheck size={13} className="text-cyan-400" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-1 text-[11px] sm:text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <ShieldCheck size={12} className="text-cyan-400 shrink-0" aria-hidden="true" />
                     Semillero Uniguajira
                   </span>
                 </div>
@@ -154,7 +154,7 @@ export async function AuthShell({
             </div>
 
             {/* Columna Derecha: Bóveda de Acceso Seguro (Tarjeta Frosted Glass) */}
-            <div className="relative lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
+            <div className="relative w-full min-w-0 max-w-md mx-auto lg:max-w-none lg:col-span-5">
               {/* Resplandor ambiental exterior de la tarjeta */}
               <div
                 className="pointer-events-none absolute -inset-1 rounded-[34px] bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent opacity-20 dark:opacity-40 blur-xl"
@@ -162,7 +162,7 @@ export async function AuthShell({
               />
               <section
                 aria-labelledby="auth-title"
-                className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-7 sm:p-9 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
+                className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-5 sm:p-7 md:p-9 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
               >
                 {/* Línea superior con gradiente de luz cian */}
                 <div

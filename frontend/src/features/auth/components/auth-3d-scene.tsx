@@ -52,8 +52,10 @@ export function Auth3DScene() {
     // 1. Escena, Cámara y Renderer
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 9.8);
+    const initialAspect = width / (height || 1);
+    const camera = new THREE.PerspectiveCamera(45, initialAspect, 0.1, 100);
+    const initialZ = initialAspect < 1.15 ? 9.8 * (1.15 / Math.max(initialAspect, 0.65)) : 9.8;
+    camera.position.set(0, 0, initialZ);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -65,6 +67,12 @@ export function Auth3DScene() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = isLight ? 0.88 : 1.08;
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    renderer.domElement.style.maxWidth = "100%";
+    renderer.domElement.style.maxHeight = "100%";
+    renderer.domElement.style.display = "block";
+    renderer.domElement.style.touchAction = "pan-y";
     container.appendChild(renderer.domElement);
 
     // 1.1 Entorno de iluminación física (Softbox Studio Reflection Map)
@@ -242,7 +250,10 @@ export function Auth3DScene() {
       if (!container) return;
       width = container.clientWidth;
       height = container.clientHeight;
-      camera.aspect = width / height;
+      if (width === 0 || height === 0) return;
+      const currentAspect = width / height;
+      camera.aspect = currentAspect;
+      camera.position.z = currentAspect < 1.15 ? 9.8 * (1.15 / Math.max(currentAspect, 0.65)) : 9.8;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -355,7 +366,7 @@ export function Auth3DScene() {
   return (
     <div
       ref={containerRef}
-      className="relative size-full flex items-center justify-center overflow-hidden"
+      className="relative size-full max-w-full flex items-center justify-center overflow-hidden"
       aria-hidden="true"
     />
   );
