@@ -172,24 +172,28 @@ export function Auth3DScene() {
       const delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
-      // Suavizado del cursor
+      // Suavizado del cursor (amortiguación progresiva)
       const motionScale = prefersReducedMotion ? 0.1 : 1;
-      targetX += (mouseX * 0.4 * motionScale - targetX) * 0.04;
-      targetY += (mouseY * 0.3 * motionScale - targetY) * 0.04;
+      targetX += (mouseX * 0.5 * motionScale - targetX) * 0.05;
+      targetY += (mouseY * 0.4 * motionScale - targetY) * 0.05;
 
-      // Rotación suave del logo
-      const rotSpeed = prefersReducedMotion ? 0.08 : 0.35;
-      logoGroup.rotation.y += rotSpeed * delta;
+      // Oscilación armónica orgánica del logotipo (siempre de frente, sin invertirse)
+      const swayY = Math.sin(elapsed * 0.75) * 0.22;
+      const swayX = Math.cos(elapsed * 0.6) * 0.08;
 
-      // Flotación armónica y reacción al cursor
-      logoGroup.position.y = Math.sin(elapsed * 1.6) * 0.12;
-      logoGroup.rotation.x = -targetY * 0.5 + Math.sin(elapsed * 0.8) * 0.05;
-      logoGroup.rotation.z = targetX * 0.2;
+      logoGroup.position.y = Math.sin(elapsed * 1.4) * 0.16;
+      logoGroup.rotation.y = swayY + targetX * 0.45;
+      logoGroup.rotation.x = -0.04 + swayX - targetY * 0.35;
+      logoGroup.rotation.z = targetX * 0.12;
 
-      // Rotación sutil del anillo
-      orbitRing.rotation.z += 0.25 * delta;
+      // Rotación suave del anillo orbital
+      orbitRing.rotation.z += 0.2 * delta;
 
-      // Rotación sutil de las partículas de fondo
+      // Luz puntual dinámica que hace deslizar brillos metálicos sobre los biseles
+      cyanPointLight.position.x = Math.sin(elapsed * 0.8) * 3.5 - 1.5;
+      cyanPointLight.position.y = Math.cos(elapsed * 0.6) * 2 + 2.5;
+
+      // Rotación sutil del campo estelar
       particles.rotation.y = elapsed * 0.02;
 
       renderer.render(scene, camera);

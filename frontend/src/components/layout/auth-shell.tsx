@@ -110,7 +110,12 @@ export async function AuthShell({
           {/* Columna Izquierda: Escenario del Logotipo 3D Oficial de AlfaCode e identidad */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
             {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode */}
-            <div className="relative w-full max-w-[460px] h-[280px] sm:h-[340px] lg:h-[390px] flex items-center justify-center">
+            <div className="relative w-full max-w-[480px] h-[280px] sm:h-[340px] lg:h-[390px] flex items-center justify-center">
+              {/* Halo de resplandor ambiental detrás del logotipo 3D */}
+              <div
+                className="pointer-events-none absolute inset-x-8 inset-y-10 rounded-full bg-cyan-500/12 blur-[90px]"
+                aria-hidden="true"
+              />
               <Auth3DScene />
             </div>
 
@@ -145,7 +150,12 @@ export async function AuthShell({
           </div>
 
           {/* Columna Derecha: Tarjeta Frosted Glass de Ingreso */}
-          <div className="lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
+          <div className="relative lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
+            {/* Halo sutil detrás de la tarjeta */}
+            <div
+              className="pointer-events-none absolute -inset-1 rounded-[32px] bg-gradient-to-b from-cyan-500/15 via-transparent to-transparent opacity-60 blur-xl"
+              aria-hidden="true"
+            />
             <section
               aria-labelledby="auth-title"
               className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-6 sm:p-8 md:p-9 shadow-[0_0_60px_rgba(0,0,0,0.7),0_0_30px_rgba(3,130,161,0.25)] backdrop-blur-2xl transition-all duration-300 hover:border-cyan-400/40"

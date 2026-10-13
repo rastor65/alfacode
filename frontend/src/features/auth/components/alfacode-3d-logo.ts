@@ -30,8 +30,10 @@ export function create3DAlfaCodeLogo(): THREE.Group {
 
     const geometry = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
     geometry.center();
-    // Invertir Y porque SVG tiene Y hacia abajo
-    geometry.scale(0.008, -0.008, 0.008);
+    // Invertir Y mediante rotación para conservar el orden de devanado (winding order) y normales correctas
+    geometry.rotateX(Math.PI);
+    geometry.scale(0.0075, 0.0075, 0.0075);
+    geometry.computeVertexNormals();
 
     const material = isDark
       ? new THREE.MeshStandardMaterial({
@@ -39,14 +41,16 @@ export function create3DAlfaCodeLogo(): THREE.Group {
           roughness: 0.25,
           metalness: 0.85,
           emissive: 0x01303d,
-          emissiveIntensity: 0.4,
+          emissiveIntensity: 0.45,
+          side: THREE.DoubleSide,
         })
       : new THREE.MeshStandardMaterial({
           color: 0x94eefe,
           roughness: 0.15,
-          metalness: 0.45,
+          metalness: 0.5,
           emissive: 0x22d3ee,
-          emissiveIntensity: 0.7,
+          emissiveIntensity: 0.65,
+          side: THREE.DoubleSide,
         });
 
     const mesh = new THREE.Mesh(geometry, material);
