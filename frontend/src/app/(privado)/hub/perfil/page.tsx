@@ -34,8 +34,8 @@ function Section({ id, title, description, children }: { id: string; title: stri
 }
 
 export default async function ProfilePage() {
-  await requireSessionUser("/perfil");
-  const profile = await serverApi<Profile>("/users/me", "/perfil");
+  await requireSessionUser("/hub/perfil");
+  const profile = await serverApi<Profile>("/users/me", "/hub/perfil");
 
   return (
     <div className="mx-auto w-full max-w-3xl">

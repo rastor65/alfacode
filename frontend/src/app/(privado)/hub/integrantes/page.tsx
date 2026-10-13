@@ -41,11 +41,11 @@ function href(filters: Filters, page = 1) {
   if (page > 1) params.set("pagina", String(page));
 
   const query = params.toString();
-  return query ? `/integrantes?${query}` : "/integrantes";
+  return query ? `/hub/integrantes?${query}` : "/hub/integrantes";
 }
 
 export default async function MembersPage({ searchParams }: MembersPageProps) {
-  const user = await requireSessionUser("/integrantes");
+  const user = await requireSessionUser("/hub/integrantes");
   const params = await searchParams;
   const authority = isAuthority(user.roles);
   // Solo las autoridades consultan cuentas que no estan activas (el backend lo exige).
@@ -99,7 +99,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       {/* Formulario GET: funciona sin JavaScript y deja los filtros en la URL. */}
       {/* Cuadricula de dos filas (etiquetas / controles): alinea los tres campos por construccion. */}
       <form
-        action="/integrantes"
+        action="/hub/integrantes"
         method="get"
         role="search"
         className="mt-5 grid grid-cols-1 gap-x-3 gap-y-1.5 sm:grid-cols-[minmax(0,1fr)_11rem_auto]"

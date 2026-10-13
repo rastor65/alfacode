@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PanelPage() {
-  const user = await requireSessionUser("/panel");
+  const user = await requireSessionUser("/hub");
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -45,7 +45,7 @@ export default async function PanelPage() {
 
       <p className="mt-6 text-sm text-hub-muted">
         Puedes editar tu nombre y cambiar tu contraseña en{" "}
-        <Link href="/perfil" className="font-medium text-hub-accent underline-offset-4 hover:underline">
+        <Link href="/hub/perfil" className="font-medium text-hub-accent underline-offset-4 hover:underline">
           Mi perfil
         </Link>
         .

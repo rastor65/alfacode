@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, LayoutDashboard, type LucideIcon, Menu, UserRound, Users, X } from "lucide-react";
+import { FolderKanban, Inbox, LayoutDashboard, type LucideIcon, Menu, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -17,14 +17,17 @@ type NavigationItem = {
   icon: LucideIcon;
   /** Si se indica, el enlace solo se muestra a esos roles. Es solo presentacion: el backend autoriza. */
   roles?: RoleCode[];
+  /** Solo se marca activo en esa ruta exacta (la portada `/hub` es prefijo de todas). */
+  exact?: boolean;
 };
 
 /** Menu lateral. Solo incluye vistas ya implementadas. */
 const NAVIGATION: NavigationItem[] = [
-  { href: "/panel", label: "Panel", icon: LayoutDashboard },
-  { href: "/integrantes", label: "Integrantes", icon: Users },
-  { href: "/solicitudes", label: "Solicitudes", icon: Inbox, roles: ["admin", "coordinator"] },
-  { href: "/perfil", label: "Mi perfil", icon: UserRound },
+  { href: "/hub", label: "Panel", icon: LayoutDashboard, exact: true },
+  { href: "/hub/proyectos", label: "Proyectos", icon: FolderKanban },
+  { href: "/hub/integrantes", label: "Integrantes", icon: Users },
+  { href: "/hub/solicitudes", label: "Solicitudes", icon: Inbox, roles: ["admin", "coordinator"] },
+  { href: "/hub/perfil", label: "Mi perfil", icon: UserRound },
 ];
 
 function initials(fullName: string) {
@@ -72,7 +75,7 @@ export function AppShell({ user, children }: AppShellProps) {
       <nav aria-label="Menú principal" className="flex-1">
         <ul className="space-y-0.5">
           {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
 
             return (
@@ -126,7 +129,7 @@ export function AppShell({ user, children }: AppShellProps) {
             {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
           </button>
           <Link
-            href="/panel"
+            href="/hub"
             className="flex min-w-0 items-center gap-2 rounded-md text-sm font-semibold tracking-tight text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
           >
             <AlfaCodeSymbol className="size-5 shrink-0" />

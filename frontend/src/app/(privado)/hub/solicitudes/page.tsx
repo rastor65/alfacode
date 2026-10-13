@@ -44,11 +44,11 @@ function href(status: MembershipRequestStatus, page = 1) {
   }
 
   const query = params.toString();
-  return query ? `/solicitudes?${query}` : "/solicitudes";
+  return query ? `/hub/solicitudes?${query}` : "/hub/solicitudes";
 }
 
 export default async function RequestsPage({ searchParams }: RequestsPageProps) {
-  const user = await requireSessionUser("/solicitudes");
+  const user = await requireSessionUser("/hub/solicitudes");
   const params = await searchParams;
   const status = parseRequestStatus(params.estado);
   const page = parsePage(params.pagina);

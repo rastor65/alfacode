@@ -191,6 +191,14 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Pendiente:** el responsable no declaro de forma explicita la aprobacion de I-08, I-09 ni DEC-016; quedan registradas como integradas y autorizadas para continuar, no como aprobadas. El plan pone como dependencia de la Fase 2 "Fase 1 aceptada"; prevalece la instruccion del responsable de continuar.
 - **Creacion de proyectos:** sin respuesta sobre el permiso adicional para `teacher_leader` (F2-03), se aplica el valor por defecto del plan: solo `admin` y `coordinator` crean proyectos.
 
+### DEC-019 - Vistas privadas bajo `/hub`
+
+- **Fecha:** 2026-10-13
+- **Estado:** autorizado ("hazlo como recomiendas", en respuesta a la propuesta de agrupar lo privado bajo `/hub`).
+- **Contexto:** la ruta `/proyectos` ya la usa el portafolio publico; los proyectos del HUB necesitaban otra.
+- **Decision:** todas las vistas privadas pasan a `/hub` (`/hub`, `/hub/proyectos`, `/hub/integrantes`, `/hub/solicitudes`, `/hub/perfil`); el destino tras el login es `/hub`. Las rutas anteriores (`/panel`, `/perfil`, `/solicitudes`, `/integrantes`) redirigen con 307 desde `next.config.ts`, temporales para no fijarlas en caches mientras la estructura evoluciona. Las pantallas de acceso (`/ingresar`, `/registro`, `/cambiar-contrasena`, recuperacion) no cambian.
+- **Impacto:** el backend no cambia. Enlaces guardados a las rutas anteriores siguen funcionando.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`
