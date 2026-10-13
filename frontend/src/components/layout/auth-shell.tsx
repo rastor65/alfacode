@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Cpu, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeMenu } from "@/components/theme/theme-menu";
@@ -18,50 +18,58 @@ type AuthShellProps = {
 };
 
 /**
- * Marco inmersivo de las pantallas de acceso con Three.js WebGL:
- * - Escena 3D reactiva al cursor con núcleo holográfico y constelación neuronal.
- * - Fondo espacial con gradientes radiales cian y malla cibernética.
- * - Distribución dividida en escritorio (vitrina científica a la izquierda + tarjeta de cristal a la derecha).
- * - Totalmente accesible (prefers-reduced-motion, ARIA y contraste de texto).
+ * Marco de las pantallas de acceso con el logotipo tridimensional oficial de AlfaCode:
+ * - El logotipo 3D se ubica en su propio escenario dedicado en la columna izquierda (sin colisiones).
+ * - Fondo espacial profundo (#030712) con iluminación de acento cian controlada.
+ * - Forzado a estética oscura de alta fidelidad para asegurar contraste y visibilidad perfecta.
+ * - Tarjeta de acceso frosted glass con borde cian reactivo y máxima legibilidad.
  */
 export async function AuthShell({
   title,
   description,
   children,
   footer,
-  badge = "Terminal de Acceso Seguro",
-  heroHeadline = "Arquitectura de Software, Inteligencia Artificial & Rigor Científico",
-  heroSubheadline = "Plataforma central del Semillero AlfaCode para la gestión de proyectos de investigación, repositorios de código y producción científica en la Universidad de La Guajira.",
+  badge = "Terminal de Acceso",
+  heroHeadline = "AlfaCode HUB",
+  heroSubheadline = "Plataforma central del Semillero de Investigación para la gestión de proyectos de software, modelos de inteligencia artificial y producción científica en la Universidad de La Guajira.",
 }: AuthShellProps) {
   const theme = await getThemePreference();
 
   return (
-    <ThemeProvider
-      initialTheme={theme}
-      className="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-[#040810] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200"
-    >
-      {/* 1. Fondo 3D interactivo WebGL (Three.js) */}
-      <Auth3DScene />
+    <ThemeProvider initialTheme={theme}>
+      <div
+        className="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-[#030712] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200"
+        style={
+          {
+            backgroundColor: "#030712",
+            color: "#f8fafc",
+            "--hub-bg": "#030712",
+            "--hub-panel": "rgba(10, 20, 32, 0.85)",
+            "--hub-panel-border": "rgba(103, 232, 249, 0.2)",
+            "--hub-text": "#f8fafc",
+            "--hub-text-soft": "#cbd5e1",
+            "--hub-muted": "#94a3b8",
+            "--hub-accent": "#67e8f9",
+            "--hub-input": "rgba(6, 17, 26, 0.9)",
+            "--hub-input-border": "rgba(255, 255, 255, 0.15)",
+          } as React.CSSProperties
+        }
+      >
+      {/* Luces ambientales suaves de fondo */}
+      <div
+        className="pointer-events-none absolute -top-40 -left-40 size-[500px] rounded-full bg-cyan-600/12 blur-[140px]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-40 -right-40 size-[600px] rounded-full bg-[#0382a1]/15 blur-[150px]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(103,232,249,0.04)_1px,transparent_1px)] [background-size:32px_32px]"
+        aria-hidden="true"
+      />
 
-      {/* 2. Capas atmosféricas de iluminación y rejilla cibernética */}
-      <div
-        className="pointer-events-none absolute -top-40 -left-40 size-[500px] rounded-full bg-cyan-600/15 blur-[120px]"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute -bottom-40 -right-40 size-[600px] rounded-full bg-[#0382a1]/20 blur-[140px]"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 size-[650px] rounded-full bg-cyan-400/10 blur-[160px]"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(103,232,249,0.06)_1px,transparent_1px)] [background-size:28px_28px] opacity-75"
-        aria-hidden="true"
-      />
-
-      {/* 3. Cabecera superior con marca y menú de tema */}
+      {/* Cabecera superior con marca y menú de tema */}
       <header className="relative z-20 mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link
@@ -96,93 +104,51 @@ export async function AuthShell({
         </div>
       </header>
 
-      {/* 4. Contenido central: Split Grid en desktop */}
+      {/* Contenido principal: Grid de 2 columnas sin solapamientos */}
       <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid w-full items-center gap-10 lg:grid-cols-12 lg:gap-14">
-          {/* 4.1. Columna izquierda: Vitrina científica y tecnológica (visible en lg+) */}
-          <div className="hidden lg:col-span-7 lg:block space-y-6">
-            {/* Insignia de estado del nodo */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/25 bg-cyan-950/40 px-3.5 py-1 text-xs font-mono text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-              </span>
-              <span>Nodo Uniguajira · En línea</span>
-              <span className="text-cyan-500/60">/</span>
-              <span className="text-slate-400">Auth TLS 1.3</span>
+        <div className="grid w-full items-center gap-8 lg:grid-cols-12 lg:gap-14">
+          {/* Columna Izquierda: Escenario del Logotipo 3D Oficial de AlfaCode e identidad */}
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
+            {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode */}
+            <div className="relative w-full max-w-[460px] h-[280px] sm:h-[340px] lg:h-[390px] flex items-center justify-center">
+              <Auth3DScene />
             </div>
 
-            {/* Titular hero */}
-            <div className="space-y-3">
-              <h2 className="text-3xl font-extrabold tracking-tight text-white xl:text-4xl leading-tight text-balance">
+            {/* Insignia y textos institucionales */}
+            <div className="space-y-3 max-w-xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-950/40 px-3.5 py-1 text-xs font-mono text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Semillero de Investigación · Universidad de La Guajira</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
                 {heroHeadline}
               </h2>
-              <p className="max-w-xl text-base leading-relaxed text-slate-300">
+
+              <p className="text-sm sm:text-base leading-relaxed text-slate-300">
                 {heroSubheadline}
               </p>
-            </div>
 
-            {/* Tarjetas de capacidades del semillero */}
-            <div className="grid max-w-xl gap-3 sm:grid-cols-3 pt-2">
-              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-md transition hover:border-cyan-400/30 hover:bg-slate-900/70">
-                <div className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/60 text-cyan-300">
-                  <Sparkles size={14} />
-                </div>
-                <h3 className="mt-2 text-xs font-bold text-white">IA & Computación</h3>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  Modelos generativos, agentes y visión aplicados.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-md transition hover:border-cyan-400/30 hover:bg-slate-900/70">
-                <div className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/60 text-cyan-300">
-                  <ShieldCheck size={14} />
-                </div>
-                <h3 className="mt-2 text-xs font-bold text-white">Control RBAC</h3>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  Acceso institucional verificado @uniguajira.edu.co.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-3.5 backdrop-blur-md transition hover:border-cyan-400/30 hover:bg-slate-900/70">
-                <div className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/60 text-cyan-300">
-                  <Cpu size={14} />
-                </div>
-                <h3 className="mt-2 text-xs font-bold text-white">I+D de Software</h3>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  Arquitectura moderna y trazabilidad científica.
-                </p>
-              </div>
-            </div>
-
-            {/* Consola de telemetría */}
-            <div className="max-w-xl rounded-xl border border-cyan-500/15 bg-black/40 p-3 font-mono text-[11px] text-cyan-400/80 backdrop-blur-md">
-              <div className="flex items-center justify-between text-[10px] text-slate-300 border-b border-cyan-500/10 pb-1.5 mb-1.5">
-                <span className="flex items-center gap-1.5">
-                  <span className="size-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  TELEMETRÍA EN TIEMPO REAL
+              {/* Indicadores clave */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
+                <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-mono text-slate-300">
+                  ⚡ 12+ Proyectos Activos
                 </span>
-                <span>REGISTRO: ACTIVO</span>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-slate-400">
-                  &gt; IDENTIDAD: <span className="text-cyan-300">ALFACODE_RESEARCH_CORE</span>
-                </p>
-                <p className="text-slate-400">
-                  &gt; CIFRADO: <span className="text-emerald-400">AES-256-GCM / TLS 1.3</span>
-                </p>
-                <p className="text-slate-400">
-                  &gt; ESTADO: <span className="text-cyan-300">CANAL SEGURO ESTABLECIDO</span>
-                </p>
+                <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-mono text-slate-300">
+                  🔬 Producción Científica
+                </span>
+                <span className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-mono text-slate-300">
+                  🛡️ Red Institucional
+                </span>
               </div>
             </div>
           </div>
 
-          {/* 4.2. Columna derecha: Tarjeta de Acceso con efecto Frosted Glass */}
+          {/* Columna Derecha: Tarjeta Frosted Glass de Ingreso */}
           <div className="lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
             <section
               aria-labelledby="auth-title"
-              className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/80 p-6 sm:p-8 md:p-9 shadow-[0_0_60px_rgba(0,0,0,0.7),0_0_30px_rgba(3,130,161,0.25)] backdrop-blur-2xl transition-all duration-300 hover:border-cyan-400/40"
+              className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-6 sm:p-8 md:p-9 shadow-[0_0_60px_rgba(0,0,0,0.7),0_0_30px_rgba(3,130,161,0.25)] backdrop-blur-2xl transition-all duration-300 hover:border-cyan-400/40"
             >
               {/* Línea superior con gradiente cian */}
               <div
@@ -241,12 +207,13 @@ export async function AuthShell({
         </div>
       </main>
 
-      {/* 5. Pie de página institucional */}
+      {/* Pie de página institucional */}
       <footer className="relative z-20 mx-auto w-full max-w-7xl px-4 py-4 text-center text-xs text-slate-300 sm:px-6 lg:px-8">
         <p>
           © 2026 Semillero de Investigación AlfaCode · Universidad de La Guajira · Todos los derechos reservados.
         </p>
       </footer>
+      </div>
     </ThemeProvider>
   );
 }
