@@ -65,8 +65,8 @@ export function Auth3DScene() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = isLight ? 0.88 : 1.08;
+    renderer.toneMapping = isLight ? THREE.LinearToneMapping : THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = isLight ? 1.0 : 1.08;
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.maxWidth = "100%";
@@ -106,25 +106,25 @@ export function Auth3DScene() {
     }
     const envTexture = new THREE.CanvasTexture(envCanvas);
     envTexture.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = envTexture;
+    scene.environment = isLight ? null : envTexture;
 
     // 2. Luces de estudio cinematográficas calibradas para realzar el azul profundo y cian del isotipo
-    const ambientLight = new THREE.AmbientLight(isLight ? 0x0284c7 : 0x071e2e, isLight ? 0.5 : 2.2);
+    const ambientLight = new THREE.AmbientLight(isLight ? 0xffffff : 0x071e2e, isLight ? 0.55 : 2.2);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(isLight ? 0xe0f2fe : 0xf8fafc, isLight ? 0.85 : 3.0);
+    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 0.75 : 3.0);
     keyLight.position.set(4, 5, 6);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(isLight ? 0x0096c7 : 0x00e5ff, isLight ? 0.8 : 3.2);
+    const fillLight = new THREE.DirectionalLight(isLight ? 0x0284c7 : 0x00e5ff, isLight ? 0.35 : 3.2);
     fillLight.position.set(-5, 2, 4);
     scene.add(fillLight);
 
-    const cyanPointLight = new THREE.PointLight(isLight ? 0x00b4d8 : 0x38bdf8, isLight ? 1.4 : 5.0, 30);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x00a8cc : 0x38bdf8, isLight ? 0.4 : 5.0, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const bottomGlowLight = new THREE.PointLight(0x0382a1, isLight ? 1.6 : 4.5, 20);
+    const bottomGlowLight = new THREE.PointLight(0x0382a1, isLight ? 0.35 : 4.5, 20);
     bottomGlowLight.position.set(0, -3.5, 2);
     scene.add(bottomGlowLight);
 
@@ -142,13 +142,13 @@ export function Auth3DScene() {
     // 4. Anillos Giroscópicos Holográficos PBR de Alta Definición y Balizas Satelitales Duales
     const orbitRingGeometry = new THREE.TorusGeometry(3.0, isLight ? 0.02 : 0.022, 16, 120);
     const orbitRingMaterial = new THREE.MeshStandardMaterial({
-      color: isLight ? 0x0096c7 : 0x38bdf8,
+      color: isLight ? 0x00a8cc : 0x38bdf8,
       roughness: 0.15,
-      metalness: 0.7,
+      metalness: 0.4,
       emissive: isLight ? 0x0284c7 : 0x0ea5e9,
       emissiveIntensity: isLight ? 0.35 : 0.65,
       transparent: true,
-      opacity: isLight ? 0.75 : 0.75,
+      opacity: isLight ? 0.8 : 0.75,
     });
     const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
     orbitRing.rotation.x = Math.PI / 3.2;
@@ -158,13 +158,13 @@ export function Auth3DScene() {
     // Anillo exterior de contrapunto holográfico con radio optimizado para cero recorte lateral
     const outerRingGeometry = new THREE.TorusGeometry(3.65, isLight ? 0.015 : 0.017, 16, 140);
     const outerRingMaterial = new THREE.MeshStandardMaterial({
-      color: isLight ? 0x0284c7 : 0x06b6d4,
+      color: isLight ? 0x0382a1 : 0x06b6d4,
       roughness: 0.2,
-      metalness: 0.7,
-      emissive: isLight ? 0x0369a1 : 0x0891b2,
+      metalness: 0.4,
+      emissive: isLight ? 0x0382a1 : 0x0891b2,
       emissiveIntensity: isLight ? 0.30 : 0.45,
       transparent: true,
-      opacity: isLight ? 0.65 : 0.6,
+      opacity: isLight ? 0.75 : 0.6,
     });
     const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
     outerRing.rotation.x = -Math.PI / 2.8;
@@ -174,11 +174,11 @@ export function Auth3DScene() {
     // Balizas satelitales orbitales duales
     const beaconGeometry = new THREE.SphereGeometry(isLight ? 0.055 : 0.065, 16, 16);
     const beaconMaterial = new THREE.MeshStandardMaterial({
-      color: isLight ? 0x00b4d8 : 0xe0f2fe,
-      emissive: isLight ? 0x0096c7 : 0x22d3ee,
-      emissiveIntensity: 0.9,
+      color: isLight ? 0x00a8cc : 0xe0f2fe,
+      emissive: isLight ? 0x00a8cc : 0x22d3ee,
+      emissiveIntensity: 0.85,
       roughness: 0.1,
-      metalness: 0.8,
+      metalness: 0.7,
     });
     const beacon1 = new THREE.Mesh(beaconGeometry, beaconMaterial);
     const beacon2 = new THREE.Mesh(beaconGeometry, beaconMaterial);
