@@ -1,10 +1,11 @@
 "use client";
 
-import { Atom, LayoutDashboard, type LucideIcon, Menu, X } from "lucide-react";
+import { LayoutDashboard, type LucideIcon, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeMenu } from "@/components/theme/theme-menu";
 import { LogoutButton } from "@/features/auth/components/logout-button";
 import { type RoleCode, type SessionUser, roleLabel } from "@/lib/auth/roles";
@@ -123,7 +124,7 @@ export function AppShell({ user, children }: AppShellProps) {
             href="/panel"
             className="flex min-w-0 items-center gap-2 rounded-md text-sm font-semibold tracking-tight text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
           >
-            <Atom size={18} className="shrink-0 text-hub-accent" aria-hidden="true" />
+            <AlfaCodeSymbol className="size-5 shrink-0" />
             <span className="truncate">
               AlfaCode <span className="font-normal text-hub-muted">HUB</span>
             </span>

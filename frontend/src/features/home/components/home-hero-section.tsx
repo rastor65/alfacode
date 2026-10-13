@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 
+import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ButtonLink } from "@/components/ui/button-link";
 import { homeStats } from "@/features/home/data/home-content";
 import { HomeHeroPipeline } from "@/features/home/components/home-hero-pipeline";
@@ -23,9 +24,11 @@ export function HomeHeroSection() {
         {/* Left Column: Vision & Action */}
         <div className="flex flex-col justify-center">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/50 px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.2)]">
-              <span className="size-2 rounded-full bg-cyan-400 animate-pulse" aria-hidden="true" />
-              Research & Software Lab
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-950/50 py-1 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.2)]">
+              <span className="flex size-5 items-center justify-center rounded-full bg-cyan-500/20 p-0.5">
+                <AlfaCodeSymbol className="size-full" />
+              </span>
+              Semillero de Investigación &amp; Software Lab
             </span>
           </div>
 

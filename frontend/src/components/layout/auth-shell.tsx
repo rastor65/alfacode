@@ -1,6 +1,7 @@
-import { ArrowLeft, Atom } from "lucide-react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
+import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ThemeMenu } from "@/components/theme/theme-menu";
 import { getThemePreference } from "@/lib/theme-server";
@@ -23,8 +24,8 @@ export async function AuthShell({ title, description, children, footer }: AuthSh
           href="/"
           className="flex items-center gap-2.5 rounded-full text-sm font-bold tracking-tight text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
         >
-          <span className="flex size-8 items-center justify-center rounded-full border border-hub-badge-border bg-hub-badge-bg text-hub-accent">
-            <Atom size={16} aria-hidden="true" />
+          <span className="flex size-8 items-center justify-center rounded-full border border-hub-badge-border bg-hub-badge-bg p-1 text-hub-accent">
+            <AlfaCodeSymbol className="size-full" />
           </span>
           <span>
             Alfa<span className="text-hub-accent">Code</span> <span className="font-medium text-hub-muted">HUB</span>

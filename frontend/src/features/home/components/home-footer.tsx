@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Atom, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
+import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { publicNavigation, siteConfig } from "@/config/site";
 
 export function HomeFooter() {
@@ -10,15 +11,15 @@ export function HomeFooter() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-950/40 text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.2)]">
-                <Atom size={20} aria-hidden="true" />
+            <Link href="/" className="group inline-flex items-center gap-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-xl">
+              <span className="flex size-11 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-950/60 p-2 text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.25)] transition-transform duration-300 group-hover:scale-105">
+                <AlfaCodeSymbol className="size-full" />
               </span>
               <div>
-                <span className="block text-base font-bold tracking-wide text-white">
-                  {siteConfig.name}
+                <span className="block text-lg font-bold tracking-tight text-white">
+                  Alfa<span className="bg-gradient-to-r from-cyan-300 to-cyan-400 bg-clip-text text-transparent">Code</span>
                 </span>
-                <span className="block text-xs font-medium text-cyan-200/80">
+                <span className="block text-xs font-mono tracking-wider text-cyan-300/80 uppercase">
                   {siteConfig.tagline}
                 </span>
               </div>

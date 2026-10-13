@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Atom, LogIn, Menu, X } from "lucide-react";
+import { LogIn, Menu, X } from "lucide-react";
 
+import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeMenu } from "@/components/theme/theme-menu";
 import { publicNavigation } from "@/config/site";
 
@@ -21,8 +22,8 @@ export function PublicHeader() {
           className="group flex items-center gap-2.5 rounded-full pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           onClick={() => setMobileMenuOpen(false)}
         >
-          <span className="flex size-8 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-950/60 text-cyan-300 shadow-[0_0_12px_rgba(70,158,180,0.25)] transition-transform duration-300 group-hover:scale-105">
-            <Atom size={16} aria-hidden="true" />
+          <span className="flex size-8 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-950/60 p-1.5 shadow-[0_0_12px_rgba(70,158,180,0.25)] transition-transform duration-300 group-hover:scale-105">
+            <AlfaCodeSymbol className="size-full" />
           </span>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold tracking-tight text-white">
