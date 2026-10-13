@@ -20,7 +20,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
   parsed.paths.forEach((path) => {
     const node = path.userData?.node as { id?: string } | undefined;
     const isDark = node?.id === "isotipo-oscuro" || path.color.getHex() === 0x0382a1;
-    const shapes = SVGLoader.createShapes(path);
+    const shapes = path.toShapes();
 
     // Bisel curvo de alta precisión que captura brillos especulares continuos
     const extrudeSettings: THREE.ExtrudeGeometryOptions = {
@@ -39,27 +39,27 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
 
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x027b96 : 0x0382a1,
-          metalness: isLight ? 0.15 : 0.5,
-          roughness: isLight ? 0.18 : 0.15,
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.06,
-          reflectivity: 0.92,
-          emissive: isLight ? 0x013c4a : 0x012834,
-          emissiveIntensity: isLight ? 0.15 : 0.35,
+          color: isLight ? 0x014050 : 0x0382a1,
+          metalness: isLight ? 0.2 : 0.5,
+          roughness: isLight ? 0.2 : 0.15,
+          clearcoat: 0.9,
+          clearcoatRoughness: 0.08,
+          reflectivity: 0.88,
+          emissive: isLight ? 0x011b22 : 0x012834,
+          emissiveIntensity: isLight ? 0.06 : 0.35,
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x38bdf8 : 0x94eefe,
-          metalness: isLight ? 0.05 : 0.15,
-          roughness: isLight ? 0.08 : 0.07,
+          color: isLight ? 0x0ea5e9 : 0x94eefe,
+          metalness: isLight ? 0.08 : 0.15,
+          roughness: isLight ? 0.1 : 0.07,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.03,
-          transmission: isLight ? 0.22 : 0.15,
+          clearcoatRoughness: 0.04,
+          transmission: isLight ? 0 : 0.15,
           ior: 1.5,
-          reflectivity: 0.98,
-          emissive: isLight ? 0x0ea5e9 : 0x22d3ee,
-          emissiveIntensity: isLight ? 0.22 : 0.75,
+          reflectivity: 0.95,
+          emissive: isLight ? 0x0284c7 : 0x22d3ee,
+          emissiveIntensity: isLight ? 0.12 : 0.75,
           side: THREE.DoubleSide,
         });
 

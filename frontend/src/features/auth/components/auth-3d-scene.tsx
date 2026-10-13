@@ -53,7 +53,7 @@ export function Auth3DScene() {
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 9.4);
+    camera.position.set(0, 0, 10.6);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -89,7 +89,7 @@ export function Auth3DScene() {
 
       // Softbox cenital blanco
       const softbox = envCtx.createRadialGradient(64, 16, 0, 64, 16, 32);
-      softbox.addColorStop(0, isLight ? "rgba(255, 255, 255, 0.95)" : "rgba(34, 211, 238, 0.5)");
+      softbox.addColorStop(0, isLight ? "rgba(255, 255, 255, 0.45)" : "rgba(34, 211, 238, 0.5)");
       softbox.addColorStop(1, "rgba(255, 255, 255, 0)");
       envCtx.fillStyle = softbox;
       envCtx.fillRect(0, 0, 128, 64);
@@ -99,22 +99,22 @@ export function Auth3DScene() {
     scene.environment = envTexture;
 
     // 2. Luces de estudio cinematográficas calibradas para realzar el logotipo
-    const ambientLight = new THREE.AmbientLight(isLight ? 0xffffff : 0x071e2e, isLight ? 2.2 : 3.0);
+    const ambientLight = new THREE.AmbientLight(isLight ? 0xffffff : 0x071e2e, isLight ? 0.65 : 3.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 3.8 : 4.5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 1.8 : 4.5);
     keyLight.position.set(4, 5, 6);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(isLight ? 0xe0f2fe : 0x00e5ff, isLight ? 2.0 : 4.0);
+    const fillLight = new THREE.DirectionalLight(isLight ? 0xe0f2fe : 0x00e5ff, isLight ? 0.6 : 4.0);
     fillLight.position.set(-5, 2, 4);
     scene.add(fillLight);
 
-    const cyanPointLight = new THREE.PointLight(isLight ? 0x22d3ee : 0x38bdf8, isLight ? 4.5 : 7, 30);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x22d3ee : 0x38bdf8, isLight ? 1.4 : 7, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const bottomGlowLight = new THREE.PointLight(isLight ? 0x38bdf8 : 0x0382a1, isLight ? 2.5 : 6, 20);
+    const bottomGlowLight = new THREE.PointLight(isLight ? 0x38bdf8 : 0x0382a1, isLight ? 1.0 : 6, 20);
     bottomGlowLight.position.set(0, -3.5, 2);
     scene.add(bottomGlowLight);
 
@@ -130,11 +130,11 @@ export function Auth3DScene() {
     }
 
     // 4. Anillos Giroscópicos Holográficos Duales y Baliza Orbital
-    const orbitRingGeometry = new THREE.TorusGeometry(3.9, isLight ? 0.012 : 0.02, 16, 120);
+    const orbitRingGeometry = new THREE.TorusGeometry(2.6, isLight ? 0.012 : 0.018, 16, 120);
     const orbitRingMaterial = new THREE.MeshBasicMaterial({
       color: isLight ? 0x0ea5e9 : 0x38bdf8,
       transparent: true,
-      opacity: isLight ? 0.22 : 0.42,
+      opacity: isLight ? 0.32 : 0.42,
     });
     const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
     orbitRing.rotation.x = Math.PI / 3.2;
@@ -142,11 +142,11 @@ export function Auth3DScene() {
     logoGroup.add(orbitRing);
 
     // Anillo exterior de contrapunto holográfico
-    const outerRingGeometry = new THREE.TorusGeometry(4.8, isLight ? 0.008 : 0.012, 16, 140);
+    const outerRingGeometry = new THREE.TorusGeometry(3.3, isLight ? 0.008 : 0.012, 16, 140);
     const outerRingMaterial = new THREE.MeshBasicMaterial({
       color: isLight ? 0x0284c7 : 0x06b6d4,
       transparent: true,
-      opacity: isLight ? 0.12 : 0.22,
+      opacity: isLight ? 0.18 : 0.22,
     });
     const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
     outerRing.rotation.x = -Math.PI / 2.8;
@@ -237,12 +237,15 @@ export function Auth3DScene() {
 
     // 7. Loop de Animación
     let animationFrameId: number;
-    const clock = new THREE.Clock();
+    let lastTime = performance.now();
+    let elapsed = 0;
     let isTabVisible = !document.hidden;
 
     const onVisibilityChange = () => {
       isTabVisible = !document.hidden;
-      if (isTabVisible) clock.getDelta();
+      if (isTabVisible) {
+        lastTime = performance.now();
+      }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
 
@@ -251,8 +254,10 @@ export function Auth3DScene() {
 
       if (!isTabVisible) return;
 
-      const delta = clock.getDelta();
-      const elapsed = clock.getElapsedTime();
+      const now = performance.now();
+      const delta = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      elapsed += delta;
 
       // Suavizado del cursor (amortiguación progresiva)
       const motionScale = prefersReducedMotion ? 0.1 : 1;
@@ -274,9 +279,9 @@ export function Auth3DScene() {
 
       // Movimiento orbital de la baliza luminosa
       const beaconAngle = elapsed * 1.1;
-      beacon.position.x = Math.cos(beaconAngle) * 3.9;
-      beacon.position.z = Math.sin(beaconAngle) * 3.9;
-      beacon.position.y = Math.sin(beaconAngle * 2) * 0.45;
+      beacon.position.x = Math.cos(beaconAngle) * 2.6;
+      beacon.position.z = Math.sin(beaconAngle) * 2.6;
+      beacon.position.y = Math.sin(beaconAngle * 2) * 0.35;
 
       // Luz puntual dinámica que hace deslizar brillos metálicos sobre los biseles
       cyanPointLight.position.x = Math.sin(elapsed * 0.8) * 3.5 - 1.5;

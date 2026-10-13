@@ -36,8 +36,8 @@ export async function AuthShell({
   const theme = await getThemePreference();
 
   return (
-    <ThemeProvider initialTheme={theme} className="public-site flex min-h-screen flex-col justify-between">
-      <div className="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-site-page text-hub-text selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-300">
+    <ThemeProvider initialTheme={theme} className="public-site flex min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden flex-col justify-between">
+      <div className="relative flex min-h-screen lg:h-screen lg:max-h-screen flex-col justify-between overflow-x-hidden lg:overflow-hidden bg-site-page text-hub-text selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-300">
         {/* Atmósfera Ambiental: Nebulosas en capas */}
         <div
           className="pointer-events-none absolute -top-48 -left-48 size-[650px] rounded-full bg-gradient-to-br from-cyan-500/15 via-sky-500/10 to-transparent blur-[160px]"
@@ -69,8 +69,8 @@ export async function AuthShell({
         />
 
         {/* Cabecera superior con barra translúcida institucional */}
-        <header className="relative z-20 mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-2.5 backdrop-blur-xl shadow-site-header transition-colors">
+        <header className="relative z-20 mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8 lg:py-2.5">
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-2 backdrop-blur-xl shadow-site-header transition-colors">
             <Link
               href="/"
               className="group flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
@@ -82,10 +82,6 @@ export async function AuthShell({
                 <span className="text-base font-bold tracking-tight text-white">
                   Alfa<span className="text-hub-accent">Code</span>{" "}
                   <span className="font-mono text-xs font-semibold text-hub-muted">HUB</span>
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-950/50 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
-                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-                  Lab v2.4
                 </span>
               </div>
             </Link>
@@ -104,12 +100,12 @@ export async function AuthShell({
         </header>
 
         {/* Contenido principal: Grid cinematográfico de 2 columnas */}
-        <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid w-full items-center gap-10 lg:grid-cols-12 lg:gap-16">
+        <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-4 sm:px-6 lg:px-8 lg:py-2">
+          <div className="grid w-full items-center gap-8 lg:grid-cols-12 lg:gap-12">
             {/* Columna Izquierda: Escenario 3D del Isotipo Oficial y Ecosistema de Investigación */}
             <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
               {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode */}
-              <div className="relative w-full max-w-[540px] h-[320px] sm:h-[400px] lg:h-[460px] flex items-center justify-center">
+              <div className="relative w-full max-w-[460px] h-[240px] sm:h-[280px] lg:h-[330px] flex items-center justify-center">
                 {/* Halo de resplandor ambiental y pedestal luminoso */}
                 <div
                   className="pointer-events-none absolute inset-x-12 inset-y-8 rounded-full bg-gradient-to-tr from-cyan-500/18 via-teal-500/12 to-transparent blur-[100px]"
@@ -123,8 +119,8 @@ export async function AuthShell({
               </div>
 
               {/* Identidad y foco institucional minimalista */}
-              <div className="space-y-3 max-w-xl w-full pt-1">
-                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-tight">
+              <div className="space-y-2 max-w-xl w-full pt-1">
+                <h1 className="text-2xl sm:text-3xl lg:text-[36px] font-black tracking-tight text-white leading-tight">
                   {heroHeadline === "AlfaCode HUB" ? (
                     <>
                       Alfa<span className="text-hub-accent">Code</span>{" "}
@@ -135,12 +131,12 @@ export async function AuthShell({
                   )}
                 </h1>
 
-                <p className="text-sm sm:text-base leading-relaxed text-slate-300">
+                <p className="text-xs sm:text-sm leading-relaxed text-slate-300">
                   {heroSubheadline}
                 </p>
 
                 {/* 3 Pills minimalistas con áreas de enfoque */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-2">
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
                     <Cpu size={13} className="text-cyan-400" aria-hidden="true" />
                     Inteligencia Artificial
@@ -166,7 +162,7 @@ export async function AuthShell({
               />
               <section
                 aria-labelledby="auth-title"
-                className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-7 sm:p-9 shadow-[var(--panel-shadow),0_0_35px_rgba(3,130,161,0.18)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/45"
+                className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-6 sm:p-7 shadow-[var(--panel-shadow),0_0_35px_rgba(3,130,161,0.18)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/45"
               >
                 {/* Línea superior con gradiente de luz cian */}
                 <div
@@ -175,46 +171,42 @@ export async function AuthShell({
                 />
 
                 {/* Insignia superior de la tarjeta */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
                   <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-950/60 px-3.5 py-1 text-xs font-semibold text-cyan-300 shadow-sm">
                     <span className="flex size-4 items-center justify-center">
                       <AlfaCodeSymbol className="size-full" />
                     </span>
                     <span>{badge}</span>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400/90">
-                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
-                    En línea
-                  </span>
                 </div>
 
                 {/* Título y descripción de la tarjeta */}
-                <div className="mt-5">
+                <div className="mt-3.5">
                   <h2
                     id="auth-title"
-                    className="text-2xl sm:text-[26px] font-bold tracking-tight text-white text-balance"
+                    className="text-xl sm:text-2xl font-bold tracking-tight text-white text-balance"
                   >
                     {title}
                   </h2>
                   {description && (
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-300">
                       {description}
                     </p>
                   )}
                 </div>
 
                 {/* Formulario (Children) */}
-                <div className="mt-6">{children}</div>
+                <div className="mt-4">{children}</div>
 
                 {/* Pie de la tarjeta */}
                 {footer && (
-                  <div className="mt-6 border-t border-white/10 pt-4 text-center text-sm text-slate-400">
+                  <div className="mt-4 border-t border-white/10 pt-3 text-center text-xs sm:text-sm text-slate-400">
                     {footer}
                   </div>
                 )}
 
                 {/* Enlace de regreso */}
-                <p className="mt-5 text-center">
+                <p className="mt-3.5 text-center">
                   <Link
                     href="/"
                     className="inline-flex items-center gap-1.5 rounded-md text-xs text-slate-400 transition hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
@@ -229,7 +221,7 @@ export async function AuthShell({
         </main>
 
         {/* Pie de página institucional */}
-        <footer className="relative z-20 mx-auto w-full max-w-7xl px-4 py-5 text-center text-xs text-slate-400 sm:px-6 lg:px-8 border-t border-white/5">
+        <footer className="relative z-20 mx-auto w-full max-w-7xl px-4 py-2.5 text-center text-xs text-slate-400 sm:px-6 sm:py-3 lg:px-8 border-t border-white/5">
           <p>
             © 2026 Semillero de Investigación AlfaCode · Universidad de La Guajira · Todos los derechos reservados.
           </p>
