@@ -28,7 +28,7 @@ export function Auth3DScene() {
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 9);
+    camera.position.set(0, 0, 9.4);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -40,21 +40,25 @@ export function Auth3DScene() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
 
-    // 2. Luces de estudio para resaltar los biseles metálicos del logo
-    const ambientLight = new THREE.AmbientLight(0x0a1c2e, 2.5);
+    // 2. Luces de estudio cinematográficas para resaltar el clearcoat y biseles PBR
+    const ambientLight = new THREE.AmbientLight(0x071e2e, 3.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.5);
-    keyLight.position.set(5, 5, 8);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 4.5);
+    keyLight.position.set(5, 6, 8);
     scene.add(keyLight);
 
-    const cyanPointLight = new THREE.PointLight(0x00e5ff, 6, 25);
+    const rimDirectionalLight = new THREE.DirectionalLight(0x00e5ff, 4.0);
+    rimDirectionalLight.position.set(-5, 3, -5);
+    scene.add(rimDirectionalLight);
+
+    const cyanPointLight = new THREE.PointLight(0x38bdf8, 7, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const rimPointLight = new THREE.PointLight(0x0382a1, 5, 20);
-    rimPointLight.position.set(0, -3, -3);
-    scene.add(rimPointLight);
+    const bottomGlowLight = new THREE.PointLight(0x0382a1, 6, 20);
+    bottomGlowLight.position.set(0, -3.5, 2);
+    scene.add(bottomGlowLight);
 
     // 3. Grupo Principal del Logotipo 3D Oficial
     const logoGroup = new THREE.Group();
@@ -67,22 +71,42 @@ export function Auth3DScene() {
       console.error("Error al instanciar el logotipo 3D:", err);
     }
 
-    // 4. Anillo Orbital Holográfico y Aura Estelar
-    const orbitRingGeometry = new THREE.TorusGeometry(3.6, 0.02, 16, 120);
+    // 4. Anillos Giroscópicos Holográficos Duales y Baliza Orbital
+    const orbitRingGeometry = new THREE.TorusGeometry(3.9, 0.02, 16, 120);
     const orbitRingMaterial = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.42,
     });
     const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
-    orbitRing.rotation.x = Math.PI / 3.5;
+    orbitRing.rotation.x = Math.PI / 3.2;
     orbitRing.rotation.y = Math.PI / 6;
     logoGroup.add(orbitRing);
 
-    // 4.1. Aura de partículas suaves (sin líneas de telaraña)
-    const particleCount = 70;
+    // Anillo exterior de contrapunto holográfico
+    const outerRingGeometry = new THREE.TorusGeometry(4.8, 0.012, 16, 140);
+    const outerRingMaterial = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4,
+      transparent: true,
+      opacity: 0.22,
+    });
+    const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
+    outerRing.rotation.x = -Math.PI / 2.8;
+    outerRing.rotation.z = Math.PI / 4;
+    logoGroup.add(outerRing);
+
+    // Baliza orbital luminosa
+    const beaconGeometry = new THREE.SphereGeometry(0.065, 16, 16);
+    const beaconMaterial = new THREE.MeshBasicMaterial({
+      color: 0xe0f2fe,
+    });
+    const beacon = new THREE.Mesh(beaconGeometry, beaconMaterial);
+    logoGroup.add(beacon);
+
+    // 4.1. Campo estelar de partículas sutiles
+    const particleCount = 75;
     const particlePositions = new Float32Array(particleCount * 3);
-    const spread = 7;
+    const spread = 8;
 
     for (let i = 0; i < particleCount; i++) {
       particlePositions[i * 3] = (Math.random() - 0.5) * spread;
@@ -115,7 +139,7 @@ export function Auth3DScene() {
       size: 0.22,
       map: particleTexture,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -186,8 +210,15 @@ export function Auth3DScene() {
       logoGroup.rotation.x = -0.04 + swayX - targetY * 0.35;
       logoGroup.rotation.z = targetX * 0.12;
 
-      // Rotación suave del anillo orbital
-      orbitRing.rotation.z += 0.2 * delta;
+      // Rotación suave de los anillos orbitales
+      orbitRing.rotation.z += 0.22 * delta;
+      outerRing.rotation.z -= 0.16 * delta;
+
+      // Movimiento orbital de la baliza luminosa
+      const beaconAngle = elapsed * 1.1;
+      beacon.position.x = Math.cos(beaconAngle) * 3.9;
+      beacon.position.z = Math.sin(beaconAngle) * 3.9;
+      beacon.position.y = Math.sin(beaconAngle * 2) * 0.45;
 
       // Luz puntual dinámica que hace deslizar brillos metálicos sobre los biseles
       cyanPointLight.position.x = Math.sin(elapsed * 0.8) * 3.5 - 1.5;
@@ -210,6 +241,10 @@ export function Auth3DScene() {
 
       orbitRingGeometry.dispose();
       orbitRingMaterial.dispose();
+      outerRingGeometry.dispose();
+      outerRingMaterial.dispose();
+      beaconGeometry.dispose();
+      beaconMaterial.dispose();
       particleGeometry.dispose();
       particleMaterial.dispose();
       particleTexture.dispose();

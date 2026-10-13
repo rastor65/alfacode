@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight, Lock, Mail, Shield } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,7 @@ export function LoginForm({ next }: LoginFormProps) {
         autoComplete="email"
         inputMode="email"
         placeholder="nombre@uniguajira.edu.co"
+        icon={<Mail size={16} aria-hidden="true" />}
         required
         maxLength={254}
         hint="Usa tu correo @uniguajira.edu.co."
@@ -72,6 +73,7 @@ export function LoginForm({ next }: LoginFormProps) {
         name="password"
         type="password"
         autoComplete="current-password"
+        icon={<Lock size={16} aria-hidden="true" />}
         required
         maxLength={256}
         error={fieldErrors.password}

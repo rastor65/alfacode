@@ -9,6 +9,7 @@ type FormFieldProps = Omit<ComponentProps<"input">, "id"> & {
   label: string;
   hint?: string;
   error?: string;
+  icon?: React.ReactNode;
 };
 
 const inputClassName =
@@ -18,7 +19,7 @@ const inputClassName =
  * Campo con etiqueta, ayuda y error asociados por `aria-describedby`. Los campos de
  * contrasena incluyen un boton para mostrar u ocultar lo escrito.
  */
-export function FormField({ label, hint, error, type = "text", className, ...props }: FormFieldProps) {
+export function FormField({ label, hint, error, icon, type = "text", className, ...props }: FormFieldProps) {
   const id = useId();
   const [revealed, setRevealed] = useState(false);
   const isPassword = type === "password";
@@ -30,6 +31,14 @@ export function FormField({ label, hint, error, type = "text", className, ...pro
         {label}
       </label>
       <div className="relative">
+        {icon && (
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-cyan-400/60"
+            aria-hidden="true"
+          >
+            {icon}
+          </div>
+        )}
         <input
           id={id}
           type={isPassword && revealed ? "text" : type}
@@ -37,6 +46,7 @@ export function FormField({ label, hint, error, type = "text", className, ...pro
           aria-describedby={describedBy}
           className={cn(
             inputClassName,
+            icon && "pl-11",
             isPassword && "pr-11",
             error ? "border-hub-field-error" : "border-hub-input-border hover:border-hub-muted",
           )}

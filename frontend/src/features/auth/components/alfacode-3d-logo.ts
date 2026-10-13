@@ -10,7 +10,10 @@ const SVG_DATA = `
 `;
 
 export function create3DAlfaCodeLogo(): THREE.Group {
-  const group = new THREE.Group();
+  const rootGroup = new THREE.Group();
+  const logoGroup = new THREE.Group();
+  rootGroup.add(logoGroup);
+
   const loader = new SVGLoader();
   const parsed = loader.parse(SVG_DATA);
 
@@ -19,43 +22,100 @@ export function create3DAlfaCodeLogo(): THREE.Group {
     const isDark = node?.id === "isotipo-oscuro" || path.color.getHex() === 0x0382a1;
     const shapes = SVGLoader.createShapes(path);
 
+    // Bisel controlado y fino para evitar que los vértices se crucen o produzcan facetas negras
     const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      depth: 28,
+      depth: isDark ? 26 : 30,
       bevelEnabled: true,
-      bevelSegments: 4,
+      bevelSegments: 2,
       steps: 1,
-      bevelSize: 3,
-      bevelThickness: 3,
+      bevelSize: 0.6,
+      bevelThickness: 0.8,
     };
 
     const geometry = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
-    geometry.center();
-    // Invertir Y mediante rotación para conservar el orden de devanado (winding order) y normales correctas
+    // Invertir Y para corregir coordenadas SVG sin alterar el centro relativo entre piezas
     geometry.rotateX(Math.PI);
-    geometry.scale(0.0075, 0.0075, 0.0075);
     geometry.computeVertexNormals();
 
     const material = isDark
-      ? new THREE.MeshStandardMaterial({
-          color: 0x0382a1,
-          roughness: 0.25,
-          metalness: 0.85,
-          emissive: 0x01303d,
-          emissiveIntensity: 0.45,
+      ? new THREE.MeshPhysicalMaterial({
+          color: 0x02485c,
+          metalness: 0.9,
+          roughness: 0.2,
+          clearcoat: 0.85,
+          clearcoatRoughness: 0.08,
+          reflectivity: 0.9,
+          emissive: 0x012834,
+          emissiveIntensity: 0.4,
           side: THREE.DoubleSide,
         })
-      : new THREE.MeshStandardMaterial({
-          color: 0x94eefe,
-          roughness: 0.15,
-          metalness: 0.5,
+      : new THREE.MeshPhysicalMaterial({
+          color: 0x67e8f9,
+          metalness: 0.28,
+          roughness: 0.09,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.04,
+          transmission: 0.15,
+          ior: 1.48,
+          reflectivity: 0.95,
           emissive: 0x22d3ee,
-          emissiveIntensity: 0.65,
+          emissiveIntensity: 0.75,
           side: THREE.DoubleSide,
         });
 
     const mesh = new THREE.Mesh(geometry, material);
-    group.add(mesh);
+
+    // Separación física en profundidad Z:
+    // La cinta clara (primer plano) queda al frente (+10) y el cuerpo oscuro de base detrás (-10)
+    // Esto garantiza que sus bordes NUNCA se mezclen ni se solapen en 3D
+    mesh.position.z = isDark ? -10 : 10;
+
+    logoGroup.add(mesh);
   });
 
-  return group;
+  // Centrar el logotipo completo como un conjunto UNIFICADO, preservando la alineación exacta entre ambas piezas
+  const box = new THREE.Box3().setFromObject(logoGroup);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  logoGroup.position.x = -center.x;
+  logoGroup.position.y = -center.y;
+  logoGroup.position.z = -center.z;
+
+  // Escala unificada del isotipo
+  rootGroup.scale.set(0.0085, 0.0085, 0.0085);
+
+  // Pedestal holográfico proyectado en el plano inferior
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0, "rgba(34, 211, 238, 0.4)");
+      grad.addColorStop(0.35, "rgba(3, 130, 161, 0.18)");
+      grad.addColorStop(0.7, "rgba(6, 182, 212, 0.04)");
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+      const groundTex = new THREE.CanvasTexture(canvas);
+      const groundGeo = new THREE.PlaneGeometry(900, 900);
+      const groundMat = new THREE.MeshBasicMaterial({
+        map: groundTex,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+      groundMesh.rotation.x = -Math.PI / 2;
+      groundMesh.position.y = -320;
+      rootGroup.add(groundMesh);
+    }
+  } catch {
+    // Si canvas 2D no está disponible, continuar sin pedestal
+  }
+
+  return rootGroup;
 }
