@@ -23,4 +23,4 @@ Esta carpeta contiene guias de trabajo y estado operativo. No redefine requisito
 
 ## Punto de partida
 
-Fase 0; `I-01` esta implementada y verificada tecnicamente, pendiente de aprobacion explicita del responsable. No hay una nueva iteracion autorizada. PostgreSQL queda pausado temporalmente; el trabajo inmediato de datos debe verificarse solo con SQLite hasta nueva instruccion.
+Fase 0; `I-03` esta implementada y verificada tecnicamente, pendiente de aprobacion explicita del responsable. No hay una nueva iteracion autorizada. PostgreSQL queda pausado temporalmente; el trabajo inmediato de datos debe verificarse solo con SQLite hasta nueva instruccion.

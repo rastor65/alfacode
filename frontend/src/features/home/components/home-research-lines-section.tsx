@@ -22,7 +22,7 @@ export function HomeResearchLinesSection({
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-[#7ed4e8]">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-site-eyebrow">
               <span className="size-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
               Ecosistema Científico
             </span>

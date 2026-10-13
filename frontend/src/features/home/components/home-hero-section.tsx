@@ -9,7 +9,7 @@ export function HomeHeroSection() {
     <section className="node-grid relative overflow-hidden border-b border-cyan-500/10 pt-28 pb-16 lg:pt-32 lg:pb-24">
       {/* Soft gradient bottom blend */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#071018] via-[#071018]/80 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-site-bg via-site-bg/80 to-transparent"
         aria-hidden="true"
       />
 
@@ -31,7 +31,7 @@ export function HomeHeroSection() {
 
           <h1 className="text-balance mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-6xl xl:text-7xl">
             Investigamos problemas.{" "}
-            <span className="block bg-gradient-to-r from-white via-cyan-100 to-[#7ed4e8] bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-white via-cyan-100 to-site-eyebrow bg-clip-text text-transparent">
               Construimos soluciones.
             </span>
           </h1>
@@ -60,10 +60,10 @@ export function HomeHeroSection() {
                   className="glass-card-interactive rounded-xl p-4"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-2xl font-bold text-[#e1feff]">
+                    <span className="font-mono text-2xl font-bold text-site-highlight">
                       {stat.value}
                     </span>
-                    <Icon size={18} className="text-[#7ed4e8]" aria-hidden="true" />
+                    <Icon size={18} className="text-site-eyebrow" aria-hidden="true" />
                   </div>
                   <p className="mt-2 text-xs font-semibold text-slate-200">
                     {stat.label}

@@ -29,6 +29,149 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Justificacion:** reducir alcance operativo mientras se construye la base inicial.
 - **Impacto:** migraciones y datos se verifican en SQLite hasta nueva autorizacion; no se debe declarar compatibilidad PostgreSQL completada.
 
+### DEC-004 - Aprobacion de I-01, I-02, I-03 y cierre de Fase 0
+
+- **Fecha:** 2026-10-12
+- **Estado:** aprobada.
+- **Decision:** el responsable aprueba I-01, I-02 e I-03 y autoriza continuar con la siguiente iteracion (I-04, inicio de Fase 1).
+- **Aprobacion del responsable:** confirmada en la conversacion de trabajo del 2026-10-12 ("i 01, i 02 e i 03 las apruebo, continua con la siguiente").
+
+### DEC-005 - Estrategia de sesion y alcance de I-04
+
+- **Fecha:** 2026-10-12
+- **Estado:** aplicada en I-04; derivada sin cambios de `plan-desarrollo.md` seccion 2.3, que ya fija la implementacion.
+- **Decision:** sesion opaca revocable en tabla `sessions`; token aleatorio de 32 bytes enviado solo en cookie `HttpOnly`; en base de datos se guarda unicamente su hash SHA-256; duracion 7 dias sin renovacion silenciosa; cada validacion exige sesion no revocada, no vencida y usuario `active`. Contrasenas con Argon2id (se instalara al implementar login, F1-05).
+- **Detalles de implementacion:** IDs UUID generados en la aplicacion; roles institucionales insertados por seed idempotente (`npm run backend:seed:roles`), no por migracion; la migracion `IdentityBase1728700000000` falla explicitamente en PostgreSQL hasta que se retome (DEC-003).
+- **Pendiente para iteraciones siguientes:** tablas `membership_requests`, `invitations` y `verification_tokens` (resto de F1-01), login/logout/me, cookie, CSRF y rate limit. Atendido en I-05 (DEC-006).
+- **Aprobacion del responsable:** confirmada junto con la aprobacion de I-04 (DEC-007).
+
+### DEC-006 - Protecciones de autenticacion de I-05 e IP del cliente
+
+- **Fecha:** 2026-10-13
+- **Estado:** aplicada en I-05; pendiente de revision del responsable.
+- **Contexto:** el responsable autorizo I-05 incluyendo CSRF, rate limit y "todas las protecciones necesarias".
+- **Decisiones:**
+  - **Rutas privadas por defecto:** guard global; solo `@Public()` (health, login) queda abierto. Roles con `@RequireRoles()` evaluados en backend (union de roles).
+  - **CSRF:** patron sincronizador ligado a la sesion. Al iniciar sesion se genera un token CSRF; se guarda su hash en `sessions.csrf_token_hash` y su valor viaja en la cookie legible `alfacode_csrf` y en el cuerpo del login. Toda operacion mutable autenticada exige la cabecera `X-CSRF-Token` correcta. Ademas, toda operacion mutable (incluido login) exige `Origin`/`Referer` en `CORS_ORIGINS`.
+  - **Rate limit:** en memoria, ventana fija de 15 min, contando **solo intentos fallidos** de login: 5 por cuenta+IP (se reinicia al acertar), 20 por cuenta desde cualquier IP y 50 por IP. Asi un atacante no bloquea al dueno de la cuenta en otra red y una red compartida (NAT del campus) no se bloquea por los aciertos de sus usuarios. Ademas, 300 peticiones/min por IP en toda la API. Solo valido con una instancia del backend; con replicas debe moverse a un almacen compartido.
+  - **Concurrencia de Argon2id:** maximo 4 verificaciones simultaneas (64 MiB cada una) y 100 en espera; por encima responde 503 `SERVICE_BUSY`. El hash ficticio se precalcula al arrancar.
+  - **Login:** Argon2id (64 MiB, t=3, p=4), rehash automatico si cambian parametros, verificacion contra hash ficticio si el correo no existe (sin enumeracion por tiempo ni por mensaje), estado de cuenta revelado solo tras contrasena correcta, rotacion de sesion al volver a iniciar sesion.
+  - **Validacion:** DTO validados con una clase explicita por endpoint (`DtoValidationPipe`), porque `tsx` no emite metadatos y un `ValidationPipe` global se saltaria la validacion en desarrollo. Se rechazan propiedades no declaradas.
+  - **Otros:** `helmet`, errores uniformes `{code, message, details}` sin trazas, limite de cuerpo JSON 100 kB, limpieza horaria de sesiones vencidas.
+- **Hallazgo (IP del cliente):** verificado con un servidor de eco que el rewrite de Next.js 16 **no agrega** `X-Forwarded-For` y **reenvia sin filtrar** el que envie el cliente; ademas Next.js ya no expone la IP en `proxy.ts` ni en Route Handlers cuando se aloja por cuenta propia.
+- **Correccion (2026-10-13, por instruccion del responsable):** el frontend se ejecuta con un **servidor personalizado** documentado por Next.js (`frontend/server/index.mjs`), unico punto con acceso al socket real. Antes de pasar la peticion a Next.js (incluidas conexiones WebSocket), `server/client-ip.mjs` elimina `X-Forwarded-For`, `X-Real-IP` y `Forwarded` recibidos y escribe una sola `X-Forwarded-For` con la IP real: la del socket si Next.js recibe conexiones directas (`FRONTEND_TRUSTED_PROXY_HOPS=0`), o la entrada agregada por el proxy mas externo si hay N proxies de confianza delante. El backend confia solo en ese salto: `TRUST_PROXY=loopback` por defecto fuera de produccion.
+- **Requisito para produccion:** configurar `FRONTEND_TRUSTED_PROXY_HOPS` segun los proxies que haya delante de Next.js, y en el backend `TRUST_PROXY` con la direccion o subred del servidor de Next.js (el backend no debe ser accesible publicamente si confia en esa cabecera). Con `NODE_ENV=production` el backend **no arranca** si `TRUST_PROXY` o `CORS_ORIGINS` no estan definidos explicitamente, o si `CORS_ORIGINS` contiene origenes que no son `https://`. `TRUST_PROXY=false` explicito solo es valido si el backend recibe las conexiones directamente. La topologia concreta debe confirmarse al planear el despliegue.
+- **Aprobacion del responsable:** pendiente.
+
+### DEC-007 - Aprobacion de I-04 y autorizacion de I-05
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada.
+- **Decision:** el responsable aprueba I-04 y autoriza I-05, incluyendo CSRF, rate limit y todas las protecciones necesarias.
+- **Aprobacion del responsable:** confirmada en la conversacion de trabajo ("apruebo i 04, autorizo i 05, incluye csrf, rate limit y todas las protecciones necesarias").
+
+### DEC-008 - Aprobacion de I-05 y autorizacion de I-06
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada.
+- **Decision:** el responsable aprueba I-05 (incluidas las correcciones de hallazgos y la IP real del cliente) y autoriza I-06.
+- **Aprobacion del responsable:** confirmada en la conversacion de trabajo ("apruebo i 05, continua con i 06"). Con ello DEC-006 queda aprobada.
+
+### DEC-009 - Vinculacion de integrantes (I-06)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aplicada en I-06; pendiente de revision del responsable.
+- **Decisiones:**
+  - **Primer administrador (F1-04):** comando `npm run backend:bootstrap:admin`, interactivo; la contrasena se introduce en ejecucion sin mostrarse. Falla si ya existe cualquier usuario con rol `admin`, si el correo ya existe o si faltan los roles. El correo queda verificado porque lo declara quien ejecuta el comando.
+  - **Correo (F1-11):** interfaz `Mailer` reemplazable con `outbox` (desarrollo: un `.eml` por correo en `backend/data/outbox/`, ignorado por Git), `memory` (pruebas) y `none`. En produccion solo se admite `none` hasta integrar un correo real; con `none` el registro publico responde 503 `REGISTRATION_DISABLED` (plan, seccion 2.3) y la invitacion devuelve el enlace una sola vez a quien invita (`delivery: "manual"`).
+  - **Enlaces:** `${APP_PUBLIC_URL}/verificar-correo#token=...` e `${APP_PUBLIC_URL}/invitacion#token=...`. El token viaja en el fragmento, que el navegador no envia al servidor ni a logs. Las paginas del frontend que los consumen corresponden a F1-14.
+  - **Registro (F1-08):** respuesta 202 identica exista o no el correo (a una cuenta existente se le envia un aviso sin enlace); el hash Argon2id se calcula en ambos casos. El correo se envia dentro de la transaccion. Verificacion valida 24 h y de un solo uso. Limite: 10 registros/hora y 20 verificaciones/15 min por IP.
+  - **Aprobacion (F1-09):** solo `admin`/`coordinator`; solo se aprueba si el correo esta verificado (409 `EMAIL_NOT_VERIFIED`); transicion condicionada a `pending` (409 `REQUEST_ALREADY_RESOLVED`); registra autor, fecha, comentario y rol. El rechazo deja la cuenta en `rejected`.
+  - **Invitaciones (F1-10):** 72 h, un solo uso, hash del token; una nueva invitacion revoca las abiertas para el mismo correo; no se invita a correos con cuenta existente (cualquier estado; 409). La aceptacion crea la cuenta `active` con correo verificado y el rol autorizado, sin solicitud publica. Limite: 10 aceptaciones/15 min por IP.
+  - **Roles:** `admin` asigna cualquier rol; `coordinator` solo `teacher_leader`, `researcher` y `student` (403 `ROLE_NOT_ASSIGNABLE`).
+  - **Contrasenas nuevas:** de 12 a 128 caracteres.
+  - **Auditoria:** tabla `audit_events` (actor, accion, objetivo, detalles JSON sin secretos), escrita en la misma transaccion que el cambio. Sin clave foranea al actor, para conservar el historial.
+- **Limites conocidos:** un correo rechazado o con registro pendiente no puede recibir invitacion ni registrarse de nuevo hasta que exista administracion de integrantes (F1-13). No hay reenvio de verificacion.
+- **Aprobacion del responsable:** pendiente.
+
+### DEC-010 - Solo correos institucionales @uniguajira.edu.co
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada por instruccion del responsable ("agrega la validacion para que los unicos correos autorizados sean los del dominio @uniguajira.edu.co"); implementada dentro de I-06.
+- **Decision:** solo se admiten correos cuyo dominio sea exactamente `uniguajira.edu.co` (comparacion de lo que sigue a la ultima `@`, sin distinguir mayusculas). Se rechazan subdominios (`@estudiantes.uniguajira.edu.co`) e imitaciones (`@uniguajira.edu.co.evil.com`).
+- **Alcance:** la regla se aplica en todos los puntos de entrada de correo: registro, creacion de invitaciones, aceptacion de invitaciones (por si la politica cambio despues de emitirlas), comando de bootstrap del administrador y login (ninguna cuenta fuera del dominio puede iniciar sesion aunque existiera). Respuesta: 400 `EMAIL_DOMAIN_NOT_ALLOWED`.
+- **Configuracion:** `ALLOWED_EMAIL_DOMAINS` (lista separada por comas), con `uniguajira.edu.co` por defecto; valores invalidos impiden arrancar.
+- **Subdominios:** el responsable confirmo el 2026-10-13 que la universidad no usa subdominios de correo; la comparacion exacta queda como definitiva.
+
+### DEC-011 - Aprobacion de I-06 y autorizacion de I-07
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada.
+- **Decision:** el responsable aprueba I-06 (incluida la restriccion de dominio DEC-010) y autoriza I-07. Con ello DEC-009 queda aprobada.
+- **Aprobacion del responsable:** confirmada en la conversacion de trabajo ("apruebo i 06, puedes continuar con i 07").
+
+### DEC-012 - Recuperacion, perfil y administracion de integrantes (I-07)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aplicada en I-07; pendiente de revision del responsable.
+- **Recuperacion (F1-06):** `POST /auth/forgot-password` responde 202 identico exista o no la cuenta; solo cuentas activas y verificadas reciben correo, que se envia sin esperar para no delatar la cuenta por tiempo. Token de un solo uso valido 30 minutos en `#token=` de `/restablecer-contrasena`; una nueva solicitud invalida la anterior. `POST /auth/reset-password` revoca todas las sesiones y se audita. Limites: 10 solicitudes/15 min por IP, 3/hora por cuenta, 10 confirmaciones/15 min por IP. Sin correo real responde 503 `PASSWORD_RESET_DISABLED` (plan, seccion 2.3).
+- **Perfil (F1-12):** `GET/PATCH /users/me`; solo `fullName` es editable y cualquier otro campo se rechaza con 400.
+- **Integrantes (F1-13):**
+  - `GET /users`: cualquier integrante ve solo activos con `id`, `fullName` y `roles`, busca por nombre y filtra por rol; las autoridades ven ademas correo, estado y verificacion, buscan tambien por correo y filtran por estado. La busqueda es literal (se escapan `%` y `_`).
+  - `GET /users/:id`: solo autoridades.
+  - `PATCH /users/:id/status`: transiciones `active -> inactive`, `inactive -> active` y `rejected -> active` (esta ultima exige `roleCode` si la persona no tiene roles y correo verificado); las cuentas `pending` se resuelven desde la cola. Desactivar revoca sus sesiones de inmediato.
+  - **Rutas nuevas, no listadas en el plan:** `POST /users/:id/roles` y `DELETE /users/:id/roles/:roleCode` para asignar y retirar roles institucionales.
+  - Reglas: nadie cambia su propio estado ni sus roles; un coordinator no asigna ni retira `admin`/`coordinator` ni administra a personas con esos roles; una cuenta activa conserva al menos un rol; nunca se deja el sistema sin un `admin` activo (defensa en profundidad: por la API no es alcanzable porque quien actua seria otro admin activo). No hay borrado de usuarios.
+  - Todo cambio de estado o rol se audita con actor, valores anteriores y nuevos y motivo.
+- **Aprobacion del responsable:** pendiente.
+
+### DEC-013 - Aprobacion de I-07 y autorizacion de I-08 por fases
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada.
+- **Decision:** el responsable aprueba I-07 (con ello DEC-012) y autoriza I-08, pidiendo dividir las tareas grandes en fases. I-08 (F1-14, pantallas de acceso) se divide en: I-08.1 base, login, panel minimo y logout; I-08.2 registro, verificacion de correo y aceptacion de invitacion; I-08.3 recuperacion y restablecimiento de contrasena y repaso de estados y accesibilidad. Cada fase se entrega para revision antes de seguir.
+- **Aprobacion del responsable:** confirmada en la conversacion de trabajo ("apruebo i 07, continua con i 08, recuerda que si es una tarea grande, dividirla en varias fases").
+
+### DEC-014 - Arquitectura de autenticacion en el frontend (I-08.1)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aplicada en I-08.1; pendiente de revision del responsable.
+- **Decision:** los formularios son componentes de cliente que llaman a `/api/v1` en el mismo origen (`src/lib/api/client.ts`), no Server Actions. Asi la cookie `HttpOnly` la fija el propio backend, el navegador envia `Origin` y la IP real llega por el servidor personalizado: se reutilizan los controles ya probados (origen, CSRF, limites por IP). En operaciones mutables el cliente reenvia en `X-CSRF-Token` el valor de la cookie `alfacode_csrf`.
+- **Sesion en el servidor:** `src/lib/auth/session.ts` (`server-only`) valida la cookie contra `GET /auth/me` en cada renderizado, memoizado por peticion con `cache` y reenviando la IP real del cliente. Las paginas protegidas llaman a `requireSessionUser` en la propia pagina (no solo en un layout). Es una comprobacion para decidir que mostrar; la autorizacion efectiva sigue en el backend.
+- **Rutas:** `/ingresar` (login, `noindex`) y `/panel` (minimo, protegido, `noindex`). El destino `?next=` se valida con `safeNextPath` contra redirecciones abiertas.
+- **Layout de vistas privadas (instruccion del responsable, 2026-10-13):** header superior, menu lateral y contenido (`src/components/layout/app-shell.tsx`), aplicado con el grupo de rutas `src/app/(privado)/` sin cambiar URLs. A peticion del responsable se hizo sutil: header fijo con linea inferior y fondo translucido, menu lateral separado por una linea fina, contenido directamente sobre el fondo; el selector de tema y "Cerrar sesion" (variante `ghost`) estan al pie del menu lateral. El selector de tema es un desplegable (`src/components/theme/theme-menu.tsx`, patron de menu WAI-ARIA con `menuitemradio`): fila en el menu lateral que abre hacia arriba, e icono en el header de las pantallas de acceso. Por debajo de `lg` el menu lateral se abre desde un boton del header (cierra con Escape, clic fuera o al navegar). El layout solo obtiene el usuario para mostrarlo; cada pagina verifica la sesion. El menu solo lista vistas ya implementadas.
+- **Temas (instruccion del responsable, 2026-10-13):** las vistas del HUB (acceso y privadas) admiten claro, oscuro y sistema; por defecto sistema. Los colores son variables CSS (`--hub-*` en `globals.css`) que cambian segun `data-theme` sobre `.hub-theme`; el modo sistema lo resuelve `prefers-color-scheme` sin JavaScript. La preferencia se guarda en la cookie no sensible `alfacode_theme` (1 ano, `SameSite=Lax`) y el servidor la aplica al renderizar, por lo que no hay parpadeo ni script en linea. Contraste de los tokens verificado contra WCAG AA (minimo 4,71:1). **Portafolio publico (instruccion del responsable, 2026-10-13):** tambien admite los tres temas, con la misma cookie y el mismo desplegable en el header publico (icono junto a "Ingresar"). `PublicThemeProvider` envuelve la portada y `PublicPageShell` con la clase `.public-site`; como sus componentes se escribieron con la paleta de Tailwind en oscuro, en claro `.public-site` reasigna esa paleta (`white`, `slate-*`, `cyan-*`, `emerald-400`) y los colores que no son de la paleta pasan a tokens `--site-*`, de modo que el modo oscuro no cambia (salvo dos rotulos que pasan de opacidad 70 % a 80 % para cumplir contraste en claro). Consecuencia: las rutas publicas leen la cookie y pasan de prerenderizadas a renderizadas por peticion, igual que las pantallas de acceso. Contraste del texto en claro verificado contra WCAG AA (minimo 4,67:1).
+- **Enlaces con token (I-08.2):** `/verificar-correo` e `/invitacion` leen el token del fragmento en el navegador con `useSyncExternalStore` (sin desajuste de hidratacion), lo quitan de la barra de direcciones tras usarlo y declaran `referrer: no-referrer`. La verificacion de correo exige pulsar un boton, para que los filtros de correo que abren enlaces automaticamente no consuman el token de un solo uso.
+- **Pruebas:** se agrega `tsx@4.23.15` como dependencia de desarrollo del frontend para probar modulos TypeScript con `node:test` (resuelve los alias `@/`).
+- **Hallazgo:** `npm audit` del frontend reporta 5 vulnerabilidades altas previas en la cadena de ESLint (`braces` via `eslint-config-next`), solo de desarrollo; `npm audit --omit=dev` reporta 0. La correccion automatica bajaria `eslint-config-next` a 14 (cambio incompatible), por lo que no se aplico.
+- **Aprobacion del responsable:** pendiente.
+
+### DEC-015 - Correo real por SMTP de Google
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada por instruccion del responsable ("quiero usar el smtp de google"); implementada, pendiente de la prueba funcional con credenciales reales.
+- **Decision:** nuevo transporte `MAIL_TRANSPORT=smtp` con `nodemailer@10.0.11` (con tipos propios, sin dependencias; se eligio una version con 16 dias publicada en lugar de la 10.1.0 de 2 dias). Por defecto `smtp.gmail.com:465` con TLS implicito (en 587 se exige STARTTLS), TLS minimo 1.2 y tiempos de espera de 10 a 20 s. Credenciales solo por variables de entorno (`SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`); si faltan, el backend no arranca. Al arrancar se comprueba la conexion en segundo plano y se registra el resultado sin secretos. En produccion se admiten `smtp` o `none`.
+- **Autenticacion de Google:** el usuario y la contrasena normales ya no sirven por SMTP; se requiere una contrasena de aplicacion (16 caracteres), que exige verificacion en dos pasos. En cuentas de una organizacion (Google Workspace) el administrador puede tenerla deshabilitada; alternativas: pedir a TI que la habilite, usar OAuth 2.0 o el servicio SMTP relay de Workspace (cambios futuros), o una cuenta personal de Gmail.
+- **Cambio de diseno:** registro e invitaciones envian el correo despues de confirmar la transaccion (antes se enviaba dentro), para no bloquear SQLite durante el envio por red. Si el envio falla se compensa: el registro pendiente se borra (con su solicitud y token; queda la auditoria `user.registration_rolled_back`) y la invitacion se revoca (`invitation.revoked`); la API responde 503 `MAIL_DELIVERY_FAILED`. Un registro con correo existente y uno nuevo responden igual ante el fallo. La recuperacion de contrasena ya enviaba despues de confirmar y sin esperar.
+- **Prueba funcional:** `npm run backend:mail:test -- destinatario@uniguajira.edu.co` comprueba conexion y credenciales y envia un correo de prueba.
+- **Aprobacion del responsable:** decision confirmada; falta su prueba con credenciales reales.
+
+### DEC-016 - Solicitud sin contrasena y contrasena temporal al aprobar
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada por instruccion del responsable ("cuando un usuario solicita unirse, no debe llenar su contrasena ... si la acepta, se debe autogenerar una contrasena ... y que el sistema le obligue a cambiarla apenas inicie sesion"). Opciones confirmadas por el responsable: se quita la verificacion previa del correo; las invitaciones no cambian.
+- **Conflicto con el plan:** `plan-desarrollo.md` F1-08 pide verificar el correo antes de aprobar y lista `POST /auth/verify-email`. Por la jerarquia de decisiones prevalece la instruccion del responsable; el plan no se modifica y este registro documenta la diferencia. La propiedad del correo se sigue comprobando: al usar la contrasena temporal enviada a el (o un enlace de recuperacion).
+- **Flujo:**
+  1. `POST /auth/register` recibe nombre, correo y mensaje (una contrasena se rechaza con 400). Crea el usuario `pending` con una contrasena inutilizable (hash de un secreto aleatorio) y la solicitud `pending`. No envia correos. Respuesta identica exista o no la cuenta.
+  2. Al aprobar se activa la cuenta, se asigna el rol y se genera una contrasena temporal de 16 caracteres aleatorios (aprox. 93 bits, sin caracteres ambiguos), valida 72 h; solo se guarda su hash. Se envia por correo despues de confirmar.
+  3. En el primer ingreso con la temporal el correo queda verificado (`user.email_verified`, fuente `temporary_password`). Mientras `must_change_password` sea verdadero, el backend responde 403 `PASSWORD_CHANGE_REQUIRED` en toda ruta salvo `GET /auth/me`, `POST /auth/logout` y `POST /auth/change-password`. El frontend redirige a `/cambiar-contrasena`.
+  4. `POST /auth/change-password` (contrasena actual + nueva) quita la obligacion, invalida la temporal y revoca las demas sesiones; limita los fallos con la contrasena actual a 5 cada 15 minutos.
+- **Entrega y fallos:** respuesta de aprobacion con `credentials.delivery`: `email`, `manual` (sin SMTP: la contrasena se devuelve una sola vez a quien aprueba) o `failed` (la aprobacion se mantiene). `POST /users/:id/temporary-password` (admin/coordinator, nunca sobre la propia cuenta ni sobre quien no puede administrar, solo cuentas activas) genera una nueva temporal, revoca sesiones y la entrega. Reactivar una cuenta rechazada o que nunca ingreso tambien genera una temporal. Vencida, la persona puede usar la recuperacion de contrasena (ahora disponible para cuentas activas aun sin verificar; el enlace verifica el correo).
+- **Seguridad:** la contrasena temporal no se registra en logs ni en la auditoria; todas las respuestas de `/api/v1` llevan `Cache-Control: no-store`. Se elimino `POST /auth/verify-email` y la pagina `/verificar-correo`; la tabla `verification_tokens` sigue en uso para la recuperacion.
+- **Migracion:** `PasswordLifecycle1728730000000` agrega `users.must_change_password` y `users.password_expires_at`.
+- **Riesgo aceptado:** enviar una contrasena por correo deja una credencial en el buzon hasta su primer uso; se mitiga con vencimiento de 72 h, cambio obligatorio y revocacion de sesiones.
+- **Aprobacion del responsable:** decision confirmada; implementacion pendiente de su revision.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

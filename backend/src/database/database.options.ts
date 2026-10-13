@@ -3,9 +3,28 @@ import { dirname, resolve } from "node:path";
 
 import type { DataSourceOptions } from "typeorm";
 
+import { AuditEvent } from "../modules/audit/audit-event.entity";
+import { Session } from "../modules/auth/session.entity";
+import { VerificationToken } from "../modules/auth/verification-token.entity";
+import { Invitation } from "../modules/membership/invitation.entity";
+import { MembershipRequest } from "../modules/membership/membership-request.entity";
+import { Role } from "../modules/roles/role.entity";
+import { User } from "../modules/users/user.entity";
 import { SchemaBootstrap1728690000000 } from "./migrations/1728690000000-schema-bootstrap";
+import { IdentityBase1728700000000 } from "./migrations/1728700000000-identity-base";
+import { IdentityFlows1728710000000 } from "./migrations/1728710000000-identity-flows";
+import { AuditEvents1728720000000 } from "./migrations/1728720000000-audit-events";
+import { PasswordLifecycle1728730000000 } from "./migrations/1728730000000-password-lifecycle";
 
-const migrations = [SchemaBootstrap1728690000000];
+export const entities = [User, Role, Session, MembershipRequest, Invitation, VerificationToken, AuditEvent];
+
+export const migrations = [
+  SchemaBootstrap1728690000000,
+  IdentityBase1728700000000,
+  IdentityFlows1728710000000,
+  AuditEvents1728720000000,
+  PasswordLifecycle1728730000000,
+];
 
 function loadEnvFile(filePath: string) {
   if (!existsSync(filePath)) {
@@ -37,6 +56,12 @@ function loadEnvFile(filePath: string) {
 }
 
 export function loadDatabaseEnv() {
+  // Dentro de `node --test` no se leen los .env locales: las pruebas no deben depender de la
+  // configuracion (ni de las credenciales) de quien las ejecuta.
+  if (process.env.NODE_TEST_CONTEXT) {
+    return;
+  }
+
   loadEnvFile(resolve(process.cwd(), ".env.local"));
   loadEnvFile(resolve(process.cwd(), ".env"));
 }
@@ -56,7 +81,7 @@ export function createDataSourceOptions(): DataSourceOptions {
     return {
       type: "postgres",
       url,
-      entities: [],
+      entities,
       migrations,
       synchronize: false,
     };
@@ -64,14 +89,17 @@ export function createDataSourceOptions(): DataSourceOptions {
 
   if (dbType === "sqlite") {
     const sqlitePath = process.env.SQLITE_PATH ?? "./data/alfacode-hub.sqlite";
-    const database = resolve(process.cwd(), sqlitePath);
+    // ":memory:" se usa en pruebas HTTP aisladas; no crea archivos.
+    const database = sqlitePath === ":memory:" ? sqlitePath : resolve(process.cwd(), sqlitePath);
 
-    mkdirSync(dirname(database), { recursive: true });
+    if (database !== ":memory:") {
+      mkdirSync(dirname(database), { recursive: true });
+    }
 
     return {
       type: "better-sqlite3",
       database,
-      entities: [],
+      entities,
       migrations,
       synchronize: false,
     };

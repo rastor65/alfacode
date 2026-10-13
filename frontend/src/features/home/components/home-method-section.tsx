@@ -4,7 +4,7 @@ import { methodSteps } from "@/features/home/data/home-content";
 
 export function HomeMethodSection() {
   return (
-    <section className="relative overflow-hidden border-y border-cyan-500/15 bg-gradient-to-b from-[#071018] via-[#081522]/60 to-[#071018] py-24 px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden border-y border-cyan-500/15 bg-gradient-to-b from-site-bg via-site-bg-alt/60 to-site-bg py-24 px-4 sm:px-6 lg:px-8">
       {/* Soft ambient center glow */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 size-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#469eb4]/10 blur-3xl"
@@ -17,7 +17,7 @@ export function HomeMethodSection() {
             <Target size={22} aria-hidden="true" />
           </div>
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-[#7ed4e8]">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-site-eyebrow">
               <span className="size-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
               Metodología Experimental
             </span>
@@ -51,7 +51,7 @@ export function HomeMethodSection() {
                 </p>
               </div>
 
-              <div className="mt-5 border-t border-white/5 pt-3 text-[10px] uppercase font-mono tracking-wider text-cyan-400/70">
+              <div className="mt-5 border-t border-white/5 pt-3 text-[10px] uppercase font-mono tracking-wider text-cyan-400/80">
                 Fase {number}
               </div>
             </div>

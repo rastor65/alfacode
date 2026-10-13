@@ -1,4 +1,5 @@
 import { PublicHeader } from "@/components/layout/public-header";
+import { PublicThemeProvider } from "@/components/theme/public-theme-provider";
 import { HomeCallToAction } from "@/features/home/components/home-call-to-action";
 import { HomeFeaturedProjectsSection } from "@/features/home/components/home-featured-projects-section";
 import { HomeFooter } from "@/features/home/components/home-footer";
@@ -15,7 +16,7 @@ type HomePageProps = {
 
 export function HomePage({ featuredProjects, researchLines }: HomePageProps) {
   return (
-    <div className="min-h-screen bg-[#071018]">
+    <PublicThemeProvider className="bg-site-bg">
       <PublicHeader />
       <main>
         <HomeHeroSection />
@@ -26,6 +27,6 @@ export function HomePage({ featuredProjects, researchLines }: HomePageProps) {
         <HomeCallToAction />
       </main>
       <HomeFooter />
-    </div>
+    </PublicThemeProvider>
   );
 }

@@ -9,7 +9,7 @@ type PublicProjectsPageProps = {
 export function PublicProjectsPage({ projects }: PublicProjectsPageProps) {
   return (
     <PublicPageShell>
-      <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#7ed4e8]">
+      <p className="text-sm font-semibold uppercase tracking-[0.24em] text-site-eyebrow">
         Proyectos
       </p>
       <h1 className="mt-4 text-4xl font-semibold text-white">

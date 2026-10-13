@@ -4,12 +4,16 @@
   "private": true,
   "description": "Backend API for AlfaCode HUB.",
   "scripts": {
+    "bootstrap:admin": "tsx src/database/run-bootstrap-admin.ts",
     "build": "tsc -p tsconfig.build.json",
+    "mail:test": "tsx src/scripts/send-test-mail.ts",
     "migration:revert": "tsx src/database/run-migrations.ts revert",
     "migration:run": "tsx src/database/run-migrations.ts run",
     "migration:show": "tsx src/database/run-migrations.ts show",
+    "seed:roles": "tsx src/database/run-seeds.ts",
     "start": "node dist/main.js",
     "start:dev": "tsx watch src/main.ts",
+    "test": "tsx --test \"src/**/*.spec.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -18,13 +22,19 @@
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
     "@nestjs/typeorm": "^12.0.2",
+    "argon2": "^0.45.1",
     "better-sqlite3": "^12.11.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "helmet": "^8.3.0",
+    "nodemailer": "^10.0.11",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "typeorm": "^0.3.31"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^20.19.43",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3"

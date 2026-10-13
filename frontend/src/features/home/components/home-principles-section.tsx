@@ -4,7 +4,7 @@ export function HomePrinciplesSection() {
   return (
     <section className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="mb-12 max-w-3xl">
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-[#7ed4e8]">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-site-eyebrow">
           <span className="size-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
           Modelo Institucional
         </span>

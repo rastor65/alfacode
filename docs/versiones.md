@@ -65,6 +65,11 @@ Ubicacion: `backend/`
 | `tsx` | 4.23.15 |
 | `reflect-metadata` | 0.2.2 |
 | `rxjs` | 7.8.2 |
+| `argon2` | 0.45.1 (I-05) |
+| `class-validator` | 0.15.1 (I-05) |
+| `class-transformer` | 0.5.1 (I-05) |
+| `helmet` | 8.3.0 (I-05) |
+| `@types/express` (dev) | 5.x (I-05; Express instalado 5.2.1) |
 
 Estructura observada:
 
@@ -156,3 +161,66 @@ Las primeras verificaciones registran el estado encontrado durante I-01. Las ver
 ## Estado de I-01
 
 I-01 queda implementada y verificada tecnicamente para su alcance de inspeccion. No se marca aprobada por el responsable.
+
+## Verificacion tecnica - I-02
+
+**Fecha:** 2026-10-12
+**Iteracion:** I-02, cierre de pendientes de Fase 0 sobre SQLite
+**Alcance:** comunicacion frontend -> backend sin alterar el portafolio publico; PostgreSQL permanece pausado.
+
+Cambios verificados:
+
+- `frontend/next.config.ts` configura rewrite de `/api/v1/:path*` hacia `API_PROXY_TARGET` con valor predeterminado `http://localhost:4000`.
+- `frontend/.env.example` documenta `NEXT_PUBLIC_API_URL=/api/v1` y `API_PROXY_TARGET=http://localhost:4000`.
+- `frontend/src/app/system/health/page.tsx` agrega una pagina tecnica no enlazada que consulta `/api/v1/health`.
+- `backend/src/health/health.controller.ts` y `backend/src/health/health.service.ts` usan inyeccion explicita para funcionar correctamente en `tsx watch`.
+- `frontend/AGENTS.md` fue generado por `next dev` dentro del paquete `frontend/`, siguiendo las reglas de Next.js 16.
+
+Comandos ejecutados durante I-02:
+
+| Comando | Resultado |
+|---|---|
+| `npm --prefix frontend run lint` | OK |
+| `npm --prefix frontend run build` | OK; Next.js compilo y registro `/system/health` como ruta dinamica |
+| `npm --prefix backend run typecheck` | OK antes y despues de corregir inyeccion |
+| `npm --prefix backend run build` | OK antes y despues de corregir inyeccion |
+| `npm --prefix backend run migration:show` | OK; `Pending migrations: false` |
+| `npm --prefix backend run start:dev` | OK; NestJS mapeo `GET /api/v1/health` |
+| `npm --prefix frontend run dev` | OK; Next.js sirvio `http://localhost:3000` y genero `frontend/AGENTS.md` |
+| `Invoke-WebRequest http://localhost:4000/api/v1/health` | OK; 200 con `status: "ok"`, `service: "alfacode-hub-api"` y `database: "ok"` |
+| `Invoke-WebRequest http://localhost:3000/api/v1/health` | OK; 200 via rewrite de Next.js hacia backend |
+| `Invoke-WebRequest http://localhost:3000/system/health` | OK; 200 y HTML con `Disponible` y `alfacode-hub-api` |
+
+Incidencia corregida:
+
+- Durante la primera prueba runtime, `GET /api/v1/health` devolvio 500 porque `tsx watch` no estaba resolviendo la inyeccion implicita del controlador. Se corrigio con `@Inject(HealthService)` y `@InjectDataSource()`.
+
+Estado de I-02:
+
+I-02 queda implementada y verificada tecnicamente para SQLite. No se marca aprobada por el responsable. PostgreSQL sigue pausado.
+
+## Verificacion tecnica - I-03
+
+**Fecha:** 2026-10-12
+**Iteracion:** I-03, calidad y cierre tecnico de Fase 0 sobre SQLite
+**Alcance:** comandos reproducibles desde la raiz, smoke automatizado de health/API/proxy y documentacion de arranque.
+
+Cambios verificados:
+
+- `package.json` raiz agrega `verify`, `smoke:health`, `check` y `backend:migration:show`.
+- `scripts/smoke-health.mjs` levanta backend y frontend, espera los endpoints, valida health directo, proxy de Next.js y pagina tecnica, y apaga procesos al finalizar.
+- `README.md` documenta los comandos de verificacion de Fase 0.
+
+Comandos ejecutados durante I-03:
+
+| Comando | Resultado |
+|---|---|
+| `npm run verify` | OK; frontend lint/build, backend typecheck/build y `migration:show` con `Pending migrations: false` |
+| `npm run smoke:health` | Primer intento fallo por `spawn EINVAL` en Windows; se corrigio el runner |
+| `npm run smoke:health` | OK; `Backend health`, `Next.js API proxy` y `Frontend technical health page` |
+| `npm run check` | OK; ejecuta `verify` + `smoke:health` |
+| Comprobacion HTTP posterior | OK; backend y frontend quedaron detenidos tras el smoke |
+
+Estado de I-03:
+
+I-03 queda implementada y verificada tecnicamente para SQLite. No se marca aprobada por el responsable. PostgreSQL sigue pausado. Fase 0 queda lista para revision/aprobacion del responsable antes de iniciar Fase 1.

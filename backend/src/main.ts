@@ -1,25 +1,13 @@
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 
 import { AppModule } from "./app.module";
-
-function parseOrigins(value: string | undefined): string[] {
-  return (value ?? "http://localhost:3000")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-}
+import { configureApp } from "./app.setup";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = configureApp(await NestFactory.create<NestExpressApplication>(AppModule));
   const config = app.get(ConfigService);
-  const origins = parseOrigins(config.get<string>("CORS_ORIGINS"));
-
-  app.setGlobalPrefix("api/v1");
-  app.enableCors({
-    origin: origins,
-    credentials: true,
-  });
   const port = Number(config.get<string>("BACKEND_PORT") ?? process.env.PORT ?? 4000);
   await app.listen(port);
 }

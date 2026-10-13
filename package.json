@@ -4,12 +4,21 @@
   "private": true,
   "description": "AlfaCode HUB monorepo with separated frontend and backend applications.",
   "scripts": {
+    "check": "npm run verify && npm run smoke:health",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build",
     "frontend:lint": "npm --prefix frontend run lint",
     "frontend:start": "npm --prefix frontend run start",
     "backend:dev": "npm --prefix backend run start:dev",
     "backend:build": "npm --prefix backend run build",
-    "backend:typecheck": "npm --prefix backend run typecheck"
+    "backend:typecheck": "npm --prefix backend run typecheck",
+    "backend:migration:show": "npm --prefix backend run migration:show",
+    "smoke:health": "node scripts/smoke-health.mjs",
+    "verify": "npm run frontend:lint && npm run frontend:test && npm run frontend:build && npm run backend:typecheck && npm run backend:test && npm run backend:build && npm run backend:migration:show",
+    "backend:test": "npm --prefix backend run test",
+    "backend:seed:roles": "npm --prefix backend run seed:roles",
+    "frontend:test": "npm --prefix frontend run test",
+    "backend:bootstrap:admin": "npm --prefix backend run bootstrap:admin",
+    "backend:mail:test": "npm --prefix backend run mail:test --"
   }
 }

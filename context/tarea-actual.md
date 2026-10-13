@@ -1,42 +1,36 @@
-# Tarea actual - Continuidad tras I-01
+# Tarea actual - Fase 1, I-08 (pantallas de acceso, F1-14) por fases
 
 ## Estado
 
-**Fase:** 0 - Preparacion y fundamentos
-**Ultima iteracion ejecutada:** I-01
-**Estado de I-01:** implementada y verificada tecnicamente; pendiente de aprobacion explicita del responsable.
-**Trabajo actualmente autorizado:** limpieza documental del estado y registro de decisiones.
+**Fase:** 1 - Identidad, autenticacion e integrantes
+**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013).
+**I-08:** autorizada por fases (DEC-013). Las tres fases estan implementadas y verificadas tecnicamente.
+**Pendiente:** revision y aprobacion del responsable de I-08 (en particular I-08.2 e I-08.3) y de DEC-016.
+**Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-08.
 
-## Resultado tecnico ya verificado
+## Fases de I-08
 
-- Frontend existente en Next.js/React conservado y compilando.
-- Backend NestJS con API versionada bajo `/api/v1`.
-- `GET /api/v1/health` responde 200.
-- TypeORM configurado con SQLite para desarrollo.
-- `synchronize: false`.
-- Migracion inicial `SchemaBootstrap1728690000000` aplicada en SQLite.
-- PostgreSQL queda pausado temporalmente por decision del responsable.
+| Fase | Contenido | Estado |
+|---|---|---|
+| I-08.1 | Base (cliente de API con CSRF, sesion en servidor, componentes de formulario), `/ingresar`, `/panel`, cerrar sesion, layout privado sutil, temas claro/oscuro/sistema con desplegable | Revisada por el responsable |
+| I-08.2 | `/registro`, `/invitacion`; tras DEC-016: solicitud sin contrasena, `/cambiar-contrasena` obligatoria con contrasena temporal y sin `/verificar-correo` | Verificada tecnicamente |
+| I-08.3 | `/recuperar-contrasena`, `/restablecer-contrasena`, enlace desde `/ingresar`; repaso de accesibilidad | Verificada tecnicamente |
+
+## Resultado tecnico verificado de I-08.3
+
+- Paginas reales en puertos aislados con base y outbox temporales: `/ingresar` enlaza a `/recuperar-contrasena`; `/recuperar-contrasena` y `/restablecer-contrasena` 200 (esta con `no-referrer` y boton deshabilitado hasta leer el enlace); el correo lleva `/restablecer-contrasena#token=...`; restablecer 200, la sesion anterior queda cerrada (307 a `/ingresar`) y la contrasena nueva funciona; sin secretos ni errores en los logs.
+- Accesibilidad: enlace "Saltar al contenido" con `main#contenido`; el menu movil recibe el foco al abrirse y Escape lo devuelve al boton; el indicador de carga respeta `prefers-reduced-motion`; `lang="es"` ya estaba. Contraste WCAG AA verificado en I-08.1.
+- `npm run verify` OK (26 + 127 pruebas).
+- **No verificado por el agente:** la interaccion en un navegador real (envio de formularios, foco, desplegables).
 
 ## Siguiente iteracion propuesta
 
-**ID sugerido:** I-02
+**ID sugerido:** I-09
 **Estado:** propuesta; no autorizada.
-**Objetivo sugerido:** cerrar pendientes de Fase 0 sobre SQLite, sin configurar PostgreSQL ni iniciar modulos de negocio.
-
-Alcance sugerido:
-
-1. Revisar el estado real de `F0-05` a `F0-09` y registrar que partes ya quedaron implementadas.
-2. Completar, si se autoriza, una prueba aislada de comunicacion frontend -> backend sin alterar el portafolio publico.
-3. Actualizar documentacion reproducible de arranque/verificacion.
-4. Mantener pruebas y migraciones solo sobre SQLite mientras PostgreSQL este pausado.
+**Objetivo sugerido:** F1-14, segunda parte (gestion), dividida en fases: I-09.1 perfil propio (ver y editar nombre, cambiar contrasena); I-09.2 cola de solicitudes (listar, aprobar con rol y entrega de la contrasena temporal, rechazar); I-09.3 integrantes (listado con busqueda y filtros, detalle, activar/desactivar, roles, regenerar contrasena temporal) e invitaciones. El menu lateral mostrara cada vista segun el rol.
 
 ## No realizar sin nueva autorizacion
 
-- No implementar pantallas internas del HUB.
-- No iniciar entidades de usuarios, roles, proyectos, tareas o sprints.
-- No implementar login completo sin confirmar estrategia de sesion.
+- No iniciar I-09 hasta que el responsable apruebe I-08.
 - No configurar PostgreSQL ni Railway.
 - No crear datos reales de personas.
-- No marcar aprobacion humana de I-01 ni I-02.
-
-> Para continuar, el responsable debe autorizar explicitamente la siguiente iteracion.

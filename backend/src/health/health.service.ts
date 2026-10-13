@@ -1,9 +1,13 @@
 import { Injectable } from "@nestjs/common";
+import { InjectDataSource } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 
 @Injectable()
 export class HealthService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
+  ) {}
 
   async getHealth() {
     await this.dataSource.query("SELECT 1");

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Atom, Menu, X } from "lucide-react";
+import { Atom, LogIn, Menu, X } from "lucide-react";
 
+import { ThemeMenu } from "@/components/theme/theme-menu";
 import { publicNavigation } from "@/config/site";
 
 export function PublicHeader() {
@@ -13,7 +14,7 @@ export function PublicHeader() {
 
   return (
     <header className="fixed inset-x-0 top-3 sm:top-4 z-50 px-3 sm:px-6">
-      <div className="mx-auto flex h-13 sm:h-14 max-w-4xl items-center justify-between rounded-full border border-white/[0.09] bg-[#06111a]/85 px-3 sm:px-4 shadow-[0_10px_35px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-2xl transition-all duration-200">
+      <div className="mx-auto flex h-13 sm:h-14 max-w-4xl items-center justify-between rounded-full border border-white/[0.09] bg-site-ink/85 px-3 sm:px-4 shadow-site-header backdrop-blur-2xl transition-all duration-200">
         {/* Brand / Logo */}
         <Link
           href="/"
@@ -61,8 +62,26 @@ export function PublicHeader() {
           })}
         </nav>
 
-        {/* Mobile Toggle */}
         <div className="flex items-center gap-2">
+          <ThemeMenu
+            variant="icon"
+            placement="bottom"
+            align="end"
+            triggerClassName="size-8 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white focus-visible:ring-cyan-400"
+          />
+          <Link
+            href="/ingresar"
+            className={`hidden sm:inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+              pathname === "/ingresar"
+                ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-100"
+                : "border-cyan-400/25 bg-cyan-950/40 text-cyan-200 hover:border-cyan-400/50 hover:text-white"
+            }`}
+          >
+            <LogIn size={14} aria-hidden="true" />
+            Ingresar
+          </Link>
+
+          {/* Mobile Toggle */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -77,7 +96,7 @@ export function PublicHeader() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="mx-auto mt-2 max-w-4xl rounded-2xl border border-white/10 bg-[#06111a]/95 p-4 md:hidden shadow-2xl backdrop-blur-2xl">
+        <div className="mx-auto mt-2 max-w-4xl rounded-2xl border border-white/10 bg-site-ink/95 p-4 md:hidden shadow-2xl backdrop-blur-2xl">
           <nav className="flex flex-col gap-1" aria-label="Menú Móvil">
             {publicNavigation.map((item) => {
               const isActive =
@@ -100,6 +119,14 @@ export function PublicHeader() {
                 </Link>
               );
             })}
+            <Link
+              href="/ingresar"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-2 flex items-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-950/40 px-3.5 py-2 text-sm font-semibold text-cyan-100 transition hover:border-cyan-400/50"
+            >
+              <LogIn size={16} aria-hidden="true" />
+              Ingresar
+            </Link>
           </nav>
         </div>
       )}

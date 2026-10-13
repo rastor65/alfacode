@@ -5,7 +5,7 @@ import { publicNavigation, siteConfig } from "@/config/site";
 
 export function HomeFooter() {
   return (
-    <footer className="border-t border-cyan-500/15 bg-gradient-to-b from-[#071018] to-[#04090e] px-4 py-16 sm:px-6 lg:px-8">
+    <footer className="border-t border-cyan-500/15 bg-gradient-to-b from-site-bg to-site-bg-deep px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand Column */}
@@ -18,7 +18,7 @@ export function HomeFooter() {
                 <span className="block text-base font-bold tracking-wide text-white">
                   {siteConfig.name}
                 </span>
-                <span className="block text-xs font-medium text-cyan-200/70">
+                <span className="block text-xs font-medium text-cyan-200/80">
                   {siteConfig.tagline}
                 </span>
               </div>

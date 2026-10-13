@@ -37,7 +37,7 @@ export function HomeHeroPipeline() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
               <span className="relative inline-flex size-2.5 rounded-full bg-cyan-400" />
             </span>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7ed4e8]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-site-eyebrow">
               Matriz de Ingeniería & I+D
             </p>
           </div>
@@ -74,7 +74,7 @@ export function HomeHeroPipeline() {
                 onClick={() => setActiveStageId(stage.id)}
                 className={`group relative flex flex-col items-center justify-center rounded-lg py-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                   isActive
-                    ? "bg-[#469eb4]/20 text-[#e1feff] shadow-[0_0_15px_rgba(70,158,180,0.25)] ring-1 ring-[#469eb4]/50"
+                    ? "bg-[#469eb4]/20 text-site-highlight shadow-[0_0_15px_rgba(70,158,180,0.25)] ring-1 ring-[#469eb4]/50"
                     : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
                 }`}
               >

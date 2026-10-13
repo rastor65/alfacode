@@ -12,7 +12,7 @@ export function HomeFeaturedProjectsSection({
   projects,
 }: HomeFeaturedProjectsSectionProps) {
   return (
-    <section className="relative overflow-hidden border-y border-cyan-500/15 bg-gradient-to-b from-[#071018] via-[#081522] to-[#071018] py-24">
+    <section className="relative overflow-hidden border-y border-cyan-500/15 bg-gradient-to-b from-site-bg via-site-bg-alt to-site-bg py-24">
       {/* Ambient glow */}
       <div
         className="pointer-events-none absolute right-10 top-1/2 size-80 -translate-y-1/2 rounded-full bg-[#469eb4]/10 blur-3xl"
@@ -22,7 +22,7 @@ export function HomeFeaturedProjectsSection({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-[#7ed4e8]">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-site-eyebrow">
               <span className="size-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
               Proyectos Destacados
             </span>

@@ -5,7 +5,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 export function HomeCallToAction() {
   return (
     <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
-      <div className="glass-panel relative mx-auto overflow-hidden rounded-3xl p-8 sm:p-12 lg:p-14 max-w-7xl border border-cyan-400/25 shadow-[0_20px_70px_rgba(2,8,14,0.6)]">
+      <div className="glass-panel relative mx-auto overflow-hidden rounded-3xl p-8 sm:p-12 lg:p-14 max-w-7xl border border-cyan-400/25 shadow-site-cta">
         {/* Ambient radial spotlights */}
         <div
           className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-[#469eb4]/20 blur-3xl"

@@ -46,6 +46,13 @@ npm run dev
 
 Abrir `http://localhost:3000`.
 
+Verificacion aislada de conexion frontend -> backend:
+
+```bash
+http://localhost:3000/system/health
+http://localhost:3000/api/v1/health
+```
+
 Backend:
 
 ```bash
@@ -67,6 +74,10 @@ npm run frontend:lint
 npm run backend:dev
 npm run backend:build
 npm run backend:typecheck
+npm run backend:migration:show
+npm run verify
+npm run smoke:health
+npm run check
 ```
 
 Frontend, desde `frontend/`:
@@ -84,6 +95,17 @@ Backend, desde `backend/`:
 npm run start:dev
 npm run build
 npm run typecheck
+npm run migration:show
+npm run migration:run
+npm run migration:revert
+```
+
+Verificacion de Fase 0 desde la raiz:
+
+```bash
+npm run verify       # lint/build/typecheck y migraciones pendientes
+npm run smoke:health # levanta frontend/backend, prueba health y apaga procesos
+npm run check        # ejecuta verify + smoke:health
 ```
 
 ## Variables De Entorno
@@ -92,7 +114,8 @@ Frontend: copiar `frontend/.env.example` a `frontend/.env.local`.
 
 ```bash
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
+NEXT_PUBLIC_API_URL=/api/v1
+API_PROXY_TARGET=http://localhost:4000
 ```
 
 Backend: copiar `backend/.env.example` a `backend/.env.local`.
