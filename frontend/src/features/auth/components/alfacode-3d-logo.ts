@@ -22,44 +22,44 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     const isDark = node?.id === "isotipo-oscuro" || path.color.getHex() === 0x0382a1;
     const shapes = path.toShapes();
 
-    // Bisel curvo de alta precisión que captura brillos especulares continuos
+    // Bisel de alta definición y curvas suavizadas a 36 segmentos para eliminar facetas
     const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      depth: isDark ? 22 : 26,
+      curveSegments: 36,
+      depth: isDark ? 20 : 24,
       bevelEnabled: true,
-      bevelSegments: 3,
+      bevelSegments: 5,
       steps: 1,
-      bevelSize: 0.7,
-      bevelThickness: 0.9,
+      bevelSize: 0.85,
+      bevelThickness: 0.95,
     };
 
     const geometry = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
-    // Invertir Y para corregir coordenadas SVG sin alterar el centro relativo entre piezas
+    // Invertir Y para coordenadas SVG; se conservan las normales ortogonales nativas de ExtrudeGeometry para evitar artefactos
     geometry.rotateX(Math.PI);
-    geometry.computeVertexNormals();
 
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x014050 : 0x0382a1,
-          metalness: isLight ? 0.2 : 0.5,
-          roughness: isLight ? 0.2 : 0.15,
-          clearcoat: 0.9,
-          clearcoatRoughness: 0.08,
-          reflectivity: 0.88,
-          emissive: isLight ? 0x011b22 : 0x012834,
-          emissiveIntensity: isLight ? 0.06 : 0.35,
+          color: isLight ? 0x026179 : 0x0382a1,
+          metalness: isLight ? 0.35 : 0.48,
+          roughness: isLight ? 0.12 : 0.14,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.05,
+          reflectivity: 0.92,
+          emissive: isLight ? 0x012c37 : 0x012834,
+          emissiveIntensity: isLight ? 0.22 : 0.35,
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x0ea5e9 : 0x94eefe,
-          metalness: isLight ? 0.08 : 0.15,
-          roughness: isLight ? 0.1 : 0.07,
+          color: isLight ? 0x0284c7 : 0x38bdf8,
+          metalness: isLight ? 0.22 : 0.25,
+          roughness: isLight ? 0.09 : 0.06,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.04,
-          transmission: isLight ? 0 : 0.15,
+          clearcoatRoughness: 0.03,
+          transmission: 0,
           ior: 1.5,
-          reflectivity: 0.95,
+          reflectivity: 0.98,
           emissive: isLight ? 0x0284c7 : 0x22d3ee,
-          emissiveIntensity: isLight ? 0.12 : 0.75,
+          emissiveIntensity: isLight ? 0.28 : 0.65,
           side: THREE.DoubleSide,
         });
 
@@ -91,9 +91,9 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     if (ctx) {
       const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
       if (isLight) {
-        grad.addColorStop(0, "rgba(2, 60, 80, 0.16)");
-        grad.addColorStop(0.3, "rgba(3, 105, 161, 0.08)");
-        grad.addColorStop(0.65, "rgba(15, 23, 42, 0.02)");
+        grad.addColorStop(0, "rgba(2, 97, 121, 0.28)");
+        grad.addColorStop(0.35, "rgba(3, 130, 161, 0.12)");
+        grad.addColorStop(0.7, "rgba(2, 97, 121, 0.03)");
         grad.addColorStop(1, "rgba(0, 0, 0, 0)");
       } else {
         grad.addColorStop(0, "rgba(34, 211, 238, 0.4)");
