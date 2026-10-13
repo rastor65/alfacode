@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
+import { ArrowRight, Shield } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -76,13 +77,34 @@ export function LoginForm({ next }: LoginFormProps) {
         error={fieldErrors.password}
       />
       <p className="-mt-2 text-right text-sm">
-        <Link href="/recuperar-contrasena" className="text-hub-accent underline-offset-4 hover:underline">
+        <Link
+          href="/recuperar-contrasena"
+          className="text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline"
+        >
           ¿Olvidaste tu contraseña?
         </Link>
       </p>
-      <Button type="submit" className="w-full" pending={pending} pendingLabel="Ingresando…">
-        Ingresar
+      <Button
+        type="submit"
+        className="w-full group relative overflow-hidden shadow-[0_0_25px_rgba(70,158,180,0.35)] hover:shadow-[0_0_35px_rgba(70,158,180,0.55)] transition-all"
+        pending={pending}
+        pendingLabel="Ingresando…"
+      >
+        <span className="flex items-center justify-center gap-2">
+          <span>Ingresar</span>
+          <ArrowRight
+            size={16}
+            className="transition-transform duration-200 group-hover:translate-x-1"
+            aria-hidden="true"
+          />
+        </span>
       </Button>
+
+      {/* Indicador de canal cifrado y seguridad */}
+      <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-slate-300">
+        <Shield size={12} className="text-cyan-400" aria-hidden="true" />
+        <span>Canal cifrado TLS 1.3 con RBAC institucional</span>
+      </div>
     </form>
   );
 }
