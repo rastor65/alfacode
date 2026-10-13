@@ -65,23 +65,56 @@ export function Auth3DScene() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
 
-    // 2. Luces de estudio cinematográficas calibradas para modo claro u oscuro
-    const ambientLight = new THREE.AmbientLight(isLight ? 0xf0f9ff : 0x071e2e, isLight ? 3.4 : 3.0);
+    // 1.1 Entorno de iluminación física (Softbox Studio Reflection Map)
+    // Garantiza que los biseles PBR reflejen luz de estudio blanca y suave, eliminando facetas negras en modo claro
+    const envCanvas = document.createElement("canvas");
+    envCanvas.width = 128;
+    envCanvas.height = 64;
+    const envCtx = envCanvas.getContext("2d");
+    if (envCtx) {
+      const envGrad = envCtx.createLinearGradient(0, 0, 0, 64);
+      if (isLight) {
+        envGrad.addColorStop(0, "#ffffff");
+        envGrad.addColorStop(0.35, "#e0f2fe");
+        envGrad.addColorStop(0.7, "#f0f9ff");
+        envGrad.addColorStop(1, "#cffafe");
+      } else {
+        envGrad.addColorStop(0, "#083344");
+        envGrad.addColorStop(0.35, "#042f2e");
+        envGrad.addColorStop(0.7, "#02121e");
+        envGrad.addColorStop(1, "#01080e");
+      }
+      envCtx.fillStyle = envGrad;
+      envCtx.fillRect(0, 0, 128, 64);
+
+      // Softbox cenital blanco
+      const softbox = envCtx.createRadialGradient(64, 16, 0, 64, 16, 32);
+      softbox.addColorStop(0, isLight ? "rgba(255, 255, 255, 0.95)" : "rgba(34, 211, 238, 0.5)");
+      softbox.addColorStop(1, "rgba(255, 255, 255, 0)");
+      envCtx.fillStyle = softbox;
+      envCtx.fillRect(0, 0, 128, 64);
+    }
+    const envTexture = new THREE.CanvasTexture(envCanvas);
+    envTexture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = envTexture;
+
+    // 2. Luces de estudio cinematográficas calibradas para realzar el logotipo
+    const ambientLight = new THREE.AmbientLight(isLight ? 0xffffff : 0x071e2e, isLight ? 2.2 : 3.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 4.8 : 4.5);
-    keyLight.position.set(5, 6, 8);
+    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 3.8 : 4.5);
+    keyLight.position.set(4, 5, 6);
     scene.add(keyLight);
 
-    const rimDirectionalLight = new THREE.DirectionalLight(isLight ? 0x0284c7 : 0x00e5ff, isLight ? 3.5 : 4.0);
-    rimDirectionalLight.position.set(-5, 3, -5);
-    scene.add(rimDirectionalLight);
+    const fillLight = new THREE.DirectionalLight(isLight ? 0xe0f2fe : 0x00e5ff, isLight ? 2.0 : 4.0);
+    fillLight.position.set(-5, 2, 4);
+    scene.add(fillLight);
 
-    const cyanPointLight = new THREE.PointLight(isLight ? 0x0284c7 : 0x38bdf8, isLight ? 6 : 7, 30);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x22d3ee : 0x38bdf8, isLight ? 4.5 : 7, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const bottomGlowLight = new THREE.PointLight(isLight ? 0x0284c7 : 0x0382a1, isLight ? 5 : 6, 20);
+    const bottomGlowLight = new THREE.PointLight(isLight ? 0x38bdf8 : 0x0382a1, isLight ? 2.5 : 6, 20);
     bottomGlowLight.position.set(0, -3.5, 2);
     scene.add(bottomGlowLight);
 
@@ -97,11 +130,11 @@ export function Auth3DScene() {
     }
 
     // 4. Anillos Giroscópicos Holográficos Duales y Baliza Orbital
-    const orbitRingGeometry = new THREE.TorusGeometry(3.9, 0.02, 16, 120);
+    const orbitRingGeometry = new THREE.TorusGeometry(3.9, isLight ? 0.012 : 0.02, 16, 120);
     const orbitRingMaterial = new THREE.MeshBasicMaterial({
-      color: isLight ? 0x0284c7 : 0x38bdf8,
+      color: isLight ? 0x0ea5e9 : 0x38bdf8,
       transparent: true,
-      opacity: isLight ? 0.55 : 0.42,
+      opacity: isLight ? 0.22 : 0.42,
     });
     const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
     orbitRing.rotation.x = Math.PI / 3.2;
@@ -109,11 +142,11 @@ export function Auth3DScene() {
     logoGroup.add(orbitRing);
 
     // Anillo exterior de contrapunto holográfico
-    const outerRingGeometry = new THREE.TorusGeometry(4.8, 0.012, 16, 140);
+    const outerRingGeometry = new THREE.TorusGeometry(4.8, isLight ? 0.008 : 0.012, 16, 140);
     const outerRingMaterial = new THREE.MeshBasicMaterial({
-      color: isLight ? 0x0369a1 : 0x06b6d4,
+      color: isLight ? 0x0284c7 : 0x06b6d4,
       transparent: true,
-      opacity: isLight ? 0.38 : 0.22,
+      opacity: isLight ? 0.12 : 0.22,
     });
     const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
     outerRing.rotation.x = -Math.PI / 2.8;
@@ -121,15 +154,15 @@ export function Auth3DScene() {
     logoGroup.add(outerRing);
 
     // Baliza orbital luminosa
-    const beaconGeometry = new THREE.SphereGeometry(0.065, 16, 16);
+    const beaconGeometry = new THREE.SphereGeometry(isLight ? 0.045 : 0.065, 16, 16);
     const beaconMaterial = new THREE.MeshBasicMaterial({
-      color: isLight ? 0x0284c7 : 0xe0f2fe,
+      color: isLight ? 0x0ea5e9 : 0xe0f2fe,
     });
     const beacon = new THREE.Mesh(beaconGeometry, beaconMaterial);
     logoGroup.add(beacon);
 
-    // 4.1. Campo estelar de partículas sutiles
-    const particleCount = 75;
+    // 4.1. Campo estelar de partículas sutiles (limpio e invisible en modo claro para máxima pureza visual)
+    const particleCount = isLight ? 0 : 75;
     const particlePositions = new Float32Array(particleCount * 3);
     const spread = 8;
 
@@ -150,7 +183,7 @@ export function Auth3DScene() {
     if (ctx) {
       const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
       gradient.addColorStop(0, "rgba(225, 254, 255, 1)");
-      gradient.addColorStop(0.4, isLight ? "rgba(2, 132, 199, 0.7)" : "rgba(103, 232, 249, 0.7)");
+      gradient.addColorStop(0.4, "rgba(103, 232, 249, 0.7)");
       gradient.addColorStop(1, "rgba(3, 130, 161, 0)");
       ctx.fillStyle = gradient;
       ctx.beginPath();
@@ -160,12 +193,12 @@ export function Auth3DScene() {
     const particleTexture = new THREE.CanvasTexture(canvas);
 
     const particleMaterial = new THREE.PointsMaterial({
-      color: isLight ? 0x0284c7 : 0x94eefe,
+      color: 0x94eefe,
       size: 0.22,
       map: particleTexture,
       transparent: true,
-      opacity: isLight ? 0.6 : 0.65,
-      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
+      opacity: isLight ? 0 : 0.65,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
 
@@ -273,6 +306,7 @@ export function Auth3DScene() {
       particleGeometry.dispose();
       particleMaterial.dispose();
       particleTexture.dispose();
+      envTexture.dispose();
 
       // Recorrer y liberar geometrías y materiales del logo
       logoGroup.traverse((child) => {

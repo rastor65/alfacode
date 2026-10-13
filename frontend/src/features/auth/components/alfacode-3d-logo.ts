@@ -22,14 +22,14 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     const isDark = node?.id === "isotipo-oscuro" || path.color.getHex() === 0x0382a1;
     const shapes = SVGLoader.createShapes(path);
 
-    // Bisel controlado y fino para evitar que los vértices se crucen o produzcan facetas negras
+    // Bisel curvo de alta precisión que captura brillos especulares continuos
     const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      depth: isDark ? 26 : 30,
+      depth: isDark ? 22 : 26,
       bevelEnabled: true,
-      bevelSegments: 2,
+      bevelSegments: 3,
       steps: 1,
-      bevelSize: 0.6,
-      bevelThickness: 0.8,
+      bevelSize: 0.7,
+      bevelThickness: 0.9,
     };
 
     const geometry = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
@@ -39,36 +39,34 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
 
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x035368 : 0x02485c,
-          metalness: isLight ? 0.85 : 0.9,
-          roughness: 0.2,
-          clearcoat: 0.85,
-          clearcoatRoughness: 0.08,
-          reflectivity: 0.9,
-          emissive: 0x012834,
-          emissiveIntensity: isLight ? 0.2 : 0.4,
+          color: isLight ? 0x027b96 : 0x0382a1,
+          metalness: isLight ? 0.15 : 0.5,
+          roughness: isLight ? 0.18 : 0.15,
+          clearcoat: 1.0,
+          clearcoatRoughness: 0.06,
+          reflectivity: 0.92,
+          emissive: isLight ? 0x013c4a : 0x012834,
+          emissiveIntensity: isLight ? 0.15 : 0.35,
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x0284c7 : 0x67e8f9,
-          metalness: isLight ? 0.35 : 0.28,
-          roughness: isLight ? 0.12 : 0.09,
+          color: isLight ? 0x38bdf8 : 0x94eefe,
+          metalness: isLight ? 0.05 : 0.15,
+          roughness: isLight ? 0.08 : 0.07,
           clearcoat: 1.0,
-          clearcoatRoughness: 0.04,
-          transmission: 0.15,
-          ior: 1.48,
-          reflectivity: 0.95,
-          emissive: isLight ? 0x0369a1 : 0x22d3ee,
-          emissiveIntensity: isLight ? 0.45 : 0.75,
+          clearcoatRoughness: 0.03,
+          transmission: isLight ? 0.22 : 0.15,
+          ior: 1.5,
+          reflectivity: 0.98,
+          emissive: isLight ? 0x0ea5e9 : 0x22d3ee,
+          emissiveIntensity: isLight ? 0.22 : 0.75,
           side: THREE.DoubleSide,
         });
 
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Separación física en profundidad Z:
-    // La cinta clara (primer plano) queda al frente (+10) y el cuerpo oscuro de base detrás (-10)
-    // Esto garantiza que sus bordes NUNCA se mezclen ni se solapen en 3D
-    mesh.position.z = isDark ? -10 : 10;
+    // Separación física Z sutil para que encajen de forma integrada sin solapar caras ni proyectar huecos extraños
+    mesh.position.z = isDark ? -5 : 5;
 
     logoGroup.add(mesh);
   });
@@ -84,7 +82,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
   // Escala unificada del isotipo
   rootGroup.scale.set(0.0085, 0.0085, 0.0085);
 
-  // Pedestal holográfico proyectado en el plano inferior
+  // Pedestal / sombra de contacto proyectada en el plano inferior
   try {
     const canvas = document.createElement("canvas");
     canvas.width = 128;
@@ -92,10 +90,17 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     const ctx = canvas.getContext("2d");
     if (ctx) {
       const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      grad.addColorStop(0, isLight ? "rgba(2, 132, 199, 0.35)" : "rgba(34, 211, 238, 0.4)");
-      grad.addColorStop(0.35, isLight ? "rgba(3, 105, 161, 0.18)" : "rgba(3, 130, 161, 0.18)");
-      grad.addColorStop(0.7, isLight ? "rgba(6, 182, 212, 0.04)" : "rgba(6, 182, 212, 0.04)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      if (isLight) {
+        grad.addColorStop(0, "rgba(2, 60, 80, 0.16)");
+        grad.addColorStop(0.3, "rgba(3, 105, 161, 0.08)");
+        grad.addColorStop(0.65, "rgba(15, 23, 42, 0.02)");
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      } else {
+        grad.addColorStop(0, "rgba(34, 211, 238, 0.4)");
+        grad.addColorStop(0.35, "rgba(3, 130, 161, 0.18)");
+        grad.addColorStop(0.7, "rgba(6, 182, 212, 0.04)");
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      }
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 128, 128);
       const groundTex = new THREE.CanvasTexture(canvas);
@@ -103,7 +108,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
       const groundMat = new THREE.MeshBasicMaterial({
         map: groundTex,
         transparent: true,
-        opacity: isLight ? 0.65 : 0.75,
+        opacity: isLight ? 0.7 : 0.75,
         blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
