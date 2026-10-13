@@ -37,30 +37,30 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     // Invertir Y para coordenadas SVG; se conservan las normales ortogonales nativas de ExtrudeGeometry para evitar artefactos
     geometry.rotateX(Math.PI);
 
-    // Acabado lacado cerámico de alta fidelidad con los colores azul y cian exactos de AlfaCode
+    // Acabado cerámico lúcido de alta fidelidad con los colores azul y cian exactos de AlfaCode
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x0382a1 : 0x0382a1, // Azul marino / petróleo oficial exacto de AlfaCode (#0382a1)
+          color: 0x0382a1, // Azul marino / petróleo oficial de AlfaCode (#0382a1)
           metalness: 0, // Dieléctrico puro: mantiene la saturación cromática sólida
-          roughness: isLight ? 0.22 : 0.08,
-          clearcoat: isLight ? 0 : 1.0, // En modo claro sin capa de brillo blanco para preservar el color real
+          roughness: isLight ? 0.10 : 0.08,
+          clearcoat: isLight ? 0.35 : 1.0,
           clearcoatRoughness: 0.03,
-          reflectivity: isLight ? 0.5 : 0.95,
-          emissive: isLight ? 0x01303c : 0x02657e,
-          emissiveIntensity: isLight ? 0.15 : 0.42,
+          reflectivity: isLight ? 0.85 : 0.95,
+          emissive: 0x02657e,
+          emissiveIntensity: isLight ? 0.35 : 0.42,
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x00a8cc : 0x94eefe, // Cian oficial AlfaCode de máxima saturación (#00a8cc)
+          color: isLight ? 0x38bdf8 : 0x94eefe, // Cian luminoso brillante oficial de AlfaCode (#38bdf8 / #94eefe)
           metalness: 0, // Dieléctrico puro: máxima viveza de color
-          roughness: isLight ? 0.20 : 0.06,
-          clearcoat: isLight ? 0 : 1.0, // En modo claro sin capa de brillo blanco
+          roughness: isLight ? 0.08 : 0.06,
+          clearcoat: isLight ? 0.40 : 1.0,
           clearcoatRoughness: 0.02,
           transmission: 0,
           ior: 1.5,
-          reflectivity: isLight ? 0.5 : 0.98,
-          emissive: isLight ? 0x004a5a : 0x22d3ee,
-          emissiveIntensity: isLight ? 0.15 : 0.72,
+          reflectivity: isLight ? 0.90 : 0.98,
+          emissive: isLight ? 0x00b4d8 : 0x22d3ee,
+          emissiveIntensity: isLight ? 0.48 : 0.72,
           side: THREE.DoubleSide,
         });
 
