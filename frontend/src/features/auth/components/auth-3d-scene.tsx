@@ -53,7 +53,7 @@ export function Auth3DScene() {
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 10.6);
+    camera.position.set(0, 0, 9.4);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -63,10 +63,12 @@ export function Auth3DScene() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = isLight ? 1.05 : 1.15;
     container.appendChild(renderer.domElement);
 
     // 1.1 Entorno de iluminación física (Softbox Studio Reflection Map)
-    // Garantiza que los biseles PBR reflejen luz de estudio blanca y suave, eliminando facetas negras en modo claro
+    // Garantiza que los biseles PBR reflejen luz de estudio con tinte azul/cian suave, eliminando facetas grises
     const envCanvas = document.createElement("canvas");
     envCanvas.width = 128;
     envCanvas.height = 64;
@@ -74,7 +76,7 @@ export function Auth3DScene() {
     if (envCtx) {
       const envGrad = envCtx.createLinearGradient(0, 0, 0, 64);
       if (isLight) {
-        envGrad.addColorStop(0, "#ffffff");
+        envGrad.addColorStop(0, "#bae6fd");
         envGrad.addColorStop(0.35, "#e0f2fe");
         envGrad.addColorStop(0.7, "#f0f9ff");
         envGrad.addColorStop(1, "#cffafe");
@@ -87,9 +89,9 @@ export function Auth3DScene() {
       envCtx.fillStyle = envGrad;
       envCtx.fillRect(0, 0, 128, 64);
 
-      // Softbox cenital blanco
+      // Softbox cenital celeste para reflejos lúcidos y saturados
       const softbox = envCtx.createRadialGradient(64, 16, 0, 64, 16, 32);
-      softbox.addColorStop(0, isLight ? "rgba(255, 255, 255, 0.65)" : "rgba(34, 211, 238, 0.5)");
+      softbox.addColorStop(0, isLight ? "rgba(56, 189, 248, 0.55)" : "rgba(34, 211, 238, 0.5)");
       softbox.addColorStop(1, "rgba(255, 255, 255, 0)");
       envCtx.fillStyle = softbox;
       envCtx.fillRect(0, 0, 128, 64);
@@ -98,23 +100,23 @@ export function Auth3DScene() {
     envTexture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = envTexture;
 
-    // 2. Luces de estudio cinematográficas calibradas para realzar el logotipo
-    const ambientLight = new THREE.AmbientLight(isLight ? 0xffffff : 0x071e2e, isLight ? 0.85 : 3.0);
+    // 2. Luces de estudio cinematográficas calibradas para realzar el azul profundo y cian del isotipo
+    const ambientLight = new THREE.AmbientLight(isLight ? 0xbae6fd : 0x071e2e, isLight ? 1.2 : 2.8);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 2.2 : 4.5);
+    const keyLight = new THREE.DirectionalLight(0xf8fafc, isLight ? 1.8 : 3.6);
     keyLight.position.set(4, 5, 6);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(isLight ? 0xe0f2fe : 0x00e5ff, isLight ? 1.0 : 4.0);
+    const fillLight = new THREE.DirectionalLight(0x0ea5e9, isLight ? 1.8 : 3.8);
     fillLight.position.set(-5, 2, 4);
     scene.add(fillLight);
 
-    const cyanPointLight = new THREE.PointLight(isLight ? 0x22d3ee : 0x38bdf8, isLight ? 2.0 : 7, 30);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x0284c7 : 0x38bdf8, isLight ? 3.2 : 6.5, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const bottomGlowLight = new THREE.PointLight(isLight ? 0x38bdf8 : 0x0382a1, isLight ? 1.4 : 6, 20);
+    const bottomGlowLight = new THREE.PointLight(0x0382a1, isLight ? 2.2 : 5.5, 20);
     bottomGlowLight.position.set(0, -3.5, 2);
     scene.add(bottomGlowLight);
 
@@ -130,7 +132,7 @@ export function Auth3DScene() {
     }
 
     // 4. Anillos Giroscópicos Holográficos PBR de Alta Definición y Balizas Satelitales Duales
-    const orbitRingGeometry = new THREE.TorusGeometry(2.65, isLight ? 0.016 : 0.02, 16, 120);
+    const orbitRingGeometry = new THREE.TorusGeometry(3.3, isLight ? 0.018 : 0.022, 16, 120);
     const orbitRingMaterial = new THREE.MeshStandardMaterial({
       color: isLight ? 0x0284c7 : 0x38bdf8,
       roughness: 0.2,
@@ -146,7 +148,7 @@ export function Auth3DScene() {
     logoGroup.add(orbitRing);
 
     // Anillo exterior de contrapunto holográfico
-    const outerRingGeometry = new THREE.TorusGeometry(3.2, isLight ? 0.012 : 0.016, 16, 140);
+    const outerRingGeometry = new THREE.TorusGeometry(4.0, isLight ? 0.013 : 0.017, 16, 140);
     const outerRingMaterial = new THREE.MeshStandardMaterial({
       color: isLight ? 0x0369a1 : 0x06b6d4,
       roughness: 0.25,
@@ -293,13 +295,13 @@ export function Auth3DScene() {
 
       // Movimiento orbital de las balizas luminosas duales
       const beaconAngle = elapsed * 1.1;
-      beacon1.position.x = Math.cos(beaconAngle) * 2.65;
-      beacon1.position.z = Math.sin(beaconAngle) * 2.65;
-      beacon1.position.y = Math.sin(beaconAngle * 2) * 0.35;
+      beacon1.position.x = Math.cos(beaconAngle) * 3.3;
+      beacon1.position.z = Math.sin(beaconAngle) * 3.3;
+      beacon1.position.y = Math.sin(beaconAngle * 2) * 0.4;
 
-      beacon2.position.x = Math.cos(beaconAngle + Math.PI) * 2.65;
-      beacon2.position.z = Math.sin(beaconAngle + Math.PI) * 2.65;
-      beacon2.position.y = -Math.sin(beaconAngle * 2) * 0.35;
+      beacon2.position.x = Math.cos(beaconAngle + Math.PI) * 3.3;
+      beacon2.position.z = Math.sin(beaconAngle + Math.PI) * 3.3;
+      beacon2.position.y = -Math.sin(beaconAngle * 2) * 0.4;
 
       // Luz puntual dinámica que hace deslizar brillos metálicos sobre los biseles
       cyanPointLight.position.x = Math.sin(elapsed * 0.8) * 3.5 - 1.5;

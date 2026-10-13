@@ -99,74 +99,62 @@ export async function AuthShell({
           </div>
         </header>
 
-        {/* Contenido principal: Grid simétrico de dos paneles frosted glass */}
-        <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-4 sm:px-6 lg:px-8">
-          <div className="grid w-full items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
-            {/* Panel Izquierdo: Escenario 3D PBR del Isotipo Oficial y Ecosistema de Investigación */}
-            <div className="relative lg:col-span-7 flex flex-col">
-              <div
-                className="pointer-events-none absolute -inset-1.5 rounded-[34px] bg-gradient-to-b from-cyan-400/20 via-teal-500/10 to-transparent opacity-70 blur-2xl"
-                aria-hidden="true"
-              />
-              <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-6 sm:p-7 shadow-[var(--panel-shadow),0_0_35px_rgba(3,130,161,0.18)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/45 h-full">
-                {/* Línea superior con gradiente de luz cian */}
+        {/* Contenido principal: Grid cinematográfico de 2 columnas */}
+        <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid w-full items-center gap-10 lg:grid-cols-12 lg:gap-14">
+            {/* Columna Izquierda: Escenario 3D del Isotipo Oficial y Ecosistema de Investigación */}
+            <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
+              {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode a tamaño heroico */}
+              <div className="relative w-full max-w-[560px] h-[360px] sm:h-[420px] lg:h-[480px] flex items-center justify-center">
+                {/* Halo de resplandor ambiental y pedestal luminoso */}
                 <div
-                  className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent shadow-[0_0_15px_rgba(34,211,238,0.6)]"
+                  className="pointer-events-none absolute inset-x-12 inset-y-8 rounded-full bg-gradient-to-tr from-cyan-500/20 via-teal-500/15 to-transparent blur-[100px]"
                   aria-hidden="true"
                 />
+                <div
+                  className="pointer-events-none absolute bottom-4 w-3/4 h-16 rounded-full bg-cyan-400/25 blur-[50px]"
+                  aria-hidden="true"
+                />
+                <Auth3DScene />
+              </div>
 
-                {/* Cabecera del escenario */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-950/60 px-3.5 py-1 text-xs font-semibold text-cyan-300 shadow-sm">
-                    <span className="flex size-4 items-center justify-center">
-                      <AlfaCodeSymbol className="size-full" />
-                    </span>
-                    <span>Semillero AlfaCode</span>
-                  </div>
-                  <span className="text-[11px] font-mono text-cyan-400/80">Uniguajira</span>
-                </div>
-
-                {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode */}
-                <div className="relative my-auto w-full h-[240px] sm:h-[270px] lg:h-[290px] flex items-center justify-center">
-                  <div
-                    className="pointer-events-none absolute inset-x-8 inset-y-4 rounded-full bg-gradient-to-tr from-cyan-500/18 via-teal-500/12 to-transparent blur-[80px]"
-                    aria-hidden="true"
-                  />
-                  <Auth3DScene />
-                </div>
-
-                {/* Identidad y foco institucional */}
-                <div className="space-y-2 pt-3 border-t border-white/10">
-                  <div className="flex items-center justify-between gap-2">
-                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
+              {/* Identidad y foco institucional */}
+              <div className="space-y-2.5 max-w-xl w-full pt-2">
+                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-tight">
+                  {heroHeadline === "AlfaCode HUB" ? (
+                    <>
                       Alfa<span className="text-hub-accent">Code</span>{" "}
                       <span className="font-mono text-cyan-400">HUB</span>
-                    </h1>
-                    <span className="text-[11px] font-mono text-slate-400">v0.2</span>
-                  </div>
-                  <p className="text-xs sm:text-sm leading-relaxed text-slate-300">
-                    {heroSubheadline}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-0.5 text-[11px] font-medium text-slate-300 backdrop-blur-md">
-                      <Cpu size={12} className="text-cyan-400" aria-hidden="true" />
-                      Inteligencia Artificial
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-0.5 text-[11px] font-medium text-slate-300 backdrop-blur-md">
-                      <Code2 size={12} className="text-cyan-400" aria-hidden="true" />
-                      Ingeniería de Software
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-2.5 py-0.5 text-[11px] font-medium text-slate-300 backdrop-blur-md">
-                      <ShieldCheck size={12} className="text-cyan-400" aria-hidden="true" />
-                      Investigación
-                    </span>
-                  </div>
+                    </>
+                  ) : (
+                    heroHeadline
+                  )}
+                </h1>
+
+                <p className="text-sm sm:text-base leading-relaxed text-slate-300">
+                  {heroSubheadline}
+                </p>
+
+                {/* 3 Pills minimalistas con áreas de enfoque */}
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <Cpu size={13} className="text-cyan-400" aria-hidden="true" />
+                    Inteligencia Artificial
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <Code2 size={13} className="text-cyan-400" aria-hidden="true" />
+                    Ingeniería de Software
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <ShieldCheck size={13} className="text-cyan-400" aria-hidden="true" />
+                    Semillero Uniguajira
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Panel Derecho: Bóveda de Acceso Seguro (Tarjeta Frosted Glass) */}
-            <div className="relative lg:col-span-5 flex flex-col w-full max-w-md mx-auto lg:max-w-none">
+            {/* Columna Derecha: Bóveda de Acceso Seguro (Tarjeta Frosted Glass) */}
+            <div className="relative lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
               {/* Resplandor ambiental exterior de la tarjeta */}
               <div
                 className="pointer-events-none absolute -inset-1.5 rounded-[34px] bg-gradient-to-b from-cyan-400/20 via-teal-500/10 to-transparent opacity-70 blur-2xl"
@@ -174,7 +162,7 @@ export async function AuthShell({
               />
               <section
                 aria-labelledby="auth-title"
-                className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-6 sm:p-7 shadow-[var(--panel-shadow),0_0_35px_rgba(3,130,161,0.18)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/45 h-full"
+                className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-7 sm:p-9 shadow-[var(--panel-shadow),0_0_35px_rgba(3,130,161,0.18)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/45"
               >
                 {/* Línea superior con gradiente de luz cian */}
                 <div
