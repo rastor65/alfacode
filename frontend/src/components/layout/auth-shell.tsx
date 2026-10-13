@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Cpu, Code2, ShieldCheck, Terminal } from "lucide-react";
+import { ArrowLeft, Cpu, Code2, ShieldCheck } from "lucide-react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeMenu } from "@/components/theme/theme-menu";
@@ -21,17 +21,17 @@ type AuthShellProps = {
  * Marco de las pantallas de acceso con el logotipo tridimensional oficial de AlfaCode:
  * - Escenario 3D PBR cinematográfico con pedestal holográfico y doble anillo giroscópico.
  * - Atmósfera cyber-space profunda con nebulosas de acento, retícula de ingeniería y viñeta.
- * - Jerarquía tipográfica display con tarjetas de pilares de investigación y consola de telemetría.
- * - Bóveda de acceso frosted glass de grado institucional con canal cifrado TLS 1.3.
+ * - Presentación minimalista y limpia centrada en la identidad de AlfaCode.
+ * - Bóveda de acceso frosted glass de grado institucional.
  */
 export async function AuthShell({
   title,
   description,
   children,
   footer,
-  badge = "Terminal de Acceso Seguro",
-  heroHeadline = "Arquitectura de Software, Inteligencia Artificial & Rigor Científico",
-  heroSubheadline = "Plataforma central del Semillero de Investigación AlfaCode para la gestión de proyectos de investigación, repositorios de código y producción científica en la Universidad de La Guajira.",
+  badge = "Acceso Institucional",
+  heroHeadline = "AlfaCode HUB",
+  heroSubheadline = "Semillero de Investigación en Computación Avanzada · Universidad de La Guajira.",
 }: AuthShellProps) {
   const theme = await getThemePreference();
 
@@ -139,68 +139,37 @@ export async function AuthShell({
                 <Auth3DScene />
               </div>
 
-              {/* Insignia y textos institucionales de alto impacto */}
-              <div className="space-y-4 max-w-2xl w-full">
-
-                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-[1.15] text-balance">
-                  {heroHeadline}
+              {/* Identidad y foco institucional minimalista */}
+              <div className="space-y-3 max-w-xl w-full pt-1">
+                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-tight">
+                  {heroHeadline === "AlfaCode HUB" ? (
+                    <>
+                      Alfa<span className="bg-gradient-to-r from-cyan-300 via-sky-300 to-cyan-400 bg-clip-text text-transparent">Code</span>{" "}
+                      <span className="font-mono text-cyan-300">HUB</span>
+                    </>
+                  ) : (
+                    heroHeadline
+                  )}
                 </h1>
 
-                <p className="text-sm sm:text-base leading-relaxed text-slate-300 max-w-xl">
+                <p className="text-sm sm:text-base leading-relaxed text-slate-300">
                   {heroSubheadline}
                 </p>
 
-                {/* 3 Pilares del Semillero en Tarjetas Cibernéticas */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 w-full text-left">
-                  <div className="group rounded-2xl border border-white/10 bg-slate-950/60 p-3.5 backdrop-blur-md transition-all hover:border-cyan-400/45 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(3,130,161,0.25)]">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/70 text-cyan-300">
-                        <Cpu size={14} />
-                      </span>
-                      <span className="text-xs font-bold text-white tracking-wide">IA & Computación</span>
-                    </div>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-                      Modelos generativos, agentes y visión aplicados.
-                    </p>
-                  </div>
-
-                  <div className="group rounded-2xl border border-white/10 bg-slate-950/60 p-3.5 backdrop-blur-md transition-all hover:border-cyan-400/45 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(3,130,161,0.25)]">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/70 text-cyan-300">
-                        <ShieldCheck size={14} />
-                      </span>
-                      <span className="text-xs font-bold text-white tracking-wide">Control RBAC</span>
-                    </div>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-                      Acceso institucional verificado @uniguajira.edu.co.
-                    </p>
-                  </div>
-
-                  <div className="group rounded-2xl border border-white/10 bg-slate-950/60 p-3.5 backdrop-blur-md transition-all hover:border-cyan-400/45 hover:bg-slate-900/80 hover:shadow-[0_0_25px_rgba(3,130,161,0.25)]">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-950/70 text-cyan-300">
-                        <Code2 size={14} />
-                      </span>
-                      <span className="text-xs font-bold text-white tracking-wide">I+D de Software</span>
-                    </div>
-                    <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-                      Arquitectura moderna y trazabilidad científica.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Barra de telemetría de ingeniería */}
-                <div className="rounded-xl border border-cyan-500/20 bg-slate-950/70 px-4 py-2.5 font-mono text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-3 shadow-inner">
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <Terminal size={13} className="text-cyan-400 shrink-0" />
-                    <span className="text-cyan-300 font-semibold tracking-wider text-[10px]">TELEMETRÍA EN TIEMPO REAL</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-[10px] text-slate-400 font-mono">
-                    <span>REGISTRO: <span className="text-emerald-400 font-semibold">ACTIVO</span></span>
-                    <span>IDENTIDAD: <span className="text-cyan-300 font-semibold">ALFACODE_RESEARCH_CORE</span></span>
-                    <span>CIFRADO: <span className="text-cyan-300 font-semibold">AES-256-GCM / TLS 1.3</span></span>
-                    <span>ESTADO: <span className="text-emerald-400 font-semibold">CANAL SEGURO ESTABLECIDO</span></span>
-                  </div>
+                {/* 3 Pills minimalistas con áreas de enfoque */}
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <Cpu size={13} className="text-cyan-400" aria-hidden="true" />
+                    Inteligencia Artificial
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <Code2 size={13} className="text-cyan-400" aria-hidden="true" />
+                    Ingeniería de Software
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur-md">
+                    <ShieldCheck size={13} className="text-cyan-400" aria-hidden="true" />
+                    Semillero Uniguajira
+                  </span>
                 </div>
               </div>
             </div>
@@ -230,7 +199,10 @@ export async function AuthShell({
                     </span>
                     <span>{badge}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-cyan-300/80 tracking-wider">SSL · SEEDBED</span>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400/90">
+                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+                    En línea
+                  </span>
                 </div>
 
                 {/* Título y descripción de la tarjeta */}

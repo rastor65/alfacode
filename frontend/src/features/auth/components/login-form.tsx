@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { ArrowRight, Lock, Mail, Shield } from "lucide-react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,6 @@ export function LoginForm({ next }: LoginFormProps) {
         icon={<Mail size={16} aria-hidden="true" />}
         required
         maxLength={254}
-        hint="Usa tu correo @uniguajira.edu.co."
         error={fieldErrors.email}
       />
       <FormField
@@ -101,12 +100,6 @@ export function LoginForm({ next }: LoginFormProps) {
           />
         </span>
       </Button>
-
-      {/* Indicador de canal cifrado y seguridad */}
-      <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-slate-300">
-        <Shield size={12} className="text-cyan-400" aria-hidden="true" />
-        <span>Canal cifrado TLS 1.3 con RBAC institucional</span>
-      </div>
     </form>
   );
 }
