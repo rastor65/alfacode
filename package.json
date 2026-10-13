@@ -4,6 +4,7 @@
   "private": true,
   "description": "AlfaCode HUB monorepo with separated frontend and backend applications.",
   "scripts": {
+    "build": "npm --prefix frontend run build",
     "check": "npm run verify && npm run smoke:health",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build",
