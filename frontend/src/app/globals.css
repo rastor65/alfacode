@@ -388,3 +388,8 @@ body::after {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Con un modal abierto, la pagina de fondo no se desplaza. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}

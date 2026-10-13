@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, type LucideIcon, Menu, X } from "lucide-react";
+import { Inbox, LayoutDashboard, type LucideIcon, Menu, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -19,8 +19,13 @@ type NavigationItem = {
   roles?: RoleCode[];
 };
 
-/** Menu lateral. Solo incluye vistas ya implementadas; las de gestion llegan en I-09. */
-const NAVIGATION: NavigationItem[] = [{ href: "/panel", label: "Panel", icon: LayoutDashboard }];
+/** Menu lateral. Solo incluye vistas ya implementadas. */
+const NAVIGATION: NavigationItem[] = [
+  { href: "/panel", label: "Panel", icon: LayoutDashboard },
+  { href: "/integrantes", label: "Integrantes", icon: Users },
+  { href: "/solicitudes", label: "Solicitudes", icon: Inbox, roles: ["admin", "coordinator"] },
+  { href: "/perfil", label: "Mi perfil", icon: UserRound },
+];
 
 function initials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);

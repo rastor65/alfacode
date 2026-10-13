@@ -23,14 +23,34 @@
 - `npm run verify` OK (26 + 127 pruebas).
 - **No verificado por el agente:** la interaccion en un navegador real (envio de formularios, foco, desplegables).
 
-## Siguiente iteracion propuesta
+## I-09 (gestion, F1-14 segunda parte) por fases
 
-**ID sugerido:** I-09
-**Estado:** propuesta; no autorizada.
-**Objetivo sugerido:** F1-14, segunda parte (gestion), dividida en fases: I-09.1 perfil propio (ver y editar nombre, cambiar contrasena); I-09.2 cola de solicitudes (listar, aprobar con rol y entrega de la contrasena temporal, rechazar); I-09.3 integrantes (listado con busqueda y filtros, detalle, activar/desactivar, roles, regenerar contrasena temporal) e invitaciones. El menu lateral mostrara cada vista segun el rol.
+**Estado:** autorizada (DEC-017).
+
+| Fase | Contenido | Estado |
+|---|---|---|
+| I-09.1 | `/perfil`: datos de la cuenta, editar nombre, cambiar contrasena en la misma vista | Verificada tecnicamente |
+| I-09.2 | `/solicitudes`: pestanas por estado, paginacion, aprobar con rol y comentario, rechazar, aviso de entrega de la contrasena temporal (correo, manual una sola vez con copiar, o fallo con reintento) | Verificada tecnicamente |
+| I-09.3 | `/integrantes` (busqueda, filtro por rol; autoridades: correo, filtro por estado, invitar) e `/integrantes/[id]` (autoridades: activar/desactivar con motivo, rol al reactivar, asignar y quitar roles, regenerar contrasena temporal) | Verificada tecnicamente |
+
+## Resultado tecnico verificado de I-09.1 e I-09.2
+
+- `frontend/src/lib/api/server.ts`: lectura desde el servidor con la cookie y la IP real de quien navega; `getSessionUser` lo reutiliza.
+- `npm --prefix frontend test`: 30 pruebas OK (roles asignables, autoridad, filtros de URL).
+- Puertos aislados con base y outbox temporales: `/solicitudes` (admin) muestra pendientes con mensaje y acciones; tras aprobar, la pestana de aprobadas muestra rol, revisor, fecha en hora de Bogota y comentario; un investigador ve el aviso de permiso y no tiene el enlace en el menu; `/perfil` muestra correo, roles, estado, fecha de alta y los formularios; editar el nombre se refleja en la vista. Sin errores en los logs.
+- `npm run verify` OK (30 + 127 pruebas).
+- **No verificado por el agente:** la interaccion en un navegador real (aprobar o rechazar desde la interfaz, copiar la contrasena temporal, reintento).
+
+## Resultado tecnico verificado de I-09.3
+
+- `npm --prefix frontend test`: 33 pruebas OK (`canManageMember`, filtros).
+- Puertos aislados con base y outbox temporales, por rol: un estudiante ve nombres y roles sin correos ajenos, sin invitar, sin pestanas de estado ni enlaces al detalle, y recibe 404 en `/integrantes/[id]`; el admin ve correos, invitar, pestanas y enlaces; busqueda por nombre y filtro por rol funcionan; en su propio detalle el admin no tiene acciones; un coordinator no puede administrar al admin y, sobre una estudiante, solo se le ofrecen `researcher` y `teacher_leader` para agregar; tras desactivar, la persona aparece en Inactivos y su detalle ofrece activar. Sin errores en los logs.
+- `npm run verify` OK (33 + 127 pruebas).
+- **No verificado por el agente:** la interaccion en un navegador real.
 
 ## No realizar sin nueva autorizacion
 
-- No iniciar I-09 hasta que el responsable apruebe I-08.
+- No iniciar la Fase 2 sin aprobacion del cierre de la Fase 1 y autorizacion explicita.
+- No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.
 - No crear datos reales de personas.

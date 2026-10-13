@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { roleLabel } from "@/lib/auth/roles";
@@ -13,7 +14,7 @@ export default async function PanelPage() {
   const user = await requireSessionUser("/panel");
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl">
       <p className="text-sm font-medium text-hub-accent">Panel</p>
       <h1 className="mt-1 text-2xl font-bold tracking-tight text-hub-text text-balance sm:text-3xl">
         Hola, {user.fullName}
@@ -43,7 +44,11 @@ export default async function PanelPage() {
       </section>
 
       <p className="mt-6 text-sm text-hub-muted">
-        Las herramientas de perfil, integrantes y solicitudes se habilitarán en las próximas iteraciones.
+        Puedes editar tu nombre y cambiar tu contraseña en{" "}
+        <Link href="/perfil" className="font-medium text-hub-accent underline-offset-4 hover:underline">
+          Mi perfil
+        </Link>
+        .
       </p>
     </div>
   );
