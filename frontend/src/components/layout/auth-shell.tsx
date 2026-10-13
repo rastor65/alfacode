@@ -157,16 +157,16 @@ export async function AuthShell({
             <div className="relative lg:col-span-5 w-full max-w-md mx-auto lg:max-w-none">
               {/* Resplandor ambiental exterior de la tarjeta */}
               <div
-                className="pointer-events-none absolute -inset-1.5 rounded-[34px] bg-gradient-to-b from-cyan-400/20 via-teal-500/10 to-transparent opacity-70 blur-2xl"
+                className="pointer-events-none absolute -inset-1 rounded-[34px] bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent opacity-20 dark:opacity-40 blur-xl"
                 aria-hidden="true"
               />
               <section
                 aria-labelledby="auth-title"
-                className="relative overflow-hidden rounded-3xl border border-cyan-400/25 bg-slate-950/85 p-7 sm:p-9 shadow-[var(--panel-shadow),0_0_35px_rgba(3,130,161,0.18)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/45"
+                className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-7 sm:p-9 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
               >
                 {/* Línea superior con gradiente de luz cian */}
                 <div
-                  className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent shadow-[0_0_15px_rgba(34,211,238,0.6)]"
+                  className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
                   aria-hidden="true"
                 />
 

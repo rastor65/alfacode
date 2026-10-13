@@ -64,7 +64,7 @@ export function Auth3DScene() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = isLight ? 0.92 : 1.08;
+    renderer.toneMappingExposure = isLight ? 0.88 : 1.08;
     container.appendChild(renderer.domElement);
 
     // 1.1 Entorno de iluminación física (Softbox Studio Reflection Map)
@@ -76,10 +76,10 @@ export function Auth3DScene() {
     if (envCtx) {
       const envGrad = envCtx.createLinearGradient(0, 0, 0, 64);
       if (isLight) {
-        envGrad.addColorStop(0, "#bae6fd");
-        envGrad.addColorStop(0.35, "#e0f2fe");
-        envGrad.addColorStop(0.7, "#f0f9ff");
-        envGrad.addColorStop(1, "#cffafe");
+        envGrad.addColorStop(0, "#0382a1");
+        envGrad.addColorStop(0.35, "#0284c7");
+        envGrad.addColorStop(0.7, "#0369a1");
+        envGrad.addColorStop(1, "#075985");
       } else {
         envGrad.addColorStop(0, "#083344");
         envGrad.addColorStop(0.35, "#042f2e");
@@ -91,7 +91,7 @@ export function Auth3DScene() {
 
       // Softbox cenital celeste para reflejos lúcidos y saturados
       const softbox = envCtx.createRadialGradient(64, 16, 0, 64, 16, 32);
-      softbox.addColorStop(0, isLight ? "rgba(56, 189, 248, 0.45)" : "rgba(34, 211, 238, 0.5)");
+      softbox.addColorStop(0, isLight ? "rgba(2, 132, 199, 0.4)" : "rgba(34, 211, 238, 0.5)");
       softbox.addColorStop(1, "rgba(255, 255, 255, 0)");
       envCtx.fillStyle = softbox;
       envCtx.fillRect(0, 0, 128, 64);
@@ -101,22 +101,22 @@ export function Auth3DScene() {
     scene.environment = envTexture;
 
     // 2. Luces de estudio cinematográficas calibradas para realzar el azul profundo y cian del isotipo
-    const ambientLight = new THREE.AmbientLight(isLight ? 0xdbeafe : 0x071e2e, isLight ? 0.45 : 2.2);
+    const ambientLight = new THREE.AmbientLight(isLight ? 0x0284c7 : 0x071e2e, isLight ? 0.5 : 2.2);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xf8fafc, isLight ? 1.25 : 3.0);
+    const keyLight = new THREE.DirectionalLight(isLight ? 0xe0f2fe : 0xf8fafc, isLight ? 0.85 : 3.0);
     keyLight.position.set(4, 5, 6);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(isLight ? 0x0284c7 : 0x00e5ff, isLight ? 0.85 : 3.2);
+    const fillLight = new THREE.DirectionalLight(isLight ? 0x0096c7 : 0x00e5ff, isLight ? 0.8 : 3.2);
     fillLight.position.set(-5, 2, 4);
     scene.add(fillLight);
 
-    const cyanPointLight = new THREE.PointLight(isLight ? 0x0284c7 : 0x38bdf8, isLight ? 1.4 : 5.0, 30);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x00b4d8 : 0x38bdf8, isLight ? 1.4 : 5.0, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const bottomGlowLight = new THREE.PointLight(0x0382a1, isLight ? 1.2 : 4.5, 20);
+    const bottomGlowLight = new THREE.PointLight(0x0382a1, isLight ? 1.6 : 4.5, 20);
     bottomGlowLight.position.set(0, -3.5, 2);
     scene.add(bottomGlowLight);
 
@@ -132,15 +132,15 @@ export function Auth3DScene() {
     }
 
     // 4. Anillos Giroscópicos Holográficos PBR de Alta Definición y Balizas Satelitales Duales
-    const orbitRingGeometry = new THREE.TorusGeometry(3.0, isLight ? 0.018 : 0.022, 16, 120);
+    const orbitRingGeometry = new THREE.TorusGeometry(3.0, isLight ? 0.02 : 0.022, 16, 120);
     const orbitRingMaterial = new THREE.MeshStandardMaterial({
-      color: isLight ? 0x0284c7 : 0x38bdf8,
-      roughness: 0.2,
-      metalness: 0.85,
-      emissive: isLight ? 0x0369a1 : 0x0ea5e9,
-      emissiveIntensity: isLight ? 0.25 : 0.65,
+      color: isLight ? 0x0096c7 : 0x38bdf8,
+      roughness: 0.15,
+      metalness: 0.7,
+      emissive: isLight ? 0x0284c7 : 0x0ea5e9,
+      emissiveIntensity: isLight ? 0.35 : 0.65,
       transparent: true,
-      opacity: isLight ? 0.55 : 0.75,
+      opacity: isLight ? 0.75 : 0.75,
     });
     const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
     orbitRing.rotation.x = Math.PI / 3.2;
@@ -148,15 +148,15 @@ export function Auth3DScene() {
     logoGroup.add(orbitRing);
 
     // Anillo exterior de contrapunto holográfico con radio optimizado para cero recorte lateral
-    const outerRingGeometry = new THREE.TorusGeometry(3.65, isLight ? 0.013 : 0.017, 16, 140);
+    const outerRingGeometry = new THREE.TorusGeometry(3.65, isLight ? 0.015 : 0.017, 16, 140);
     const outerRingMaterial = new THREE.MeshStandardMaterial({
-      color: isLight ? 0x0369a1 : 0x06b6d4,
-      roughness: 0.25,
-      metalness: 0.8,
-      emissive: isLight ? 0x0284c7 : 0x0891b2,
-      emissiveIntensity: isLight ? 0.20 : 0.45,
+      color: isLight ? 0x0284c7 : 0x06b6d4,
+      roughness: 0.2,
+      metalness: 0.7,
+      emissive: isLight ? 0x0369a1 : 0x0891b2,
+      emissiveIntensity: isLight ? 0.30 : 0.45,
       transparent: true,
-      opacity: isLight ? 0.45 : 0.6,
+      opacity: isLight ? 0.65 : 0.6,
     });
     const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
     outerRing.rotation.x = -Math.PI / 2.8;
@@ -164,13 +164,13 @@ export function Auth3DScene() {
     logoGroup.add(outerRing);
 
     // Balizas satelitales orbitales duales
-    const beaconGeometry = new THREE.SphereGeometry(isLight ? 0.05 : 0.065, 16, 16);
+    const beaconGeometry = new THREE.SphereGeometry(isLight ? 0.055 : 0.065, 16, 16);
     const beaconMaterial = new THREE.MeshStandardMaterial({
-      color: isLight ? 0x38bdf8 : 0xe0f2fe,
-      emissive: isLight ? 0x0284c7 : 0x22d3ee,
-      emissiveIntensity: 0.85,
+      color: isLight ? 0x00b4d8 : 0xe0f2fe,
+      emissive: isLight ? 0x0096c7 : 0x22d3ee,
+      emissiveIntensity: 0.9,
       roughness: 0.1,
-      metalness: 0.9,
+      metalness: 0.8,
     });
     const beacon1 = new THREE.Mesh(beaconGeometry, beaconMaterial);
     const beacon2 = new THREE.Mesh(beaconGeometry, beaconMaterial);
