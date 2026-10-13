@@ -1,4 +1,4 @@
-export const DEFAULT_AFTER_LOGIN = "/panel";
+export const DEFAULT_AFTER_LOGIN = "/hub";
 
 /** Pantalla obligatoria mientras la contrasena sea temporal (DEC-016). */
 export const CHANGE_PASSWORD_PATH = "/cambiar-contrasena";

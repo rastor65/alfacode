@@ -5,9 +5,9 @@ import { DEFAULT_AFTER_LOGIN, safeNextPath } from "./redirects";
 
 describe("safeNextPath", () => {
   it("acepta rutas internas con consulta y fragmento", () => {
-    assert.equal(safeNextPath("/panel"), "/panel");
+    assert.equal(safeNextPath("/hub/perfil"), "/hub/perfil");
     assert.equal(safeNextPath("/proyectos/x?tab=2#detalle"), "/proyectos/x?tab=2#detalle");
-    assert.equal(safeNextPath(["/panel", "/otra"]), "/panel");
+    assert.equal(safeNextPath(["/hub/perfil", "/otra"]), "/hub/perfil");
   });
 
   it("rechaza destinos externos o peligrosos (redireccion abierta)", () => {
@@ -30,7 +30,7 @@ describe("safeNextPath", () => {
 
   it("no vuelve a la pantalla de login", () => {
     assert.equal(safeNextPath("/ingresar"), DEFAULT_AFTER_LOGIN);
-    assert.equal(safeNextPath("/ingresar?next=/panel"), DEFAULT_AFTER_LOGIN);
+    assert.equal(safeNextPath("/ingresar?next=/hub"), DEFAULT_AFTER_LOGIN);
     assert.equal(safeNextPath("/registro"), DEFAULT_AFTER_LOGIN);
     assert.equal(safeNextPath("/cambiar-contrasena"), DEFAULT_AFTER_LOGIN);
   });

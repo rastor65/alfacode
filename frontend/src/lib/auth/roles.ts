@@ -22,3 +22,39 @@ export type SessionUser = {
   mustChangePassword: boolean;
   roles: RoleCode[];
 };
+
+/** Orden en que se ofrecen los roles al asignarlos. */
+export const ROLE_CODES: RoleCode[] = ["student", "researcher", "teacher_leader", "coordinator", "admin"];
+
+/** Pueden revisar solicitudes, invitar y administrar integrantes (matriz F1). */
+export function isAuthority(roles: readonly RoleCode[]) {
+  return roles.includes("admin") || roles.includes("coordinator");
+}
+
+/**
+ * Roles que la persona puede asignar: un admin cualquiera; un coordinator solo
+ * `teacher_leader`, `researcher` y `student`. Solo decide que se muestra; el backend autoriza.
+ */
+export function assignableRoles(actorRoles: readonly RoleCode[]): RoleCode[] {
+  if (actorRoles.includes("admin")) {
+    return ROLE_CODES;
+  }
+
+  return actorRoles.includes("coordinator") ? ["student", "researcher", "teacher_leader"] : [];
+}
+
+/**
+ * Si la persona puede administrar a otra: un admin a cualquiera; un coordinator solo a quien
+ * no tenga `admin` ni `coordinator`. Nadie a si mismo. Solo presentacion: el backend autoriza.
+ */
+export function canManageMember(actor: { id: string; roles: readonly RoleCode[] }, target: { id: string; roles: readonly RoleCode[] }) {
+  if (actor.id === target.id) {
+    return false;
+  }
+
+  if (actor.roles.includes("admin")) {
+    return true;
+  }
+
+  return actor.roles.includes("coordinator") && !target.roles.some((role) => role === "admin" || role === "coordinator");
+}

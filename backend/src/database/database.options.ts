@@ -8,6 +8,8 @@ import { Session } from "../modules/auth/session.entity";
 import { VerificationToken } from "../modules/auth/verification-token.entity";
 import { Invitation } from "../modules/membership/invitation.entity";
 import { MembershipRequest } from "../modules/membership/membership-request.entity";
+import { ProjectMember } from "../modules/projects/project-member.entity";
+import { Project } from "../modules/projects/project.entity";
 import { Role } from "../modules/roles/role.entity";
 import { User } from "../modules/users/user.entity";
 import { SchemaBootstrap1728690000000 } from "./migrations/1728690000000-schema-bootstrap";
@@ -15,8 +17,19 @@ import { IdentityBase1728700000000 } from "./migrations/1728700000000-identity-b
 import { IdentityFlows1728710000000 } from "./migrations/1728710000000-identity-flows";
 import { AuditEvents1728720000000 } from "./migrations/1728720000000-audit-events";
 import { PasswordLifecycle1728730000000 } from "./migrations/1728730000000-password-lifecycle";
+import { ProjectsAndTeams1728740000000 } from "./migrations/1728740000000-projects-and-teams";
 
-export const entities = [User, Role, Session, MembershipRequest, Invitation, VerificationToken, AuditEvent];
+export const entities = [
+  User,
+  Role,
+  Session,
+  MembershipRequest,
+  Invitation,
+  VerificationToken,
+  AuditEvent,
+  Project,
+  ProjectMember,
+];
 
 export const migrations = [
   SchemaBootstrap1728690000000,
@@ -24,6 +37,7 @@ export const migrations = [
   IdentityFlows1728710000000,
   AuditEvents1728720000000,
   PasswordLifecycle1728730000000,
+  ProjectsAndTeams1728740000000,
 ];
 
 function loadEnvFile(filePath: string) {

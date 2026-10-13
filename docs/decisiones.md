@@ -172,6 +172,33 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Riesgo aceptado:** enviar una contrasena por correo deja una credencial en el buzon hasta su primer uso; se mitiga con vencimiento de 72 h, cambio obligatorio y revocacion de sesiones.
 - **Aprobacion del responsable:** decision confirmada; implementacion pendiente de su revision.
 
+### DEC-017 - Autorizacion de I-09 y estado de I-08
+
+- **Fecha:** 2026-10-13
+- **Estado:** I-09 autorizada ("autorizo i 09, continuemos").
+- **Contexto:** el responsable integro I-04 a I-08 en `main` (commit `a2dd3d8`, PR #1). No declaro de forma explicita la aprobacion de I-08 ni de DEC-016; se registra la autorizacion de I-09 y la integracion, sin marcarlas como aprobadas.
+- **Cambios de otra persona colaboradora (rastor65):** commits `7da7c27` (script de build raiz), `19296ef` (logos oficiales) y `b137c57` (pantallas de acceso con escena Three.js y dependencia `three`). El nuevo `auth-shell.tsx` usa colores oscuros fijos, por lo que las pantallas de acceso ya no respetan el tema claro pedido por el responsable; queda como punto a decidir, sin cambios del agente sobre ese trabajo.
+- **I-09 por fases:** I-09.1 perfil; I-09.2 cola de solicitudes; I-09.3 integrantes e invitaciones.
+- **Convencion de modales (instruccion del responsable):** crear, editar, ver detalle y confirmar acciones se hace en modales (`src/components/ui/modal.tsx`, sobre `<dialog>` nativo con `showModal()`: foco atrapado, fondo inerte, Escape y devolucion del foco). Las paginas quedan como listados y vistas de lectura; se elimino la pagina `/integrantes/[id]`. Los datos de un modal se cargan en el evento que lo abre, no en un efecto.
+- **Select de shadcn (instruccion del responsable):** los selectores usan el `Select` de shadcn/ui (`src/components/ui/select.tsx`, copiado al estilo shadcn y adaptado a los tokens del HUB) sobre `@radix-ui/react-select@2.3.7` (se evitaron 2.3.8, 2.4.0 y 2.4.1 por tener menos de dos semanas). No se ejecuto `shadcn init` porque reescribiria `globals.css` y los tokens de tema. Dentro de un modal, la lista se monta en el propio `<dialog>` (`PortalContainerContext`), porque lo montado en `body` quedaria debajo de la capa superior e inerte. shadcn no estaba instalado: los demas componentes de `ui/` siguen siendo propios.
+- **Convencion de layout (instruccion del responsable):** el contenido de cada vista privada va centrado en el area de contenido con un ancho comun (`mx-auto w-full max-w-3xl`), para que no quede pegado a la izquierda ni cambie de posicion al navegar.
+
+### DEC-018 - Commit de I-09 y autorizacion de I-10
+
+- **Fecha:** 2026-10-13
+- **Estado:** autorizado ("hazlo", en respuesta a la propuesta de hacer commit y preparar I-10).
+- **Decision:** se hace commit en `dev` de I-09 y de los ajustes posteriores (modales, `Select` y `Switch` de shadcn, centrado, filtros e interruptores de roles). Se autoriza I-10 (Fase 2: proyectos y equipos, F2-01 a F2-06).
+- **Pendiente:** el responsable no declaro de forma explicita la aprobacion de I-08, I-09 ni DEC-016; quedan registradas como integradas y autorizadas para continuar, no como aprobadas. El plan pone como dependencia de la Fase 2 "Fase 1 aceptada"; prevalece la instruccion del responsable de continuar.
+- **Creacion de proyectos:** sin respuesta sobre el permiso adicional para `teacher_leader` (F2-03), se aplica el valor por defecto del plan: solo `admin` y `coordinator` crean proyectos.
+
+### DEC-019 - Vistas privadas bajo `/hub`
+
+- **Fecha:** 2026-10-13
+- **Estado:** autorizado ("hazlo como recomiendas", en respuesta a la propuesta de agrupar lo privado bajo `/hub`).
+- **Contexto:** la ruta `/proyectos` ya la usa el portafolio publico; los proyectos del HUB necesitaban otra.
+- **Decision:** todas las vistas privadas pasan a `/hub` (`/hub`, `/hub/proyectos`, `/hub/integrantes`, `/hub/solicitudes`, `/hub/perfil`); el destino tras el login es `/hub`. Las rutas anteriores (`/panel`, `/perfil`, `/solicitudes`, `/integrantes`) redirigen con 307 desde `next.config.ts`, temporales para no fijarlas en caches mientras la estructura evoluciona. Las pantallas de acceso (`/ingresar`, `/registro`, `/cambiar-contrasena`, recuperacion) no cambian.
+- **Impacto:** el backend no cambia. Enlaces guardados a las rutas anteriores siguen funcionando.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

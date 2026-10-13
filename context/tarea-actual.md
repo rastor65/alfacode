@@ -23,14 +23,58 @@
 - `npm run verify` OK (26 + 127 pruebas).
 - **No verificado por el agente:** la interaccion en un navegador real (envio de formularios, foco, desplegables).
 
-## Siguiente iteracion propuesta
+## I-09 (gestion, F1-14 segunda parte) por fases
 
-**ID sugerido:** I-09
-**Estado:** propuesta; no autorizada.
-**Objetivo sugerido:** F1-14, segunda parte (gestion), dividida en fases: I-09.1 perfil propio (ver y editar nombre, cambiar contrasena); I-09.2 cola de solicitudes (listar, aprobar con rol y entrega de la contrasena temporal, rechazar); I-09.3 integrantes (listado con busqueda y filtros, detalle, activar/desactivar, roles, regenerar contrasena temporal) e invitaciones. El menu lateral mostrara cada vista segun el rol.
+**Estado:** autorizada (DEC-017).
+
+| Fase | Contenido | Estado |
+|---|---|---|
+| I-09.1 | `/perfil`: datos de la cuenta, editar nombre, cambiar contrasena en la misma vista | Verificada tecnicamente |
+| I-09.2 | `/solicitudes`: pestanas por estado, paginacion, aprobar con rol y comentario, rechazar, aviso de entrega de la contrasena temporal (correo, manual una sola vez con copiar, o fallo con reintento) | Verificada tecnicamente |
+| I-09.3 | `/integrantes` (busqueda, filtro por rol; autoridades: correo, filtro por estado, invitar) e `/integrantes/[id]` (autoridades: activar/desactivar con motivo, rol al reactivar, asignar y quitar roles, regenerar contrasena temporal) | Verificada tecnicamente |
+
+## Resultado tecnico verificado de I-09.1 e I-09.2
+
+- `frontend/src/lib/api/server.ts`: lectura desde el servidor con la cookie y la IP real de quien navega; `getSessionUser` lo reutiliza.
+- `npm --prefix frontend test`: 30 pruebas OK (roles asignables, autoridad, filtros de URL).
+- Puertos aislados con base y outbox temporales: `/solicitudes` (admin) muestra pendientes con mensaje y acciones; tras aprobar, la pestana de aprobadas muestra rol, revisor, fecha en hora de Bogota y comentario; un investigador ve el aviso de permiso y no tiene el enlace en el menu; `/perfil` muestra correo, roles, estado, fecha de alta y los formularios; editar el nombre se refleja en la vista. Sin errores en los logs.
+- `npm run verify` OK (30 + 127 pruebas).
+- **No verificado por el agente:** la interaccion en un navegador real (aprobar o rechazar desde la interfaz, copiar la contrasena temporal, reintento).
+
+## Resultado tecnico verificado de I-09.3
+
+- `npm --prefix frontend test`: 33 pruebas OK (`canManageMember`, filtros).
+- Puertos aislados con base y outbox temporales, por rol: un estudiante ve nombres y roles sin correos ajenos, sin invitar, sin pestanas de estado ni enlaces al detalle, y recibe 404 en `/integrantes/[id]`; el admin ve correos, invitar, pestanas y enlaces; busqueda por nombre y filtro por rol funcionan; en su propio detalle el admin no tiene acciones; un coordinator no puede administrar al admin y, sobre una estudiante, solo se le ofrecen `researcher` y `teacher_leader` para agregar; tras desactivar, la persona aparece en Inactivos y su detalle ofrece activar. Sin errores en los logs.
+- `npm run verify` OK (33 + 127 pruebas).
+- **No verificado por el agente:** la interaccion en un navegador real.
+
+## I-10 (Fase 2: proyectos y equipos, F2-01 a F2-06) por fases
+
+**Estado:** autorizada (DEC-018). Crear proyectos: solo `admin` y `coordinator` (valor por defecto del plan).
+
+| Fase | Contenido | Estado |
+|---|---|---|
+| I-10.1 | Backend: migracion `ProjectsAndTeams1728740000000` (`projects`, `project_members`), politica de acceso, estados, equipo, auditoria; API `GET/POST /projects`, `GET/PATCH /projects/:id`, `POST /projects/:id/status`, `GET/POST /projects/:id/members`, `PATCH/DELETE /projects/:id/members/:userId` | Verificada tecnicamente |
+| I-10.2 | Frontend en `/hub/proyectos` (DEC-019): listado con filtros, crear/editar, detalle, equipo y estados (en modales) | Verificada tecnicamente |
+
+## Resultado tecnico verificado de I-10.1
+
+- `npm --prefix backend test`: 145 pruebas OK (18 nuevas de proyectos: creacion y validacion, visibilidad con 404 para ajenos y docente lider sin pertenencia, correos solo para autoridades, equipo por lider y no por colaborador, integrantes activos, lider obligatorio en proyecto activo, transiciones y bloqueo de proyectos finalizados, edicion auditada).
+- Migracion aplicada, revertida y reaplicada en la base local (usuarios intactos).
+- `npm run verify` OK (38 + 145 pruebas).
+- Las mutaciones de control no se completaron: el responsable interrumpio esa ejecucion; una mutacion quedo aplicada y se restauro desde su respaldo verificado (sin `if (false)` restantes, pruebas en verde).
+- Pendiente de I-11: impedir retirar a un miembro con tareas asignadas (F2-04) cuando existan tareas.
+
+## Resultado tecnico verificado de I-10.2
+
+- Vistas privadas movidas bajo `/hub` con redirecciones 307 desde las rutas anteriores (DEC-019).
+- `/hub/proyectos`: listado (autoridades ven todos; el resto, los suyos) con busqueda y filtros de estado y metodologia en la URL; boton "Nuevo proyecto" solo para autoridades; detalle en modal con edicion, cambios de estado con confirmacion y motivo, y equipo (agregar integrantes activos, cambiar rol, retirar). Las acciones se muestran segun los `permissions` que calcula el backend, que sigue siendo quien autoriza.
+- `npm --prefix frontend test` 43 OK (nueva `features/projects/types.test.ts`; detecto que `parseProjectStatus` aceptaba claves heredadas como `constructor`, corregido); lint OK; `npm run verify` OK (43 + 145 pruebas).
+- Flujo verificado en puertos aislados 3100/4100 con base temporal (luego eliminada): redireccion sin sesion, `/panel` -> `/hub`, login, alta, listado con lider, activacion, filtros, parametros invalidos ignorados, bloqueo al retirar al unico lider de un proyecto activo, las cinco vistas `/hub/*` con 200. No se uso navegador real: la interaccion de los modales queda pendiente de revision del responsable.
 
 ## No realizar sin nueva autorizacion
 
-- No iniciar I-09 hasta que el responsable apruebe I-08.
+- No iniciar I-11 (tareas y Kanban) hasta que el responsable revise I-10.
+- No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.
 - No crear datos reales de personas.

@@ -20,21 +20,26 @@ const FIELD_MESSAGES = {
 type ChangePasswordFormProps = {
   /** La contrasena actual es la temporal recibida por correo. */
   temporary: boolean;
+  /** `redirect`: va al panel al terminar (cambio obligatorio). `inline`: se queda y lo confirma (perfil). */
+  afterSuccess?: "redirect" | "inline";
 };
 
-export function ChangePasswordForm({ temporary }: ChangePasswordFormProps) {
+export function ChangePasswordForm({ temporary, afterSuccess = "redirect" }: ChangePasswordFormProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const currentPassword = String(form.get("currentPassword") ?? "");
     const newPassword = String(form.get("newPassword") ?? "");
 
     setError(null);
+    setSaved(false);
 
     if (newPassword !== String(form.get("confirmPassword") ?? "")) {
       setFieldErrors({ confirmPassword: "Las contraseñas no coinciden." });
@@ -47,6 +52,13 @@ export function ChangePasswordForm({ temporary }: ChangePasswordFormProps) {
     try {
       await apiRequest("/auth/change-password", { method: "POST", body: { currentPassword, newPassword } });
       // Las demas sesiones se cerraron; esta sigue abierta y ya puede usar el HUB.
+      if (afterSuccess === "inline") {
+        formElement.reset();
+        setSaved(true);
+        setPending(false);
+        return;
+      }
+
       router.replace(DEFAULT_AFTER_LOGIN);
       router.refresh();
     } catch (caught) {
@@ -67,6 +79,7 @@ export function ChangePasswordForm({ temporary }: ChangePasswordFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && <Alert tone="error">{error}</Alert>}
+      {saved && <Alert tone="success">Contraseña actualizada. Cerramos tus otras sesiones abiertas.</Alert>}
       <FormField
         label={temporary ? "Contraseña temporal" : "Contraseña actual"}
         name="currentPassword"
