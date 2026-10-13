@@ -9,7 +9,7 @@ const SVG_DATA = `
 </svg>
 `;
 
-export function create3DAlfaCodeLogo(): THREE.Group {
+export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } = {}): THREE.Group {
   const rootGroup = new THREE.Group();
   const logoGroup = new THREE.Group();
   rootGroup.add(logoGroup);
@@ -39,27 +39,27 @@ export function create3DAlfaCodeLogo(): THREE.Group {
 
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: 0x02485c,
-          metalness: 0.9,
+          color: isLight ? 0x035368 : 0x02485c,
+          metalness: isLight ? 0.85 : 0.9,
           roughness: 0.2,
           clearcoat: 0.85,
           clearcoatRoughness: 0.08,
           reflectivity: 0.9,
           emissive: 0x012834,
-          emissiveIntensity: 0.4,
+          emissiveIntensity: isLight ? 0.2 : 0.4,
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: 0x67e8f9,
-          metalness: 0.28,
-          roughness: 0.09,
+          color: isLight ? 0x0284c7 : 0x67e8f9,
+          metalness: isLight ? 0.35 : 0.28,
+          roughness: isLight ? 0.12 : 0.09,
           clearcoat: 1.0,
           clearcoatRoughness: 0.04,
           transmission: 0.15,
           ior: 1.48,
           reflectivity: 0.95,
-          emissive: 0x22d3ee,
-          emissiveIntensity: 0.75,
+          emissive: isLight ? 0x0369a1 : 0x22d3ee,
+          emissiveIntensity: isLight ? 0.45 : 0.75,
           side: THREE.DoubleSide,
         });
 
@@ -92,9 +92,9 @@ export function create3DAlfaCodeLogo(): THREE.Group {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      grad.addColorStop(0, "rgba(34, 211, 238, 0.4)");
-      grad.addColorStop(0.35, "rgba(3, 130, 161, 0.18)");
-      grad.addColorStop(0.7, "rgba(6, 182, 212, 0.04)");
+      grad.addColorStop(0, isLight ? "rgba(2, 132, 199, 0.35)" : "rgba(34, 211, 238, 0.4)");
+      grad.addColorStop(0.35, isLight ? "rgba(3, 105, 161, 0.18)" : "rgba(3, 130, 161, 0.18)");
+      grad.addColorStop(0.7, isLight ? "rgba(6, 182, 212, 0.04)" : "rgba(6, 182, 212, 0.04)");
       grad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 128, 128);
@@ -103,8 +103,8 @@ export function create3DAlfaCodeLogo(): THREE.Group {
       const groundMat = new THREE.MeshBasicMaterial({
         map: groundTex,
         transparent: true,
-        opacity: 0.75,
-        blending: THREE.AdditiveBlending,
+        opacity: isLight ? 0.65 : 0.75,
+        blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
         depthWrite: false,
         side: THREE.DoubleSide,
       });

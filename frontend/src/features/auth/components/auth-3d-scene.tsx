@@ -1,19 +1,44 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import * as THREE from "three";
+import { useTheme } from "@/components/theme/theme-provider";
 import { create3DAlfaCodeLogo } from "./alfacode-3d-logo";
+
+function subscribeSystemTheme(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getSystemThemeSnapshot() {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function getSystemThemeServerSnapshot() {
+  return true;
+}
 
 /**
  * Escena 3D WebGL con el logotipo oficial tridimensional de AlfaCode:
  * - Geometría extruida con biseles a partir de los trazos vectoriales originales.
- * - Materiales reflectivos duales: cian metalizado (#0382a1) y cian luminiscente (#94eefe).
- * - Anillo orbital holográfico y aura estelar sutil (sin telarañas caóticas).
+ * - Iluminación y materiales PBR adaptativos para modo claro y oscuro.
+ * - Anillo orbital holográfico y aura estelar sutil.
  * - Reactivo al movimiento del cursor mediante interpolación suave (damping).
- * - Compatible con prefers-reduced-motion y pausa en pestañas en segundo plano.
+ * - Compatible con prefers-reduced-motion y selector de tema en tiempo real.
  */
 export function Auth3DScene() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+  const systemIsDark = useSyncExternalStore(
+    subscribeSystemTheme,
+    getSystemThemeSnapshot,
+    getSystemThemeServerSnapshot,
+  );
+
+  const isLight = theme === "light" || (theme === "system" && !systemIsDark);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -40,23 +65,23 @@ export function Auth3DScene() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
 
-    // 2. Luces de estudio cinematográficas para resaltar el clearcoat y biseles PBR
-    const ambientLight = new THREE.AmbientLight(0x071e2e, 3.0);
+    // 2. Luces de estudio cinematográficas calibradas para modo claro u oscuro
+    const ambientLight = new THREE.AmbientLight(isLight ? 0xf0f9ff : 0x071e2e, isLight ? 3.4 : 3.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 4.5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 4.8 : 4.5);
     keyLight.position.set(5, 6, 8);
     scene.add(keyLight);
 
-    const rimDirectionalLight = new THREE.DirectionalLight(0x00e5ff, 4.0);
+    const rimDirectionalLight = new THREE.DirectionalLight(isLight ? 0x0284c7 : 0x00e5ff, isLight ? 3.5 : 4.0);
     rimDirectionalLight.position.set(-5, 3, -5);
     scene.add(rimDirectionalLight);
 
-    const cyanPointLight = new THREE.PointLight(0x38bdf8, 7, 30);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x0284c7 : 0x38bdf8, isLight ? 6 : 7, 30);
     cyanPointLight.position.set(-3, 3, 5);
     scene.add(cyanPointLight);
 
-    const bottomGlowLight = new THREE.PointLight(0x0382a1, 6, 20);
+    const bottomGlowLight = new THREE.PointLight(isLight ? 0x0284c7 : 0x0382a1, isLight ? 5 : 6, 20);
     bottomGlowLight.position.set(0, -3.5, 2);
     scene.add(bottomGlowLight);
 
@@ -65,7 +90,7 @@ export function Auth3DScene() {
     scene.add(logoGroup);
 
     try {
-      const logoMeshGroup = create3DAlfaCodeLogo();
+      const logoMeshGroup = create3DAlfaCodeLogo({ isLight });
       logoGroup.add(logoMeshGroup);
     } catch (err) {
       console.error("Error al instanciar el logotipo 3D:", err);
@@ -74,9 +99,9 @@ export function Auth3DScene() {
     // 4. Anillos Giroscópicos Holográficos Duales y Baliza Orbital
     const orbitRingGeometry = new THREE.TorusGeometry(3.9, 0.02, 16, 120);
     const orbitRingMaterial = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
+      color: isLight ? 0x0284c7 : 0x38bdf8,
       transparent: true,
-      opacity: 0.42,
+      opacity: isLight ? 0.55 : 0.42,
     });
     const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
     orbitRing.rotation.x = Math.PI / 3.2;
@@ -86,9 +111,9 @@ export function Auth3DScene() {
     // Anillo exterior de contrapunto holográfico
     const outerRingGeometry = new THREE.TorusGeometry(4.8, 0.012, 16, 140);
     const outerRingMaterial = new THREE.MeshBasicMaterial({
-      color: 0x06b6d4,
+      color: isLight ? 0x0369a1 : 0x06b6d4,
       transparent: true,
-      opacity: 0.22,
+      opacity: isLight ? 0.38 : 0.22,
     });
     const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
     outerRing.rotation.x = -Math.PI / 2.8;
@@ -98,7 +123,7 @@ export function Auth3DScene() {
     // Baliza orbital luminosa
     const beaconGeometry = new THREE.SphereGeometry(0.065, 16, 16);
     const beaconMaterial = new THREE.MeshBasicMaterial({
-      color: 0xe0f2fe,
+      color: isLight ? 0x0284c7 : 0xe0f2fe,
     });
     const beacon = new THREE.Mesh(beaconGeometry, beaconMaterial);
     logoGroup.add(beacon);
@@ -125,7 +150,7 @@ export function Auth3DScene() {
     if (ctx) {
       const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
       gradient.addColorStop(0, "rgba(225, 254, 255, 1)");
-      gradient.addColorStop(0.4, "rgba(103, 232, 249, 0.7)");
+      gradient.addColorStop(0.4, isLight ? "rgba(2, 132, 199, 0.7)" : "rgba(103, 232, 249, 0.7)");
       gradient.addColorStop(1, "rgba(3, 130, 161, 0)");
       ctx.fillStyle = gradient;
       ctx.beginPath();
@@ -135,12 +160,12 @@ export function Auth3DScene() {
     const particleTexture = new THREE.CanvasTexture(canvas);
 
     const particleMaterial = new THREE.PointsMaterial({
-      color: 0x94eefe,
+      color: isLight ? 0x0284c7 : 0x94eefe,
       size: 0.22,
       map: particleTexture,
       transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending,
+      opacity: isLight ? 0.6 : 0.65,
+      blending: isLight ? THREE.NormalBlending : THREE.AdditiveBlending,
       depthWrite: false,
     });
 
@@ -266,7 +291,7 @@ export function Auth3DScene() {
         container.removeChild(renderer.domElement);
       }
     };
-  }, []);
+  }, [isLight]);
 
   return (
     <div
