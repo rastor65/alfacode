@@ -40,7 +40,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     // Acabado lacado brillante cerámico de alta fidelidad con los colores azul y cian exactos de AlfaCode
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x02738f : 0x0382a1, // Azul marino / petróleo oficial de AlfaCode (#0382a1)
+          color: 0x0382a1, // Azul marino / petróleo oficial de AlfaCode (#0382a1)
           metalness: 0, // Dieléctrico puro: elimina cualquier reflejo gris metálico bajo luz de estudio
           roughness: 0.08,
           clearcoat: 1.0,
@@ -51,7 +51,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x0284c7 : 0x94eefe, // Cian y azul cielo eléctrico de alta fidelidad oficial
+          color: isLight ? 0x0ea5e9 : 0x94eefe, // Cian y azul cielo eléctrico de alta fidelidad oficial
           metalness: 0, // Dieléctrico puro: mantiene la saturación cromática vívida
           roughness: 0.06,
           clearcoat: 1.0,
