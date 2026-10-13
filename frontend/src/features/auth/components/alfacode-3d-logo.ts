@@ -40,18 +40,18 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
     // Acabado lacado brillante cerámico de alta fidelidad con los colores azul y cian exactos de AlfaCode
     const material = isDark
       ? new THREE.MeshPhysicalMaterial({
-          color: 0x0382a1, // Azul marino / petróleo oficial de AlfaCode (#0382a1)
+          color: isLight ? 0x02617a : 0x0382a1, // Azul marino / petróleo oficial de AlfaCode con saturación sólida y contraste
           metalness: 0, // Dieléctrico puro: elimina cualquier reflejo gris metálico bajo luz de estudio
           roughness: 0.08,
           clearcoat: 1.0,
           clearcoatRoughness: 0.03,
           reflectivity: 0.95,
-          emissive: isLight ? 0x025670 : 0x02657e,
-          emissiveIntensity: isLight ? 0.45 : 0.42,
+          emissive: isLight ? 0x013d4d : 0x02657e,
+          emissiveIntensity: isLight ? 0.16 : 0.42,
           side: THREE.DoubleSide,
         })
       : new THREE.MeshPhysicalMaterial({
-          color: isLight ? 0x0ea5e9 : 0x94eefe, // Cian y azul cielo eléctrico de alta fidelidad oficial
+          color: isLight ? 0x0284c7 : 0x94eefe, // Cian y azul cerúleo vibrante de alta saturación (no pálido)
           metalness: 0, // Dieléctrico puro: mantiene la saturación cromática vívida
           roughness: 0.06,
           clearcoat: 1.0,
@@ -60,7 +60,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
           ior: 1.5,
           reflectivity: 0.98,
           emissive: isLight ? 0x0284c7 : 0x22d3ee,
-          emissiveIntensity: isLight ? 0.42 : 0.72,
+          emissiveIntensity: isLight ? 0.22 : 0.72,
           side: THREE.DoubleSide,
         });
 
@@ -81,7 +81,7 @@ export function create3DAlfaCodeLogo({ isLight = false }: { isLight?: boolean } 
   logoGroup.position.z = -center.z;
 
   // Escala restaurada a tamaño heroico imponente
-  rootGroup.scale.set(0.0115, 0.0115, 0.0115);
+  rootGroup.scale.set(0.0108, 0.0108, 0.0108);
 
   // Pedestal / sombra de contacto proyectada en el plano inferior
   try {

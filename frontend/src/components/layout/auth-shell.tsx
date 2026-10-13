@@ -105,7 +105,7 @@ export async function AuthShell({
             {/* Columna Izquierda: Escenario 3D del Isotipo Oficial y Ecosistema de Investigación */}
             <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
               {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode a tamaño heroico */}
-              <div className="relative w-full max-w-[560px] h-[360px] sm:h-[420px] lg:h-[480px] flex items-center justify-center">
+              <div className="relative w-full max-w-[680px] h-[380px] sm:h-[460px] lg:h-[520px] flex items-center justify-center">
                 {/* Halo de resplandor ambiental y pedestal luminoso */}
                 <div
                   className="pointer-events-none absolute inset-x-12 inset-y-8 rounded-full bg-gradient-to-tr from-cyan-500/20 via-teal-500/15 to-transparent blur-[100px]"
