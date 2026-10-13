@@ -1,0 +1,390 @@
+@import "tailwindcss";
+
+:root {
+  --background: #071018;
+  --foreground: #eefcff;
+  --brand: #469eb4;
+  --brand-soft: #e1feff;
+  --ink: #06111a;
+  --panel: rgba(14, 28, 40, 0.65);
+  --panel-border: rgba(126, 212, 232, 0.16);
+  --panel-hover-border: rgba(126, 212, 232, 0.38);
+  --panel-shadow: inset 0 1px 0 rgba(225, 254, 255, 0.1), 0 24px 60px rgba(2, 8, 14, 0.45);
+  --card-bg: rgba(11, 23, 34, 0.7);
+  --card-border: rgba(126, 212, 232, 0.12);
+  --card-shadow: inset 0 1px 0 rgba(225, 254, 255, 0.08), 0 16px 40px rgba(2, 8, 14, 0.35);
+  --card-hover-bg: rgba(15, 30, 44, 0.85);
+  --card-hover-shadow: inset 0 1px 0 rgba(225, 254, 255, 0.15), 0 20px 50px rgba(70, 158, 180, 0.16);
+  --grid-dot: rgba(126, 212, 232, 0.06);
+}
+
+/*
+ * Colores del portafolio publico que no son de la paleta de Tailwind (fondos de seccion,
+ * header, rotulos). Oscuros por defecto; en claro los cambia `.public-site` (mas abajo).
+ */
+:root {
+  --site-page: #05080d;
+  --site-bg: #071018;
+  --site-bg-alt: #081522;
+  --site-bg-deep: #04090e;
+  --site-ink: #06111a;
+  --site-eyebrow: #7ed4e8;
+  --site-highlight: #e1feff;
+  --site-header-shadow: 0 10px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --site-cta-shadow: 0 20px 70px rgba(2, 8, 14, 0.6);
+}
+
+/*
+ * Tokens de color del HUB. Por defecto son oscuros, como el sitio publico. Dentro de
+ * `.hub-theme` (portafolio, vistas de acceso y privadas) cambian segun `data-theme`:
+ * `light`, `dark` o `system` (sigue `prefers-color-scheme`, sin JavaScript ni parpadeo).
+ */
+:root {
+  --hub-bg: #05080d;
+  --hub-panel: rgba(14, 28, 40, 0.72);
+  --hub-panel-border: rgba(126, 212, 232, 0.16);
+  --hub-panel-shadow: inset 0 1px 0 rgba(225, 254, 255, 0.08), 0 24px 60px rgba(2, 8, 14, 0.45);
+  --hub-text: #eefcff;
+  --hub-text-soft: #cbd5e1;
+  --hub-muted: #94a3b8;
+  --hub-accent: #67e8f9;
+  --hub-accent-soft: rgba(6, 182, 212, 0.15);
+  --hub-hover: rgba(255, 255, 255, 0.05);
+  --hub-subtle: rgba(255, 255, 255, 0.03);
+  --hub-input: rgba(6, 17, 26, 0.8);
+  --hub-input-border: rgba(255, 255, 255, 0.12);
+  --hub-danger-bg: rgba(244, 63, 94, 0.1);
+  --hub-danger-border: rgba(251, 113, 133, 0.3);
+  --hub-danger-text: #ffe4e6;
+  --hub-field-error: #fda4af;
+  --hub-success-bg: rgba(16, 185, 129, 0.1);
+  --hub-success-border: rgba(52, 211, 153, 0.3);
+  --hub-success-text: #d1fae5;
+  --hub-info-bg: rgba(6, 182, 212, 0.1);
+  --hub-info-border: rgba(34, 211, 238, 0.25);
+  --hub-info-text: #ecfeff;
+  --hub-badge-bg: rgba(207, 250, 254, 0.08);
+  --hub-badge-border: rgba(207, 250, 254, 0.15);
+  --hub-badge-text: #ecfeff;
+}
+
+.hub-theme {
+  color-scheme: dark;
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+/* Claro. El bloque se repite para `system` porque CSS no permite compartirlo con la media query. */
+.hub-theme[data-theme="light"] {
+  color-scheme: light;
+  --hub-bg: #eef3f6;
+  --hub-panel: #ffffff;
+  --hub-panel-border: #dbe4ea;
+  --hub-panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --hub-text: #0b1a24;
+  --hub-text-soft: #2b3d48;
+  --hub-muted: #5b6b75;
+  --hub-accent: #0e7490;
+  --hub-accent-soft: #e0f4f8;
+  --hub-hover: #f1f5f8;
+  --hub-subtle: #f6f9fb;
+  --hub-input: #ffffff;
+  --hub-input-border: #c4d2da;
+  --hub-danger-bg: #fff1f2;
+  --hub-danger-border: #fecdd3;
+  --hub-danger-text: #9f1239;
+  --hub-field-error: #be123c;
+  --hub-success-bg: #ecfdf5;
+  --hub-success-border: #a7f3d0;
+  --hub-success-text: #065f46;
+  --hub-info-bg: #ecfeff;
+  --hub-info-border: #a5f3fc;
+  --hub-info-text: #155e75;
+  --hub-badge-bg: #e0f4f8;
+  --hub-badge-border: #b6e3ec;
+  --hub-badge-text: #0e7490;
+}
+
+@media (prefers-color-scheme: light) {
+  .hub-theme[data-theme="system"] {
+    color-scheme: light;
+    --hub-bg: #eef3f6;
+    --hub-panel: #ffffff;
+    --hub-panel-border: #dbe4ea;
+    --hub-panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+    --hub-text: #0b1a24;
+    --hub-text-soft: #2b3d48;
+    --hub-muted: #5b6b75;
+    --hub-accent: #0e7490;
+    --hub-accent-soft: #e0f4f8;
+    --hub-hover: #f1f5f8;
+    --hub-subtle: #f6f9fb;
+    --hub-input: #ffffff;
+    --hub-input-border: #c4d2da;
+    --hub-danger-bg: #fff1f2;
+    --hub-danger-border: #fecdd3;
+    --hub-danger-text: #9f1239;
+    --hub-field-error: #be123c;
+    --hub-success-bg: #ecfdf5;
+    --hub-success-border: #a7f3d0;
+    --hub-success-text: #065f46;
+    --hub-info-bg: #ecfeff;
+    --hub-info-border: #a5f3fc;
+    --hub-info-text: #155e75;
+    --hub-badge-bg: #e0f4f8;
+    --hub-badge-border: #b6e3ec;
+    --hub-badge-text: #0e7490;
+  }
+}
+
+/*
+ * Portafolio publico en claro. Sus componentes se escribieron con la paleta de Tailwind en
+ * oscuro (`text-white`, `bg-cyan-950/40`, `border-white/10`...); en claro esa paleta se
+ * reasigna aqui en lugar de duplicar cada clase, asi el modo oscuro queda intacto:
+ * `white` pasa a tinta, `slate-950`/`cyan-950` a superficies claras y los cian claros a
+ * cian oscuro legible sobre blanco. Igual que arriba, el bloque se repite para `system`.
+ */
+.public-site[data-theme="light"] {
+  --site-page: #f3f7f9;
+  --site-bg: #f3f7f9;
+  --site-bg-alt: #e7f0f4;
+  --site-bg-deep: #e3ecf0;
+  --site-ink: #ffffff;
+  --site-eyebrow: #155e75;
+  --site-highlight: #0b4a5c;
+  --site-header-shadow: 0 8px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --site-cta-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  --panel: rgba(255, 255, 255, 0.78);
+  --panel-border: rgba(14, 116, 144, 0.16);
+  --panel-hover-border: rgba(14, 116, 144, 0.35);
+  --panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.06);
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --card-border: rgba(14, 116, 144, 0.14);
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+  --card-hover-bg: #ffffff;
+  --card-hover-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 14px 34px rgba(14, 116, 144, 0.14);
+  --grid-dot: rgba(14, 116, 144, 0.1);
+  --color-white: #0b1a24;
+  --color-black: #cbd5e1;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #ffffff;
+  --color-slate-950: #ffffff;
+  --color-cyan-100: #083344;
+  --color-cyan-200: #164e63;
+  --color-cyan-300: #164e63;
+  --color-cyan-400: #164e63;
+  --color-cyan-950: #cffafe;
+  --color-emerald-400: #059669;
+}
+
+@media (prefers-color-scheme: light) {
+  .public-site[data-theme="system"] {
+    --site-page: #f3f7f9;
+    --site-bg: #f3f7f9;
+    --site-bg-alt: #e7f0f4;
+    --site-bg-deep: #e3ecf0;
+    --site-ink: #ffffff;
+    --site-eyebrow: #155e75;
+    --site-highlight: #0b4a5c;
+    --site-header-shadow: 0 8px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --site-cta-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    --panel: rgba(255, 255, 255, 0.78);
+    --panel-border: rgba(14, 116, 144, 0.16);
+    --panel-hover-border: rgba(14, 116, 144, 0.35);
+    --panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.06);
+    --card-bg: rgba(255, 255, 255, 0.82);
+    --card-border: rgba(14, 116, 144, 0.14);
+    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+    --card-hover-bg: #ffffff;
+    --card-hover-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 14px 34px rgba(14, 116, 144, 0.14);
+    --grid-dot: rgba(14, 116, 144, 0.1);
+    --color-white: #0b1a24;
+    --color-black: #cbd5e1;
+    --color-slate-200: #1e293b;
+    --color-slate-300: #334155;
+    --color-slate-400: #475569;
+    --color-slate-800: #e2e8f0;
+    --color-slate-900: #ffffff;
+    --color-slate-950: #ffffff;
+    --color-cyan-100: #083344;
+    --color-cyan-200: #164e63;
+    --color-cyan-300: #164e63;
+    --color-cyan-400: #164e63;
+    --color-cyan-950: #cffafe;
+    --color-emerald-400: #059669;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-hub-bg: var(--hub-bg);
+  --color-hub-panel: var(--hub-panel);
+  --color-hub-border: var(--hub-panel-border);
+  --color-hub-text: var(--hub-text);
+  --color-hub-soft: var(--hub-text-soft);
+  --color-hub-muted: var(--hub-muted);
+  --color-hub-accent: var(--hub-accent);
+  --color-hub-accent-soft: var(--hub-accent-soft);
+  --color-hub-hover: var(--hub-hover);
+  --color-hub-subtle: var(--hub-subtle);
+  --color-hub-input: var(--hub-input);
+  --color-hub-input-border: var(--hub-input-border);
+  --color-hub-danger-bg: var(--hub-danger-bg);
+  --color-hub-danger-border: var(--hub-danger-border);
+  --color-hub-danger-text: var(--hub-danger-text);
+  --color-hub-field-error: var(--hub-field-error);
+  --color-hub-success-bg: var(--hub-success-bg);
+  --color-hub-success-border: var(--hub-success-border);
+  --color-hub-success-text: var(--hub-success-text);
+  --color-hub-info-bg: var(--hub-info-bg);
+  --color-hub-info-border: var(--hub-info-border);
+  --color-hub-info-text: var(--hub-info-text);
+  --color-hub-badge-bg: var(--hub-badge-bg);
+  --color-hub-badge-border: var(--hub-badge-border);
+  --color-hub-badge-text: var(--hub-badge-text);
+  --color-site-page: var(--site-page);
+  --color-site-bg: var(--site-bg);
+  --color-site-bg-alt: var(--site-bg-alt);
+  --color-site-bg-deep: var(--site-bg-deep);
+  --color-site-ink: var(--site-ink);
+  --color-site-eyebrow: var(--site-eyebrow);
+  --color-site-highlight: var(--site-highlight);
+  --shadow-site-header: var(--site-header-shadow);
+  --shadow-site-cta: var(--site-cta-shadow);
+}
+
+/* Panel del HUB: vidrio en oscuro, superficie blanca en claro. */
+.hub-panel {
+  background: var(--hub-panel);
+  border: 1px solid var(--hub-panel-border);
+  box-shadow: var(--hub-panel-shadow);
+  backdrop-filter: blur(20px) saturate(140%);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  background:
+    radial-gradient(circle at 18% 10%, rgba(70, 158, 180, 0.22), transparent 32rem),
+    radial-gradient(circle at 82% 16%, rgba(126, 212, 232, 0.14), transparent 28rem),
+    radial-gradient(circle at 50% 65%, rgba(40, 100, 120, 0.12), transparent 36rem),
+    linear-gradient(180deg, #071018 0%, #06121c 45%, #040c14 100%);
+}
+
+body::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(225, 254, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(225, 254, 255, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 90%);
+}
+
+::selection {
+  background: rgba(70, 158, 180, 0.45);
+  color: #ffffff;
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+
+.glass-card-interactive {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(20px);
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-interactive:hover {
+  background: var(--card-hover-bg);
+  border-color: var(--panel-hover-border);
+  transform: translateY(-2px);
+  box-shadow: var(--card-hover-shadow);
+}
+
+.node-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 0),
+    linear-gradient(135deg, rgba(70, 158, 180, 0.12), transparent 40%),
+    linear-gradient(225deg, rgba(126, 212, 232, 0.07), transparent 45%);
+  background-size: 36px 36px, 100% 100%, 100% 100%;
+}
+
+.glow-ambient-cyan {
+  position: relative;
+}
+
+.glow-ambient-cyan::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(70, 158, 180, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(50px);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.flow-line {
+  background: linear-gradient(90deg, transparent, rgba(70, 158, 180, 0.75), transparent);
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #06111a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(70, 158, 180, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(70, 158, 180, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

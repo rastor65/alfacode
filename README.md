@@ -1,110 +1,134 @@
 # AlfaCode
 
-Plataforma institucional para gestionar proyectos, integrantes, investigacion y produccion academica de AlfaCode, usando sus propios datos para construir el portal publico.
+Portafolio publico de AlfaCode construido con Next.js, React, TypeScript y Tailwind CSS.
+
+## Estructura
+
+```text
+frontend/   # Portafolio publico Next.js
+backend/    # API NestJS para AlfaCode HUB
+docs/       # Documentacion tecnica
+context/    # Estado operativo e instrucciones para agentes
+AGENTS.md   # Instrucciones para agentes
+```
+
+## Estado Actual
+
+- El frontend conserva solo el portafolio publico, su navegacion y sus animaciones.
+- Las rutas internas, login, auth, RBAC, repositorios, scripts de base de datos y migraciones se implementaran nuevamente por fases autorizadas.
+- El contenido del portafolio vive en archivos TypeScript estaticos.
+- El backend actual debe inspeccionarse antes de asumir contratos estables; el HUB usara API REST versionada bajo `/api/v1`.
 
 ## Stack
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- PostgreSQL administrado desde Vercel Marketplace
-- Vercel Blob
-- Auth.js / NextAuth
+- Frontend: Next.js 16.4.0, React 19.3.0, TypeScript, Tailwind CSS 4, Turbopack.
+- Backend base: Node.js, NestJS, TypeScript, API REST.
+- Persistencia: TypeORM con SQLite en desarrollo. PostgreSQL queda previsto para produccion/Railway, pero esta pausado temporalmente.
+- Seguridad prevista: autenticacion, sesiones y RBAC aplicados en backend.
+- Gestor de paquetes: npm.
 
-## Desarrollo local
+## Desarrollo Local
+
+Desde la raiz:
 
 ```bash
+npm run frontend:dev
+npm run backend:dev
+```
+
+Frontend:
+
+```bash
+cd frontend
 npm install
 npm run dev
 ```
 
 Abrir `http://localhost:3000`.
 
+Verificacion aislada de conexion frontend -> backend:
+
+```bash
+http://localhost:3000/system/health
+http://localhost:3000/api/v1/health
+```
+
+Backend:
+
+```bash
+cd backend
+npm install
+npm run start:dev
+```
+
+Abrir `http://localhost:4000/api/v1/health`.
+
 ## Scripts
+
+Raiz:
+
+```bash
+npm run frontend:dev
+npm run frontend:build
+npm run frontend:lint
+npm run backend:dev
+npm run backend:build
+npm run backend:typecheck
+npm run backend:migration:show
+npm run verify
+npm run smoke:health
+npm run check
+```
+
+Frontend, desde `frontend/`:
 
 ```bash
 npm run dev
 npm run lint
 npm run build
 npm run start
-npm run db:migrate
-npm run db:seed
-npm run db:check
-npm run db:create-admin
-npm run db:rbac
 ```
 
-## Variables de entorno
+Backend, desde `backend/`:
 
-Copiar `.env.example` a `.env.local` y completar cuando existan los servicios:
+```bash
+npm run start:dev
+npm run build
+npm run typecheck
+npm run migration:show
+npm run migration:run
+npm run migration:revert
+```
+
+Verificacion de Fase 0 desde la raiz:
+
+```bash
+npm run verify       # lint/build/typecheck y migraciones pendientes
+npm run smoke:health # levanta frontend/backend, prueba health y apaga procesos
+npm run check        # ejecuta verify + smoke:health
+```
+
+## Variables De Entorno
+
+Frontend: copiar `frontend/.env.example` a `frontend/.env.local`.
 
 ```bash
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-DATABASE_URL=
-BLOB_READ_WRITE_TOKEN=
-AUTH_SECRET=
-AUTH_URL=http://localhost:3000
-ADMIN_EMAIL=admin@alfacode.dev
-ADMIN_PASSWORD=
-ADMIN_NAME=Administrador AlfaCode
+NEXT_PUBLIC_API_URL=/api/v1
+API_PROXY_TARGET=http://localhost:4000
 ```
 
-## Estructura
-
-```text
-src/
-├── app/
-├── components/
-├── config/
-├── features/
-├── lib/
-└── types/
-
-db/
-└── migrations/
-
-Context/
-└── plan-desarrollo-alfacode.md
-```
-
-## Base de datos
-
-La primera migracion esta en `db/migrations/0001_initial.sql`. Incluye las entidades del MVP, enums, relaciones, indices y primeras politicas RLS conceptuales para PostgreSQL.
-
-Para aplicarla en Neon, agrega `DATABASE_URL` en `.env.local` y ejecuta:
+Backend: copiar `backend/.env.example` a `backend/.env.local`.
 
 ```bash
-npm run db:migrate
+NODE_ENV=development
+BACKEND_PORT=4000
+CORS_ORIGINS=http://localhost:3000
+DB_TYPE=sqlite
+SQLITE_PATH=./data/alfacode-hub.sqlite
+# DATABASE_URL=postgresql://usuario:clave@host:5432/base # futuro, cuando se retome PostgreSQL
 ```
 
-Para cargar datos iniciales:
+## Reinicio Del Sistema
 
-```bash
-npm run db:seed
-```
-
-Para verificar conteos de tablas principales:
-
-```bash
-npm run db:check
-```
-
-Para crear o actualizar el primer administrador, define `ADMIN_EMAIL` y `ADMIN_PASSWORD` en `.env.local` y ejecuta:
-
-```bash
-npm run db:create-admin
-```
-
-Para auditar recursos RBAC y permisos por rol:
-
-```bash
-npm run db:rbac
-```
-
-## Estado actual
-
-- Portal publico inicial.
-- Rutas de proyectos y detalle por slug.
-- Dashboard interno inicial.
-- Estructura base por dominios.
-- Conectores preparados para PostgreSQL y Vercel Blob.
+La logica de sistema se desarrollara desde cero en fases posteriores sobre el stack vigente. No se deben asumir dependencias de datos, autenticacion o RBAC instaladas hasta que I-01 las verifique y registre.
