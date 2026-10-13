@@ -141,15 +141,6 @@ export async function AuthShell({
 
               {/* Insignia y textos institucionales de alto impacto */}
               <div className="space-y-4 max-w-2xl w-full">
-                <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-950/60 px-4 py-1.5 text-xs font-mono text-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.2)] backdrop-blur-md">
-                  <span className="relative flex size-2">
-                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
-                  </span>
-                  <span className="font-semibold tracking-wider uppercase text-[11px]">Nodo Uniguajira</span>
-                  <span className="text-cyan-400/40">/</span>
-                  <span className="text-slate-300 font-mono text-[11px]">En Línea</span>
-                </div>
 
                 <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-tight text-white leading-[1.15] text-balance">
                   {heroHeadline}
