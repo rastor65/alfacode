@@ -19,9 +19,9 @@ export default async function RegisterPage() {
 
   return (
     <AuthShell
+      layout="centered"
       title="Postulación al Semillero"
       badge="Hoja de Vida de Estudiantes"
-      wideCard={true}
       description="Completa tu resumen de hoja de vida institucional para postularte al semillero AlfaCode."
       footer={
         <>

@@ -7,7 +7,6 @@ import {
   Calendar,
   Check,
   CheckCircle2,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Code2,
@@ -20,6 +19,7 @@ import {
   PhoneCall,
   School,
   Sparkles,
+  Tag,
   User,
   UserCheck,
 } from "lucide-react";
@@ -38,34 +38,69 @@ type Step = 1 | 2 | 3;
 interface ResearchLineItem {
   id: string;
   title: string;
+  description: string;
   icon: typeof Brain;
+  gradient: string;
 }
 
 const RESEARCH_LINES: ResearchLineItem[] = [
-  { id: "Inteligencia Artificial", title: "Inteligencia Artificial", icon: Brain },
-  { id: "Desarrollo de Software", title: "Desarrollo de Software", icon: Code2 },
-  { id: "Internet de las Cosas (IoT)", title: "Internet de las Cosas (IoT)", icon: Cpu },
+  {
+    id: "Inteligencia Artificial",
+    title: "Inteligencia Artificial",
+    description: "Machine Learning, Modelos de Lenguaje (LLMs), Computer Vision y Agentes Autónomos.",
+    icon: Brain,
+    gradient: "from-cyan-500/20 to-sky-500/10 border-cyan-500/40 text-cyan-400",
+  },
+  {
+    id: "Desarrollo de Software",
+    title: "Desarrollo de Software",
+    description: "Arquitectura Cloud, Fullstack moderno, APIs reactivas, TypeScript y DevOps.",
+    icon: Code2,
+    gradient: "from-blue-500/20 to-cyan-500/10 border-blue-500/40 text-blue-400",
+  },
+  {
+    id: "Internet de las Cosas (IoT)",
+    title: "Internet de las Cosas (IoT)",
+    description: "Sistemas embebidos, Sensores inteligentes, Automatización y Robótica aplicada.",
+    icon: Cpu,
+    gradient: "from-teal-500/20 to-emerald-500/10 border-teal-500/40 text-teal-400",
+  },
 ];
 
 const SEDES_UNIGUAJIRA = [
-  "Riohacha (Sede Principal)",
-  "Maicao",
-  "Fonseca",
-  "Villanueva",
+  { id: "Riohacha (Sede Principal)", name: "Riohacha", detail: "Sede Principal" },
+  { id: "Maicao", name: "Maicao", detail: "Sede Provincial" },
+  { id: "Fonseca", name: "Fonseca", detail: "Sede Provincial Sur" },
+  { id: "Villanueva", name: "Villanueva", detail: "Sede Provincial Sur" },
 ];
 
 const SEMESTRES = [
-  "1° Semestre",
-  "2° Semestre",
-  "3° Semestre",
-  "4° Semestre",
-  "5° Semestre",
-  "6° Semestre",
-  "7° Semestre",
-  "8° Semestre",
-  "9° Semestre",
-  "10° Semestre",
+  { num: 1, label: "1° Semestre", cycle: "Ciclo Básico" },
+  { num: 2, label: "2° Semestre", cycle: "Ciclo Básico" },
+  { num: 3, label: "3° Semestre", cycle: "Fundamentación" },
+  { num: 4, label: "4° Semestre", cycle: "Ciclo Profesional" },
+  { num: 5, label: "5° Semestre", cycle: "Ciclo Profesional" },
+  { num: 6, label: "6° Semestre", cycle: "Ciclo Profesional" },
+  { num: 7, label: "7° Semestre", cycle: "Ciclo Profesional" },
+  { num: 8, label: "8° Semestre", cycle: "Ciclo Avanzado" },
+  { num: 9, label: "9° Semestre", cycle: "Énfasis y Grado" },
+  { num: 10, label: "10° Semestre", cycle: "Práctica / Grado" },
 ];
+
+const SUGGESTED_TAGS = [
+  "Python",
+  "TypeScript",
+  "Next.js",
+  "PyTorch",
+  "FastAPI",
+  "Ciberseguridad",
+  "Robótica",
+  "Bases de Datos",
+  "Docker",
+  "Microcontroladores",
+];
+
+const PROMEDIO_PRESETS = ["3.8", "4.0", "4.2", "4.5"];
 
 export function RegisterForm() {
   const [step, setStep] = useState<Step>(1);
@@ -96,6 +131,7 @@ export function RegisterForm() {
 
   // 3. Trayectoria y áreas de investigación
   const [selectedLines, setSelectedLines] = useState<string[]>(["Inteligencia Artificial"]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(["Python", "TypeScript"]);
   const [lineasAdicionales, setLineasAdicionales] = useState("");
   const [experienciaInvestigativa, setExperienciaInvestigativa] = useState("");
   const [areasEstudio, setAreasEstudio] = useState("");
@@ -104,11 +140,28 @@ export function RegisterForm() {
   const [message, setMessage] = useState("");
   const [showAdvancedCV, setShowAdvancedCV] = useState(false);
 
+  // Helpers de interacción rápida
   function toggleLine(lineId: string) {
     setSelectedLines((current) =>
       current.includes(lineId) ? current.filter((item) => item !== lineId) : [...current, lineId],
     );
   }
+
+  function toggleTag(tag: string) {
+    setSelectedTags((current) =>
+      current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag],
+    );
+  }
+
+  function handleEmailDomainAppend() {
+    if (!email) {
+      setEmail("@uniguajira.edu.co");
+    } else if (!email.includes("@")) {
+      setEmail(`${email.trim()}@uniguajira.edu.co`);
+    }
+  }
+
+  const isEmailValidDomain = email.toLowerCase().endsWith("@uniguajira.edu.co");
 
   function validateStep(currentStep: Step): boolean {
     const errors: Record<string, string> = {};
@@ -180,6 +233,9 @@ export function RegisterForm() {
     setPending(true);
 
     const allLines = [...selectedLines];
+    if (selectedTags.length > 0) {
+      allLines.push(`Intereses: ${selectedTags.join(", ")}`);
+    }
     if (lineasAdicionales.trim()) {
       allLines.push(lineasAdicionales.trim());
     }
@@ -227,81 +283,113 @@ export function RegisterForm() {
   // Vista de éxito / confirmación digital de postulación
   if (done) {
     return (
-      <div className="space-y-4 py-4 text-center animate-in fade-in zoom-in-95 duration-200">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_24px_rgba(16,185,129,0.2)]">
-          <CheckCircle2 size={32} className="stroke-[2.2]" />
+      <div className="space-y-6 py-4 text-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.25)]">
+          <CheckCircle2 size={36} className="stroke-[2.2]" />
         </div>
 
-        <div className="space-y-1">
-          <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-            Postulación Registrada
-          </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
-            Tu hoja de vida institucional fue enviada con éxito para la vinculación al semillero <strong>AlfaCode</strong>.
+        <div className="space-y-1.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-400">
+            Postulación Registrada Exitosamente
+          </span>
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            ¡Bienvenido a AlfaCode!
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+            Tu resumen de hoja de vida institucional ha sido radicado para la vinculación oficial. El comité de investigación revisará tus datos.
           </p>
         </div>
 
-        <div className="mx-auto max-w-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-white/[0.03] p-3 text-left text-xs space-y-2">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-1.5">
+        <div className="mx-auto max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100/70 dark:bg-slate-900/60 p-4 text-left text-xs space-y-2.5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
             <span className="text-slate-500 dark:text-slate-400">Postulante:</span>
             <span className="font-semibold text-slate-900 dark:text-white">{nombres} {apellidos}</span>
           </div>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-1.5">
-            <span className="text-slate-500 dark:text-slate-400">Correo:</span>
-            <span className="font-mono text-cyan-600 dark:text-cyan-300">{email}</span>
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
+            <span className="text-slate-500 dark:text-slate-400">Correo institucional:</span>
+            <span className="font-mono text-cyan-600 dark:text-cyan-300 font-medium">{email}</span>
           </div>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-1.5">
-            <span className="text-slate-500 dark:text-slate-400">Programa:</span>
-            <span className="text-slate-700 dark:text-slate-200">{programa}</span>
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
+            <span className="text-slate-500 dark:text-slate-400">Programa y Sede:</span>
+            <span className="text-slate-800 dark:text-slate-200 font-medium">{programa} · {sede.split(" ")[0]}</span>
+          </div>
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
+            <span className="text-slate-500 dark:text-slate-400">Semestre y Promedio:</span>
+            <span className="text-slate-800 dark:text-slate-200 font-medium">{semestreActual} · Promedio {promedioAcademico}</span>
           </div>
           <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-500 dark:text-slate-400">Enfoque:</span>
-            <span className="font-medium text-teal-600 dark:text-teal-300">{selectedLines.join(", ")}</span>
+            <span className="text-slate-500 dark:text-slate-400">Líneas de interés:</span>
+            <span className="font-medium text-teal-600 dark:text-teal-300 text-right">{selectedLines.join(", ")}</span>
           </div>
         </div>
 
         <div className="pt-2">
           <Link
             href="/ingresar"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 text-xs font-semibold text-white shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all duration-150 hover:from-cyan-500 hover:to-cyan-400 active:scale-[0.98]"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 px-7 text-xs sm:text-sm font-semibold text-white shadow-[0_0_24px_rgba(6,182,212,0.3)] transition-all duration-150 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98]"
           >
             <span>Ir a iniciar sesión</span>
-            <ChevronRight size={14} />
+            <ChevronRight size={16} />
           </Link>
         </div>
       </div>
     );
   }
 
+  // Indicador de nivel de promedio
+  const numPromedio = Number.parseFloat(promedioAcademico);
+  const promedioStatus =
+    !Number.isNaN(numPromedio) && numPromedio >= 4.5
+      ? { label: "⭐ Rendimiento de Excelencia", color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" }
+      : !Number.isNaN(numPromedio) && numPromedio >= 4.0
+        ? { label: "✨ Alto Rendimiento Académico", color: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10" }
+        : !Number.isNaN(numPromedio) && numPromedio >= 3.5
+          ? { label: "👍 Buen Desempeño", color: "text-teal-400 border-teal-500/30 bg-teal-500/10" }
+          : null;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* ---------------------------------------------------- */}
-      {/* PROGRESS TRACKER MINIMALISTA (ESTILO APPLE / LINEAR) */}
+      {/* STEPPER ELEGANTE APPLE / LINEAR                      */}
       {/* ---------------------------------------------------- */}
-      <div className="space-y-2 pb-1">
-        {/* 3 Hairline Progress Bars */}
-        <div className="grid grid-cols-3 gap-2">
+      <nav aria-label="Progreso de postulación" className="relative mb-2">
+        {/* Línea conectora de fondo */}
+        <div className="absolute top-4 left-6 right-6 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-white/10 -z-0">
+          <div
+            className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-400 transition-all duration-300 ease-out shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+            style={{
+              width: step === 1 ? "0%" : step === 2 ? "50%" : "100%",
+            }}
+          />
+        </div>
+
+        {/* 3 Nodos interactivos */}
+        <div className="relative z-10 flex items-center justify-between">
+          {/* Nodo 1 */}
           <button
             type="button"
             onClick={() => goToStep(1)}
-            aria-label="Ir a paso 1: Identificación"
-            className="group flex flex-col gap-1.5 text-left cursor-pointer transition-opacity"
+            className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
           >
             <div
               className={cn(
-                "h-1 rounded-full transition-all duration-300",
-                step >= 1
-                  ? "bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"
-                  : "bg-slate-200 dark:bg-white/10",
+                "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                step > 1
+                  ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                  : step === 1
+                    ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
+                    : "border border-white/15 bg-slate-900 text-slate-400",
               )}
-            />
+            >
+              {step > 1 ? <Check size={14} className="stroke-[2.5]" /> : <User size={13} />}
+            </div>
             <span
               className={cn(
-                "text-[10px] sm:text-[11px] font-medium tracking-tight transition-colors truncate",
+                "text-[11px] font-semibold tracking-tight transition-colors",
                 step === 1
-                  ? "text-cyan-600 dark:text-cyan-300 font-semibold"
+                  ? "text-cyan-600 dark:text-cyan-300"
                   : step > 1
-                    ? "text-slate-700 dark:text-slate-300 group-hover:text-cyan-500"
+                    ? "text-slate-700 dark:text-slate-300"
                     : "text-slate-400 dark:text-slate-500",
               )}
             >
@@ -309,27 +397,31 @@ export function RegisterForm() {
             </span>
           </button>
 
+          {/* Nodo 2 */}
           <button
             type="button"
             onClick={() => goToStep(2)}
-            aria-label="Ir a paso 2: Académico"
-            className="group flex flex-col gap-1.5 text-left cursor-pointer transition-opacity"
+            className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
           >
             <div
               className={cn(
-                "h-1 rounded-full transition-all duration-300",
-                step >= 2
-                  ? "bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"
-                  : "bg-slate-200 dark:bg-white/10",
+                "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                step > 2
+                  ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                  : step === 2
+                    ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
+                    : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
               )}
-            />
+            >
+              {step > 2 ? <Check size={14} className="stroke-[2.5]" /> : <GraduationCap size={14} />}
+            </div>
             <span
               className={cn(
-                "text-[10px] sm:text-[11px] font-medium tracking-tight transition-colors truncate",
+                "text-[11px] font-semibold tracking-tight transition-colors",
                 step === 2
-                  ? "text-cyan-600 dark:text-cyan-300 font-semibold"
+                  ? "text-cyan-600 dark:text-cyan-300"
                   : step > 2
-                    ? "text-slate-700 dark:text-slate-300 group-hover:text-cyan-500"
+                    ? "text-slate-700 dark:text-slate-300"
                     : "text-slate-400 dark:text-slate-500",
               )}
             >
@@ -337,25 +429,27 @@ export function RegisterForm() {
             </span>
           </button>
 
+          {/* Nodo 3 */}
           <button
             type="button"
             onClick={() => goToStep(3)}
-            aria-label="Ir a paso 3: Investigación"
-            className="group flex flex-col gap-1.5 text-left cursor-pointer transition-opacity"
+            className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
           >
             <div
               className={cn(
-                "h-1 rounded-full transition-all duration-300",
-                step >= 3
-                  ? "bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"
-                  : "bg-slate-200 dark:bg-white/10",
+                "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                step === 3
+                  ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
+                  : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
               )}
-            />
+            >
+              <Sparkles size={13} />
+            </div>
             <span
               className={cn(
-                "text-[10px] sm:text-[11px] font-medium tracking-tight transition-colors truncate",
+                "text-[11px] font-semibold tracking-tight transition-colors",
                 step === 3
-                  ? "text-cyan-600 dark:text-cyan-300 font-semibold"
+                  ? "text-cyan-600 dark:text-cyan-300"
                   : "text-slate-400 dark:text-slate-500",
               )}
             >
@@ -363,7 +457,7 @@ export function RegisterForm() {
             </span>
           </button>
         </div>
-      </div>
+      </nav>
 
       {error && <Alert tone="error">{error}</Alert>}
 
@@ -373,11 +467,24 @@ export function RegisterForm() {
       {step === 1 && (
         <div
           className={cn(
-            "space-y-3 pt-0.5 animate-in fade-in-50 duration-200",
-            direction === "next" ? "slide-in-from-right-2" : "slide-in-from-left-2",
+            "space-y-4 pt-1 animate-in fade-in-50 duration-200",
+            direction === "next" ? "slide-in-from-right-3" : "slide-in-from-left-3",
           )}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Subcabecera conversacional del paso */}
+          <div className="border-b border-slate-200 dark:border-white/10 pb-3">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Paso 1 de 3
+            </span>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              ¿Cómo te llamas y cómo te contactamos?
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Ingresa tus datos personales y tu correo institucional de la Universidad de La Guajira.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormField
               label="Nombres *"
               name="nombres"
@@ -400,33 +507,46 @@ export function RegisterForm() {
             />
           </div>
 
-          <FormField
-            label="Correo institucional *"
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="usuario@uniguajira.edu.co"
-            icon={<Mail size={15} aria-hidden="true" />}
-            badge={
-              <span className="font-mono text-[10px] font-semibold text-cyan-600 dark:text-cyan-400">
-                @uniguajira.edu.co
-              </span>
-            }
-            hint="Solo se admiten correos institucionales de Uniguajira."
-            required
-            error={fieldErrors.email}
-          />
+          {/* Campo de Correo con asistente inteligente de dominio */}
+          <div className="space-y-1.5">
+            <FormField
+              label="Correo electrónico institucional *"
+              name="email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="usuario@uniguajira.edu.co"
+              icon={<Mail size={15} aria-hidden="true" />}
+              badge={
+                isEmailValidDomain ? (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-500 dark:text-emerald-400">
+                    <Check size={10} className="stroke-[3]" /> Dominio Uniguajira
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleEmailDomainAppend}
+                    className="text-[10px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                  >
+                    + @uniguajira.edu.co
+                  </button>
+                )
+              }
+              hint="Solo se admiten cuentas oficiales @uniguajira.edu.co para vincularte al semillero."
+              required
+              error={fieldErrors.email}
+            />
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormField
               label="Documento de identidad *"
               name="documentoIdentidad"
               value={documentoIdentidad}
               onChange={(e) => setDocumentoIdentidad(e.target.value)}
-              placeholder="C.C. o T.I. N°"
+              placeholder="Número de C.C. o T.I."
               icon={<IdCard size={15} aria-hidden="true" />}
               required
               error={fieldErrors.documentoIdentidad}
@@ -443,7 +563,7 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormField
               label="Celular de contacto *"
               name="celular"
@@ -468,25 +588,25 @@ export function RegisterForm() {
             />
           </div>
 
-          {/* Pie sutil de emisión institucional */}
-          <div className="flex items-center justify-between pt-1 text-[11px] text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block size-1.5 rounded-full bg-cyan-500" />
-              <span>Nacionalidad: <strong className="text-slate-700 dark:text-slate-300 font-medium">{nacionalidad}</strong></span>
+          {/* Barra de metadatos institucionales */}
+          <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-slate-900/40 px-3.5 py-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="size-1.5 rounded-full bg-cyan-500 animate-pulse" />
+              <span>Nacionalidad: <strong className="text-slate-700 dark:text-slate-200 font-medium">{nacionalidad}</strong></span>
               <span>·</span>
-              <span>Fecha: <strong className="text-slate-700 dark:text-slate-300 font-medium">{fechaElaboracion}</strong></span>
+              <span>Fecha: <strong className="text-slate-700 dark:text-slate-200 font-medium">{fechaElaboracion}</strong></span>
             </div>
             <button
               type="button"
               onClick={() => setShowMetadataCustomizer((v) => !v)}
-              className="text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+              className="text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium text-[11px]"
             >
-              {showMetadataCustomizer ? "Ocultar" : "Editar"}
+              {showMetadataCustomizer ? "Ocultar" : "Modificar"}
             </button>
           </div>
 
           {showMetadataCustomizer && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 animate-in fade-in-50 duration-150">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 animate-in fade-in-50 duration-150">
               <FormField
                 label="Nacionalidad"
                 name="nacionalidad"
@@ -508,10 +628,10 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={handleNext}
-              className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_20px_rgba(6,182,212,0.25)] hover:shadow-[0_0_28px_rgba(6,182,212,0.4)] transition-all duration-150 cursor-pointer"
+              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
             >
               <span>Continuar a información académica</span>
-              <ChevronRight size={15} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -523,11 +643,24 @@ export function RegisterForm() {
       {step === 2 && (
         <div
           className={cn(
-            "space-y-3 pt-0.5 animate-in fade-in-50 duration-200",
-            direction === "next" ? "slide-in-from-right-2" : "slide-in-from-left-2",
+            "space-y-4 pt-1 animate-in fade-in-50 duration-200",
+            direction === "next" ? "slide-in-from-right-3" : "slide-in-from-left-3",
           )}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Subcabecera conversacional del paso */}
+          <div className="border-b border-slate-200 dark:border-white/10 pb-3">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Paso 2 de 3
+            </span>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              Tu trayectoria en la Universidad
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Sede institucional, semestre cursado y promedio académico acumulado.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormField
               label="Facultad *"
               name="facultad"
@@ -550,94 +683,149 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* Custom Select Sede */}
-            <div className="space-y-1.5">
+          {/* Selector de Sede Uniguajira Interactivo */}
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+              Sede Uniguajira *
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {SEDES_UNIGUAJIRA.map((item) => {
+                const isSelected = sede === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSede(item.id)}
+                    className={cn(
+                      "flex flex-col items-start justify-between rounded-xl p-3 text-left transition-all duration-150 cursor-pointer border active:scale-[0.98]",
+                      isSelected
+                        ? "border-cyan-500 dark:border-cyan-400 bg-cyan-500/15 text-slate-900 dark:text-white shadow-[0_0_15px_rgba(6,182,212,0.25)] ring-1 ring-cyan-500/40"
+                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/25",
+                    )}
+                  >
+                    <div className="flex w-full items-center justify-between mb-1.5">
+                      <MapPin
+                        size={15}
+                        className={isSelected ? "text-cyan-600 dark:text-cyan-400" : "text-slate-400"}
+                      />
+                      {isSelected && (
+                        <div className="flex size-4 items-center justify-center rounded-full bg-cyan-500 text-white">
+                          <Check size={10} className="stroke-[3]" />
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-semibold text-xs text-slate-900 dark:text-white leading-tight">
+                      {item.name}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate w-full">
+                      {item.detail}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {fieldErrors.sede && (
+              <p className="text-xs text-rose-500 font-medium">{fieldErrors.sede}</p>
+            )}
+          </div>
+
+          {/* Selector de Semestre Segmentado (1 a 10) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Sede Uniguajira *
+                Semestre actual en curso *
               </label>
-              <div className="relative group">
-                <div
-                  className="pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center text-slate-400 dark:text-slate-500 transition-colors group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400"
-                  aria-hidden="true"
-                >
-                  <MapPin size={15} />
-                </div>
-                <select
-                  value={sede}
-                  onChange={(e) => setSede(e.target.value)}
-                  className="block w-full h-10.5 sm:h-11 appearance-none rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 pl-9 pr-8 text-xs sm:text-sm text-slate-900 dark:text-hub-text shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150 hover:border-slate-400 dark:hover:border-white/25 focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 focus:outline-none cursor-pointer"
-                >
-                  {SEDES_UNIGUAJIRA.map((s) => (
-                    <option key={s} value={s} className="bg-slate-900 text-white">
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex w-8 items-center justify-center text-slate-400">
-                  <ChevronDown size={14} />
-                </div>
-              </div>
+              <span className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
+                {semestreActual}
+              </span>
             </div>
 
-            {/* Custom Select Semestre */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Semestre actual *
-              </label>
-              <div className="relative group">
-                <div
-                  className="pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center text-slate-400 dark:text-slate-500 transition-colors group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400"
-                  aria-hidden="true"
-                >
-                  <GraduationCap size={15} />
-                </div>
-                <select
-                  value={semestreActual}
-                  onChange={(e) => setSemestreActual(e.target.value)}
-                  className="block w-full h-10.5 sm:h-11 appearance-none rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 pl-9 pr-8 text-xs sm:text-sm text-slate-900 dark:text-hub-text shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150 hover:border-slate-400 dark:hover:border-white/25 focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 focus:outline-none cursor-pointer"
-                >
-                  {SEMESTRES.map((sem) => (
-                    <option key={sem} value={sem} className="bg-slate-900 text-white">
-                      {sem}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex w-8 items-center justify-center text-slate-400">
-                  <ChevronDown size={14} />
-                </div>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+              {SEMESTRES.map((sem) => {
+                const isSelected = semestreActual === sem.label;
+                return (
+                  <button
+                    key={sem.num}
+                    type="button"
+                    onClick={() => setSemestreActual(sem.label)}
+                    aria-label={`Seleccionar ${sem.label}`}
+                    className={cn(
+                      "h-10 flex flex-col items-center justify-center rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer border active:scale-[0.98]",
+                      isSelected
+                        ? "border-cyan-500 dark:border-cyan-400 bg-gradient-to-b from-cyan-600 to-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)] scale-105"
+                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/25",
+                    )}
+                  >
+                    <span>{sem.num}°</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-0.5">
+              <span>Fundamentación (1° - 3°)</span>
+              <span>Ciclo Profesional (4° - 7°)</span>
+              <span>Avanzado / Grado (8° - 10°)</span>
+            </div>
+          </div>
+
+          {/* Promedio Académico con Feedback Visual y Presets */}
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              <div className="sm:col-span-8">
+                <FormField
+                  label="Promedio acumulado actual *"
+                  name="promedioAcademico"
+                  value={promedioAcademico}
+                  onChange={(e) => setPromedioAcademico(e.target.value)}
+                  placeholder="Ej. 4.2"
+                  icon={<Award size={15} aria-hidden="true" />}
+                  badge={
+                    promedioStatus ? (
+                      <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold", promedioStatus.color)}>
+                        {promedioStatus.label}
+                      </span>
+                    ) : null
+                  }
+                  hint="En escala de 0.0 a 5.0 según tu certificado de notas."
+                  required
+                  error={fieldErrors.promedioAcademico}
+                />
+              </div>
+
+              {/* Botones de sugerencia rápida de promedio */}
+              <div className="sm:col-span-4 flex items-center gap-1.5 pb-2">
+                <span className="text-[10px] text-slate-400 shrink-0">Rápido:</span>
+                {PROMEDIO_PRESETS.map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setPromedioAcademico(val)}
+                    className="flex-1 h-8 rounded-lg border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-cyan-500 hover:text-cyan-500 transition-colors cursor-pointer"
+                  >
+                    {val}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          <FormField
-            label="Promedio acumulado actual *"
-            name="promedioAcademico"
-            value={promedioAcademico}
-            onChange={(e) => setPromedioAcademico(e.target.value)}
-            placeholder="Ej. 4.2"
-            icon={<Award size={15} aria-hidden="true" />}
-            hint="En escala de 0.0 a 5.0 según tu certificado institucional."
-            required
-            error={fieldErrors.promedioAcademico}
-          />
-
-          <div className="pt-2 flex items-center gap-2">
+          <div className="pt-2 flex items-center gap-3">
             <button
               type="button"
               onClick={handlePrev}
-              className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/80 dark:border-white/12 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-medium text-xs sm:text-sm transition-all duration-150 cursor-pointer"
+              className="flex-1 h-12 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/80 dark:border-white/12 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-semibold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={16} />
               <span>Atrás</span>
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="flex-[2] h-11 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_20px_rgba(6,182,212,0.25)] hover:shadow-[0_0_28px_rgba(6,182,212,0.4)] transition-all duration-150 cursor-pointer"
+              className="flex-[2] h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
             >
               <span>Continuar a perfil investigativo</span>
-              <ChevronRight size={15} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -649,22 +837,30 @@ export function RegisterForm() {
       {step === 3 && (
         <div
           className={cn(
-            "space-y-3 pt-0.5 animate-in fade-in-50 duration-200",
-            direction === "next" ? "slide-in-from-right-2" : "slide-in-from-left-2",
+            "space-y-4 pt-1 animate-in fade-in-50 duration-200",
+            direction === "next" ? "slide-in-from-right-3" : "slide-in-from-left-3",
           )}
         >
-          {/* Líneas de Investigación en Pills Minimalistas */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Líneas de investigación en AlfaCode
-              </label>
-              <span className="text-[11px] text-slate-400">
-                Selecciona las de tu interés
-              </span>
-            </div>
+          {/* Subcabecera conversacional del paso */}
+          <div className="border-b border-slate-200 dark:border-white/10 pb-3">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Paso 3 de 3
+            </span>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              Tus intereses y motivación en AlfaCode
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Selecciona tus líneas oficiales de interés y cuéntanos sobre tus pasiones y proyectos.
+            </p>
+          </div>
 
-            <div className="flex flex-wrap gap-2">
+          {/* Líneas de Investigación Oficiales en Tarjetas Ricas */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+              Líneas oficiales del semillero AlfaCode *
+            </label>
+
+            <div className="grid grid-cols-1 gap-2.5">
               {RESEARCH_LINES.map((item) => {
                 const isSelected = selectedLines.includes(item.id);
                 const IconComponent = item.icon;
@@ -675,24 +871,78 @@ export function RegisterForm() {
                     type="button"
                     onClick={() => toggleLine(item.id)}
                     className={cn(
-                      "group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-150 cursor-pointer border active:scale-[0.98]",
+                      "group flex items-start gap-3.5 rounded-2xl p-3.5 text-left transition-all duration-150 cursor-pointer border active:scale-[0.99]",
                       isSelected
-                        ? "border-cyan-500 dark:border-cyan-400/80 bg-cyan-500/15 text-cyan-800 dark:text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.2)] ring-1 ring-cyan-500/30"
-                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/25",
+                        ? "border-cyan-500 dark:border-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.18)] ring-1 ring-cyan-500/30"
+                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 hover:border-slate-400 dark:hover:border-white/25",
                     )}
                   >
-                    <span
+                    <div
                       className={cn(
-                        "flex size-5 items-center justify-center rounded-lg transition-colors",
+                        "flex size-10 shrink-0 items-center justify-center rounded-xl transition-all",
                         isSelected
-                          ? "bg-cyan-500 text-white"
+                          ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                           : "bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 group-hover:text-cyan-400",
                       )}
                     >
-                      <IconComponent size={12} />
-                    </span>
-                    <span>{item.title}</span>
-                    {isSelected && <Check size={12} className="stroke-[2.5] text-cyan-600 dark:text-cyan-300" />}
+                      <IconComponent size={20} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                          {item.title}
+                        </span>
+                        <div
+                          className={cn(
+                            "flex size-4.5 items-center justify-center rounded-md border transition-colors",
+                            isSelected
+                              ? "border-cyan-500 bg-cyan-500 text-white"
+                              : "border-slate-300 dark:border-white/20 bg-transparent",
+                          )}
+                        >
+                          {isSelected && <Check size={11} className="stroke-[3]" />}
+                        </div>
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tags Interactivos de Tecnologías / Áreas */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Temas y tecnologías que deseas aprender o aportar
+              </label>
+              <span className="text-[11px] text-slate-400">
+                Toca para añadir
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {SUGGESTED_TAGS.map((tag) => {
+                const isSelected = selectedTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-150 cursor-pointer border active:scale-[0.97]",
+                      isSelected
+                        ? "border-cyan-500 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold ring-1 ring-cyan-500/40"
+                        : "border-slate-300/80 dark:border-white/10 bg-slate-100/60 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/25",
+                    )}
+                  >
+                    <Tag size={10} className={isSelected ? "text-cyan-500" : "text-slate-400"} />
+                    <span>{tag}</span>
+                    {isSelected && <Check size={10} className="stroke-[3]" />}
                   </button>
                 );
               })}
@@ -702,13 +952,13 @@ export function RegisterForm() {
               type="text"
               value={lineasAdicionales}
               onChange={(e) => setLineasAdicionales(e.target.value)}
-              placeholder="Otras temáticas o tecnologías (ej. Ciberseguridad, Blockchain, React)..."
-              className="block w-full h-9 rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-3 text-xs text-slate-900 dark:text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 focus:outline-none"
+              placeholder="Otras herramientas o áreas de interés (ej. Rust, Redes neuronales, Big Data)..."
+              className="block w-full h-10 rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-3.5 text-xs sm:text-sm text-slate-900 dark:text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 focus:outline-none"
             />
           </div>
 
           {/* Textareas para experiencia y áreas de estudio */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <TextAreaField
               label="Experiencia o proyectos previos"
               name="experienciaInvestigativa"
@@ -719,13 +969,13 @@ export function RegisterForm() {
               placeholder="Proyectos de clase, desarrollos personales, ferias..."
             />
             <TextAreaField
-              label="Temas o áreas de mayor interés"
+              label="Temas o áreas prioritarias de estudio"
               name="areasEstudio"
               value={areasEstudio}
               onChange={(e) => setAreasEstudio(e.target.value)}
               rows={2}
               maxLength={1000}
-              placeholder="Lenguajes, marcos de trabajo o algoritmos..."
+              placeholder="Algoritmos, arquitecturas, frameworks..."
             />
           </div>
 
@@ -739,18 +989,18 @@ export function RegisterForm() {
             placeholder="¿Qué esperas aprender y aportar al semillero de investigación?"
           />
 
-          {/* Progressive disclosure: Publicaciones y pasantías avanzadas */}
+          {/* Progressive disclosure: Publicaciones y pasantías */}
           <div className="pt-0.5">
             <button
               type="button"
               onClick={() => setShowAdvancedCV((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium"
             >
-              <span>{showAdvancedCV ? "Ocultar publicaciones y pasantías" : "+ ¿Tienes publicaciones o pasantías previas?"}</span>
+              <span>{showAdvancedCV ? "Ocultar publicaciones y pasantías" : "+ ¿Tienes publicaciones científicas o pasantías previas?"}</span>
             </button>
 
             {showAdvancedCV && (
-              <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 animate-in fade-in-50 duration-150">
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3.5 animate-in fade-in-50 duration-150">
                 <TextAreaField
                   label="Publicaciones científicas (si aplica)"
                   name="publicaciones"
@@ -773,24 +1023,24 @@ export function RegisterForm() {
             )}
           </div>
 
-          <div className="pt-2 flex items-center gap-2">
+          <div className="pt-2 flex items-center gap-3">
             <button
               type="button"
               onClick={handlePrev}
               disabled={pending}
-              className="flex-1 h-11 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/80 dark:border-white/12 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-medium text-xs sm:text-sm transition-all duration-150 cursor-pointer disabled:opacity-50"
+              className="flex-1 h-12 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/80 dark:border-white/12 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-semibold text-xs sm:text-sm transition-all duration-150 cursor-pointer disabled:opacity-50"
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={16} />
               <span>Atrás</span>
             </button>
             <Button
               type="submit"
               pending={pending}
               pendingLabel="Enviando postulación..."
-              className="flex-[2] h-11 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
+              className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
             >
               <span>Enviar postulación oficial</span>
-              <Sparkles size={15} className="ml-1 text-cyan-100" />
+              <Sparkles size={16} className="ml-1 text-cyan-100" />
             </Button>
           </div>
         </div>
