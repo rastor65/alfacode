@@ -13,11 +13,10 @@ type FormFieldProps = Omit<ComponentProps<"input">, "id"> & {
 };
 
 const inputClassName =
-  "peer block w-full rounded-xl border bg-hub-input px-3.5 py-2 sm:py-2.5 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-sm shadow-slate-900/5 transition-all duration-200 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/15";
+  "block w-full rounded-xl border border-hub-input-border bg-hub-input px-3.5 py-2 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-2xs transition-colors duration-150 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
 
 /**
- * Campo con etiqueta, ayuda y error asociados por `aria-describedby`. Los campos de
- * contrasena incluyen un boton para mostrar u ocultar lo escrito.
+ * Campo minimalista y elegante con etiqueta, ayuda y error asociados por `aria-describedby`.
  */
 export function FormField({ label, hint, error, icon, type = "text", className, ...props }: FormFieldProps) {
   const id = useId();
@@ -27,13 +26,13 @@ export function FormField({ label, hint, error, icon, type = "text", className, 
 
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label htmlFor={id} className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-hub-soft">
+      <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-hub-soft">
         {label}
       </label>
-      <div className="relative group">
+      <div className="relative">
         {icon && (
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-slate-400 dark:text-cyan-400/70 peer-focus:text-cyan-600 dark:peer-focus:text-cyan-400 transition-colors"
+            className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-slate-400 dark:text-cyan-400/70"
             aria-hidden="true"
           >
             {icon}
@@ -48,7 +47,7 @@ export function FormField({ label, hint, error, icon, type = "text", className, 
             inputClassName,
             icon && "pl-10",
             isPassword && "pr-10",
-            error ? "border-hub-field-error" : "border-hub-input-border hover:border-cyan-500/40",
+            error ? "border-hub-field-error" : "hover:border-slate-400 dark:hover:border-white/20",
           )}
           {...props}
         />
@@ -65,7 +64,7 @@ export function FormField({ label, hint, error, icon, type = "text", className, 
         )}
       </div>
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-xs text-hub-muted">
+        <p id={`${id}-hint`} className="text-[11px] text-hub-muted">
           {hint}
         </p>
       )}
@@ -92,7 +91,7 @@ export function TextAreaField({ label, hint, error, icon, className, rows = 3, .
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-hub-soft">
+        <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-hub-soft">
           {label}
         </label>
         {icon && <span className="text-slate-400 dark:text-cyan-400/60">{icon}</span>}
@@ -104,13 +103,13 @@ export function TextAreaField({ label, hint, error, icon, className, rows = 3, .
         aria-describedby={describedBy}
         className={cn(
           inputClassName,
-          "resize-y min-h-[60px]",
-          error ? "border-hub-field-error" : "border-hub-input-border hover:border-cyan-500/40",
+          "resize-y min-h-[56px]",
+          error ? "border-hub-field-error" : "hover:border-slate-400 dark:hover:border-white/20",
         )}
         {...props}
       />
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-xs text-hub-muted">
+        <p id={`${id}-hint`} className="text-[11px] text-hub-muted">
           {hint}
         </p>
       )}
