@@ -104,9 +104,22 @@ export async function AuthShell({
 
         {/* Contenido principal: Grid split de 2 columnas o Centered Onboarding */}
         {layout === "centered" ? (
-          <main className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-3 sm:px-6 lg:px-8 py-5 sm:py-8 lg:py-10">
+          <main className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+            {/* Escenario 3D interactivo del Isotipo Oficial AlfaCode centrado */}
+            <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[320px] h-[130px] sm:h-[160px] flex items-center justify-center -mb-2">
+              <div
+                className="pointer-events-none absolute inset-x-6 inset-y-2 rounded-full bg-gradient-to-tr from-cyan-500/25 via-teal-500/15 to-transparent blur-[50px]"
+                aria-hidden="true"
+              />
+              <div
+                className="pointer-events-none absolute bottom-1 w-3/5 h-6 rounded-full bg-cyan-400/30 blur-[25px]"
+                aria-hidden="true"
+              />
+              <Auth3DScene />
+            </div>
+
             {/* Cabecera del flujo */}
-            <div className="mb-6 sm:mb-8 text-center space-y-2.5 max-w-xl mx-auto">
+            <div className="mb-5 sm:mb-7 text-center space-y-2 max-w-xl mx-auto">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/60 px-3.5 py-1 text-xs font-semibold text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] backdrop-blur-md">
                 <span className="flex size-3.5 items-center justify-center">
                   <AlfaCodeSymbol className="size-full" />

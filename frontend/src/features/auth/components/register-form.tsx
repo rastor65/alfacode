@@ -13,6 +13,7 @@ import {
   Cpu,
   GraduationCap,
   IdCard,
+  Layers,
   Mail,
   MapPin,
   Phone,
@@ -38,8 +39,10 @@ type Step = 1 | 2 | 3;
 interface ResearchLineItem {
   id: string;
   title: string;
+  tagline: string;
   description: string;
   icon: typeof Brain;
+  badge: string;
   gradient: string;
 }
 
@@ -47,22 +50,28 @@ const RESEARCH_LINES: ResearchLineItem[] = [
   {
     id: "Inteligencia Artificial",
     title: "Inteligencia Artificial",
-    description: "Machine Learning, Modelos de Lenguaje (LLMs), Computer Vision y Agentes Autónomos.",
+    tagline: "Machine Learning, LLMs & Visión Artificial",
+    description: "Desarrollo de agentes inteligentes, procesamiento del lenguaje natural y modelos predictivos aplicados.",
     icon: Brain,
+    badge: "IA & Data Science",
     gradient: "from-cyan-500/20 to-sky-500/10 border-cyan-500/40 text-cyan-400",
   },
   {
     id: "Desarrollo de Software",
     title: "Desarrollo de Software",
-    description: "Arquitectura Cloud, Fullstack moderno, APIs reactivas, TypeScript y DevOps.",
+    tagline: "Cloud Native, Fullstack & Arquitectura",
+    description: "Construcción de aplicaciones distribuidas modernas con TypeScript, microservicios, seguridad y DevOps.",
     icon: Code2,
+    badge: "Modern Web & Cloud",
     gradient: "from-blue-500/20 to-cyan-500/10 border-blue-500/40 text-blue-400",
   },
   {
     id: "Internet de las Cosas (IoT)",
     title: "Internet de las Cosas (IoT)",
-    description: "Sistemas embebidos, Sensores inteligentes, Automatización y Robótica aplicada.",
+    tagline: "Sistemas Embebidos, Sensores & Hardware",
+    description: "Automatización con microcontroladores (ESP32/Arduino), robótica educativa y monitoreo telemétrico.",
     icon: Cpu,
+    badge: "Hardware & Robótica",
     gradient: "from-teal-500/20 to-emerald-500/10 border-teal-500/40 text-teal-400",
   },
 ];
@@ -70,21 +79,28 @@ const RESEARCH_LINES: ResearchLineItem[] = [
 const SEDES_UNIGUAJIRA = [
   { id: "Riohacha (Sede Principal)", name: "Riohacha", detail: "Sede Principal" },
   { id: "Maicao", name: "Maicao", detail: "Sede Provincial" },
-  { id: "Fonseca", name: "Fonseca", detail: "Sede Provincial Sur" },
-  { id: "Villanueva", name: "Villanueva", detail: "Sede Provincial Sur" },
+  { id: "Fonseca", name: "Fonseca", detail: "Sede Sur" },
+  { id: "Villanueva", name: "Villanueva", detail: "Sede Sur" },
+];
+
+const PROGRAMAS_SUGERIDOS = [
+  "Ingeniería de Sistemas",
+  "Ingeniería Industrial",
+  "Ingeniería Mecánica",
+  "Ingeniería Civil",
 ];
 
 const SEMESTRES = [
-  { num: 1, label: "1° Semestre", cycle: "Ciclo Básico" },
-  { num: 2, label: "2° Semestre", cycle: "Ciclo Básico" },
-  { num: 3, label: "3° Semestre", cycle: "Fundamentación" },
-  { num: 4, label: "4° Semestre", cycle: "Ciclo Profesional" },
-  { num: 5, label: "5° Semestre", cycle: "Ciclo Profesional" },
-  { num: 6, label: "6° Semestre", cycle: "Ciclo Profesional" },
-  { num: 7, label: "7° Semestre", cycle: "Ciclo Profesional" },
-  { num: 8, label: "8° Semestre", cycle: "Ciclo Avanzado" },
-  { num: 9, label: "9° Semestre", cycle: "Énfasis y Grado" },
-  { num: 10, label: "10° Semestre", cycle: "Práctica / Grado" },
+  { num: 1, label: "1° Semestre", cycle: "Fundamentación", pct: 10 },
+  { num: 2, label: "2° Semestre", cycle: "Fundamentación", pct: 20 },
+  { num: 3, label: "3° Semestre", cycle: "Básicas de Ingeniería", pct: 30 },
+  { num: 4, label: "4° Semestre", cycle: "Ciclo Profesional", pct: 40 },
+  { num: 5, label: "5° Semestre", cycle: "Ciclo Profesional", pct: 50 },
+  { num: 6, label: "6° Semestre", cycle: "Ciclo Profesional", pct: 60 },
+  { num: 7, label: "7° Semestre", cycle: "Ciclo Profesional", pct: 70 },
+  { num: 8, label: "8° Semestre", cycle: "Ciclo Avanzado", pct: 80 },
+  { num: 9, label: "9° Semestre", cycle: "Énfasis y Grado", pct: 90 },
+  { num: 10, label: "10° Semestre", cycle: "Práctica / Grado", pct: 100 },
 ];
 
 const SUGGESTED_TAGS = [
@@ -98,6 +114,8 @@ const SUGGESTED_TAGS = [
   "Bases de Datos",
   "Docker",
   "Microcontroladores",
+  "Cloud",
+  "Linux",
 ];
 
 const PROMEDIO_PRESETS = ["3.8", "4.0", "4.2", "4.5"];
@@ -120,7 +138,7 @@ export function RegisterForm() {
   const [telefonoFijo, setTelefonoFijo] = useState("");
   const [nacionalidad, setNacionalidad] = useState("Colombiana");
   const [fechaElaboracion, setFechaElaboracion] = useState(() => new Date().toISOString().split("T")[0]);
-  const [showMetadataCustomizer, setShowMetadataCustomizer] = useState(false);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   // 2. Información académica
   const [facultad, setFacultad] = useState("Facultad de Ingeniería");
@@ -140,7 +158,7 @@ export function RegisterForm() {
   const [message, setMessage] = useState("");
   const [showAdvancedCV, setShowAdvancedCV] = useState(false);
 
-  // Helpers de interacción rápida
+  // Helpers interactivos
   function toggleLine(lineId: string) {
     setSelectedLines((current) =>
       current.includes(lineId) ? current.filter((item) => item !== lineId) : [...current, lineId],
@@ -162,6 +180,7 @@ export function RegisterForm() {
   }
 
   const isEmailValidDomain = email.toLowerCase().endsWith("@uniguajira.edu.co");
+  const activeSemestreObj = SEMESTRES.find((s) => s.label === semestreActual) || SEMESTRES[4];
 
   function validateStep(currentStep: Step): boolean {
     const errors: Record<string, string> = {};
@@ -283,20 +302,20 @@ export function RegisterForm() {
   // Vista de éxito / confirmación digital de postulación
   if (done) {
     return (
-      <div className="space-y-6 py-4 text-center animate-in fade-in zoom-in-95 duration-200">
+      <div className="space-y-6 py-6 text-center animate-in fade-in zoom-in-95 duration-200">
         <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.25)]">
           <CheckCircle2 size={36} className="stroke-[2.2]" />
         </div>
 
         <div className="space-y-1.5">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-400">
-            Postulación Registrada Exitosamente
+            Postulación Radicada Exitosamente
           </span>
           <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            ¡Bienvenido a AlfaCode!
+            ¡Tu solicitud está en marcha!
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-            Tu resumen de hoja de vida institucional ha sido radicado para la vinculación oficial. El comité de investigación revisará tus datos.
+            Tu hoja de vida institucional ha sido radicada formalmente ante el semillero de investigación <strong>AlfaCode</strong>.
           </p>
         </div>
 
@@ -318,7 +337,7 @@ export function RegisterForm() {
             <span className="text-slate-800 dark:text-slate-200 font-medium">{semestreActual} · Promedio {promedioAcademico}</span>
           </div>
           <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-500 dark:text-slate-400">Líneas de interés:</span>
+            <span className="text-slate-500 dark:text-slate-400">Enfoque:</span>
             <span className="font-medium text-teal-600 dark:text-teal-300 text-right">{selectedLines.join(", ")}</span>
           </div>
         </div>
@@ -340,11 +359,11 @@ export function RegisterForm() {
   const numPromedio = Number.parseFloat(promedioAcademico);
   const promedioStatus =
     !Number.isNaN(numPromedio) && numPromedio >= 4.5
-      ? { label: "⭐ Rendimiento de Excelencia", color: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" }
+      ? { label: "⭐ Excelencia Académica", color: "text-emerald-500 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10" }
       : !Number.isNaN(numPromedio) && numPromedio >= 4.0
-        ? { label: "✨ Alto Rendimiento Académico", color: "text-cyan-400 border-cyan-500/30 bg-cyan-500/10" }
+        ? { label: "✨ Alto Rendimiento", color: "text-cyan-600 dark:text-cyan-400 border-cyan-500/30 bg-cyan-500/10" }
         : !Number.isNaN(numPromedio) && numPromedio >= 3.5
-          ? { label: "👍 Buen Desempeño", color: "text-teal-400 border-teal-500/30 bg-teal-500/10" }
+          ? { label: "👍 Buen Desempeño", color: "text-teal-600 dark:text-teal-400 border-teal-500/30 bg-teal-500/10" }
           : null;
 
   return (
@@ -352,7 +371,7 @@ export function RegisterForm() {
       {/* ---------------------------------------------------- */}
       {/* STEPPER ELEGANTE APPLE / LINEAR                      */}
       {/* ---------------------------------------------------- */}
-      <nav aria-label="Progreso de postulación" className="relative mb-2">
+      <nav aria-label="Progreso de postulación" className="relative mb-3">
         {/* Línea conectora de fondo */}
         <div className="absolute top-4 left-6 right-6 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-white/10 -z-0">
           <div
@@ -473,44 +492,85 @@ export function RegisterForm() {
         >
           {/* Subcabecera conversacional del paso */}
           <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Paso 1 de 3
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                Paso 1 de 3
+              </span>
+              <span className="text-[11px] text-slate-400">
+                33% completado
+              </span>
+            </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               ¿Cómo te llamas y cómo te contactamos?
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Ingresa tus datos personales y tu correo institucional de la Universidad de La Guajira.
+              Datos oficiales requeridos para asociar tu postulación al semillero de investigación.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <FormField
-              label="Nombres *"
-              name="nombres"
-              value={nombres}
-              onChange={(e) => setNombres(e.target.value)}
-              placeholder="Ej. Juan Carlos"
-              icon={<User size={15} aria-hidden="true" />}
-              required
-              error={fieldErrors.nombres}
-            />
-            <FormField
-              label="Apellidos *"
-              name="apellidos"
-              value={apellidos}
-              onChange={(e) => setApellidos(e.target.value)}
-              placeholder="Ej. Pérez Gómez"
-              icon={<UserCheck size={15} aria-hidden="true" />}
-              required
-              error={fieldErrors.apellidos}
-            />
+          {/* Grupo 1: Identidad Personal */}
+          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <User size={14} className="text-cyan-500" />
+              <span>Identidad del Postulante</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormField
+                label="Nombres *"
+                name="nombres"
+                value={nombres}
+                onChange={(e) => setNombres(e.target.value)}
+                placeholder="Ej. Juan Carlos"
+                icon={<User size={15} aria-hidden="true" />}
+                required
+                error={fieldErrors.nombres}
+              />
+              <FormField
+                label="Apellidos *"
+                name="apellidos"
+                value={apellidos}
+                onChange={(e) => setApellidos(e.target.value)}
+                placeholder="Ej. Pérez Gómez"
+                icon={<UserCheck size={15} aria-hidden="true" />}
+                required
+                error={fieldErrors.apellidos}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormField
+                label="Documento de identidad *"
+                name="documentoIdentidad"
+                value={documentoIdentidad}
+                onChange={(e) => setDocumentoIdentidad(e.target.value)}
+                placeholder="C.C. o T.I. N°"
+                icon={<IdCard size={15} aria-hidden="true" />}
+                required
+                error={fieldErrors.documentoIdentidad}
+              />
+              <FormField
+                label="Fecha de nacimiento *"
+                name="fechaNacimiento"
+                type="date"
+                value={fechaNacimiento}
+                onChange={(e) => setFechaNacimiento(e.target.value)}
+                icon={<Calendar size={15} aria-hidden="true" />}
+                required
+                error={fieldErrors.fechaNacimiento}
+              />
+            </div>
           </div>
 
-          {/* Campo de Correo con asistente inteligente de dominio */}
-          <div className="space-y-1.5">
+          {/* Grupo 2: Contacto Institucional */}
+          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3.5">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <Mail size={14} className="text-cyan-500" />
+              <span>Canales de Contacto Oficial</span>
+            </div>
+
             <FormField
-              label="Correo electrónico institucional *"
+              label="Correo institucional *"
               name="email"
               type="email"
               autoComplete="email"
@@ -522,7 +582,7 @@ export function RegisterForm() {
               badge={
                 isEmailValidDomain ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-500 dark:text-emerald-400">
-                    <Check size={10} className="stroke-[3]" /> Dominio Uniguajira
+                    <Check size={10} className="stroke-[3]" /> Dominio Institucional Verificado
                   </span>
                 ) : (
                   <button
@@ -534,36 +594,11 @@ export function RegisterForm() {
                   </button>
                 )
               }
-              hint="Solo se admiten cuentas oficiales @uniguajira.edu.co para vincularte al semillero."
+              hint="Solo se admiten correos oficiales @uniguajira.edu.co."
               required
               error={fieldErrors.email}
             />
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <FormField
-              label="Documento de identidad *"
-              name="documentoIdentidad"
-              value={documentoIdentidad}
-              onChange={(e) => setDocumentoIdentidad(e.target.value)}
-              placeholder="Número de C.C. o T.I."
-              icon={<IdCard size={15} aria-hidden="true" />}
-              required
-              error={fieldErrors.documentoIdentidad}
-            />
-            <FormField
-              label="Fecha de nacimiento *"
-              name="fechaNacimiento"
-              type="date"
-              value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
-              icon={<Calendar size={15} aria-hidden="true" />}
-              required
-              error={fieldErrors.fechaNacimiento}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormField
               label="Celular de contacto *"
               name="celular"
@@ -573,56 +608,44 @@ export function RegisterForm() {
               onChange={(e) => setCelular(e.target.value)}
               placeholder="300 123 4567"
               icon={<Phone size={15} aria-hidden="true" />}
+              hint="Número activo para notificaciones y convocatorias."
               required
               error={fieldErrors.celular}
             />
-            <FormField
-              label="Teléfono fijo (opcional)"
-              name="telefonoFijo"
-              type="tel"
-              inputMode="tel"
-              value={telefonoFijo}
-              onChange={(e) => setTelefonoFijo(e.target.value)}
-              placeholder="(605) 727 0000"
-              icon={<PhoneCall size={15} aria-hidden="true" />}
-            />
           </div>
 
-          {/* Barra de metadatos institucionales */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/60 dark:bg-slate-900/40 px-3.5 py-2 text-xs text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <span className="size-1.5 rounded-full bg-cyan-500 animate-pulse" />
-              <span>Nacionalidad: <strong className="text-slate-700 dark:text-slate-200 font-medium">{nacionalidad}</strong></span>
-              <span>·</span>
-              <span>Fecha: <strong className="text-slate-700 dark:text-slate-200 font-medium">{fechaElaboracion}</strong></span>
-            </div>
+          {/* Fila de campos opcionales secundarios */}
+          <div className="pt-0.5">
             <button
               type="button"
-              onClick={() => setShowMetadataCustomizer((v) => !v)}
-              className="text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium text-[11px]"
+              onClick={() => setShowOptionalFields((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium"
             >
-              {showMetadataCustomizer ? "Ocultar" : "Modificar"}
+              <span>{showOptionalFields ? "Ocultar teléfono fijo y nacionalidad" : "+ Agregar teléfono fijo o modificar nacionalidad"}</span>
             </button>
-          </div>
 
-          {showMetadataCustomizer && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 animate-in fade-in-50 duration-150">
-              <FormField
-                label="Nacionalidad"
-                name="nacionalidad"
-                value={nacionalidad}
-                onChange={(e) => setNacionalidad(e.target.value)}
-                placeholder="Colombiana"
-              />
-              <FormField
-                label="Fecha de solicitud"
-                name="fechaElaboracion"
-                type="date"
-                value={fechaElaboracion}
-                onChange={(e) => setFechaElaboracion(e.target.value)}
-              />
-            </div>
-          )}
+            {showOptionalFields && (
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4 animate-in fade-in-50 duration-150">
+                <FormField
+                  label="Teléfono fijo (opcional)"
+                  name="telefonoFijo"
+                  type="tel"
+                  inputMode="tel"
+                  value={telefonoFijo}
+                  onChange={(e) => setTelefonoFijo(e.target.value)}
+                  placeholder="(605) 727 0000"
+                  icon={<PhoneCall size={15} aria-hidden="true" />}
+                />
+                <FormField
+                  label="Nacionalidad"
+                  name="nacionalidad"
+                  value={nacionalidad}
+                  onChange={(e) => setNacionalidad(e.target.value)}
+                  placeholder="Colombiana"
+                />
+              </div>
+            )}
+          </div>
 
           <div className="pt-2">
             <button
@@ -649,18 +672,58 @@ export function RegisterForm() {
         >
           {/* Subcabecera conversacional del paso */}
           <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Paso 2 de 3
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                Paso 2 de 3
+              </span>
+              <span className="text-[11px] text-slate-400">
+                66% completado
+              </span>
+            </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              Tu trayectoria en la Universidad
+              Tu trayectoria en Uniguajira
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Sede institucional, semestre cursado y promedio académico acumulado.
+              Programa académico, sede de estudios, semestre y rendimiento acumulado.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Selector y programa */}
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Programa académico *
+              </label>
+              {/* Quick Pills de carreras */}
+              <div className="flex flex-wrap gap-1.5 pb-1">
+                {PROGRAMAS_SUGERIDOS.map((prog) => (
+                  <button
+                    key={prog}
+                    type="button"
+                    onClick={() => setPrograma(prog)}
+                    className={cn(
+                      "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-150 cursor-pointer border active:scale-[0.97]",
+                      programa === prog
+                        ? "border-cyan-500 bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 font-semibold ring-1 ring-cyan-500/40"
+                        : "border-slate-300/80 dark:border-white/10 bg-slate-100/60 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/20",
+                    )}
+                  >
+                    {prog}
+                  </button>
+                ))}
+              </div>
+              <FormField
+                label=""
+                name="programa"
+                value={programa}
+                onChange={(e) => setPrograma(e.target.value)}
+                placeholder="Ingeniería de Sistemas"
+                icon={<BookOpen size={15} aria-hidden="true" />}
+                required
+                error={fieldErrors.programa}
+              />
+            </div>
+
             <FormField
               label="Facultad *"
               name="facultad"
@@ -670,16 +733,6 @@ export function RegisterForm() {
               icon={<School size={15} aria-hidden="true" />}
               required
               error={fieldErrors.facultad}
-            />
-            <FormField
-              label="Programa académico *"
-              name="programa"
-              value={programa}
-              onChange={(e) => setPrograma(e.target.value)}
-              placeholder="Ingeniería de Sistemas"
-              icon={<BookOpen size={15} aria-hidden="true" />}
-              required
-              error={fieldErrors.programa}
             />
           </div>
 
@@ -729,18 +782,21 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Selector de Semestre Segmentado (1 a 10) */}
-          <div className="space-y-2">
+          {/* Selector de Semestre Segmentado (1 a 10) con Barra de Avance */}
+          <div className="space-y-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Semestre actual en curso *
-              </label>
-              <span className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
+              <div className="flex items-center gap-1.5">
+                <GraduationCap size={15} className="text-cyan-500" />
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  Semestre actual en curso *
+                </span>
+              </div>
+              <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
                 {semestreActual}
               </span>
             </div>
 
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 pt-1">
               {SEMESTRES.map((sem) => {
                 const isSelected = semestreActual === sem.label;
                 return (
@@ -762,10 +818,18 @@ export function RegisterForm() {
               })}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-0.5">
-              <span>Fundamentación (1° - 3°)</span>
-              <span>Ciclo Profesional (4° - 7°)</span>
-              <span>Avanzado / Grado (8° - 10°)</span>
+            {/* Avance de carrera dinámico */}
+            <div className="space-y-1.5 pt-2">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                <span>{activeSemestreObj.cycle}</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">~{activeSemestreObj.pct}% avance curricular</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-300"
+                  style={{ width: `${activeSemestreObj.pct}%` }}
+                />
+              </div>
             </div>
           </div>
 
@@ -787,7 +851,7 @@ export function RegisterForm() {
                       </span>
                     ) : null
                   }
-                  hint="En escala de 0.0 a 5.0 según tu certificado de notas."
+                  hint="En escala de 0.0 a 5.0 según tu certificado oficial de notas."
                   required
                   error={fieldErrors.promedioAcademico}
                 />
@@ -843,22 +907,32 @@ export function RegisterForm() {
         >
           {/* Subcabecera conversacional del paso */}
           <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Paso 3 de 3
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                Paso 3 de 3
+              </span>
+              <span className="text-[11px] text-slate-400">
+                100% completado
+              </span>
+            </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               Tus intereses y motivación en AlfaCode
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Selecciona tus líneas oficiales de interés y cuéntanos sobre tus pasiones y proyectos.
+              Elige tus líneas de interés y cuéntanos sobre tus pasiones y proyectos.
             </p>
           </div>
 
           {/* Líneas de Investigación Oficiales en Tarjetas Ricas */}
           <div className="space-y-2.5">
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-              Líneas oficiales del semillero AlfaCode *
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                Líneas oficiales del semillero AlfaCode *
+              </label>
+              <span className="text-[11px] text-slate-400">
+                {selectedLines.length} seleccionada(s)
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 gap-2.5">
               {RESEARCH_LINES.map((item) => {
@@ -871,7 +945,7 @@ export function RegisterForm() {
                     type="button"
                     onClick={() => toggleLine(item.id)}
                     className={cn(
-                      "group flex items-start gap-3.5 rounded-2xl p-3.5 text-left transition-all duration-150 cursor-pointer border active:scale-[0.99]",
+                      "group flex items-start gap-3.5 rounded-2xl p-4 text-left transition-all duration-150 cursor-pointer border active:scale-[0.99]",
                       isSelected
                         ? "border-cyan-500 dark:border-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.18)] ring-1 ring-cyan-500/30"
                         : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 hover:border-slate-400 dark:hover:border-white/25",
@@ -879,32 +953,37 @@ export function RegisterForm() {
                   >
                     <div
                       className={cn(
-                        "flex size-10 shrink-0 items-center justify-center rounded-xl transition-all",
+                        "flex size-11 shrink-0 items-center justify-center rounded-xl transition-all",
                         isSelected
                           ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]"
                           : "bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 group-hover:text-cyan-400",
                       )}
                     >
-                      <IconComponent size={20} />
+                      <IconComponent size={22} />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
-                          {item.title}
-                        </span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                            {item.title}
+                          </span>
+                          <span className="hidden sm:inline-block ml-2 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
+                            · {item.badge}
+                          </span>
+                        </div>
                         <div
                           className={cn(
-                            "flex size-4.5 items-center justify-center rounded-md border transition-colors",
+                            "flex size-5 items-center justify-center rounded-md border transition-colors shrink-0",
                             isSelected
                               ? "border-cyan-500 bg-cyan-500 text-white"
                               : "border-slate-300 dark:border-white/20 bg-transparent",
                           )}
                         >
-                          {isSelected && <Check size={11} className="stroke-[3]" />}
+                          {isSelected && <Check size={12} className="stroke-[3]" />}
                         </div>
                       </div>
-                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                         {item.description}
                       </p>
                     </div>
@@ -914,14 +993,14 @@ export function RegisterForm() {
             </div>
           </div>
 
-          {/* Tags Interactivos de Tecnologías / Áreas */}
+          {/* Tags Interactivos de Tecnologías */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Temas y tecnologías que deseas aprender o aportar
+                Tecnologías y herramientas que te interesan
               </label>
               <span className="text-[11px] text-slate-400">
-                Toca para añadir
+                Toca para activar
               </span>
             </div>
 
@@ -952,7 +1031,7 @@ export function RegisterForm() {
               type="text"
               value={lineasAdicionales}
               onChange={(e) => setLineasAdicionales(e.target.value)}
-              placeholder="Otras herramientas o áreas de interés (ej. Rust, Redes neuronales, Big Data)..."
+              placeholder="Otras herramientas o áreas de interés (ej. Rust, Ciberseguridad, Redes neuronales)..."
               className="block w-full h-10 rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-3.5 text-xs sm:text-sm text-slate-900 dark:text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 focus:outline-none"
             />
           </div>
@@ -969,13 +1048,13 @@ export function RegisterForm() {
               placeholder="Proyectos de clase, desarrollos personales, ferias..."
             />
             <TextAreaField
-              label="Temas o áreas prioritarias de estudio"
+              label="Temas o áreas que deseas profundizar"
               name="areasEstudio"
               value={areasEstudio}
               onChange={(e) => setAreasEstudio(e.target.value)}
               rows={2}
               maxLength={1000}
-              placeholder="Algoritmos, arquitecturas, frameworks..."
+              placeholder="Algoritmos, frameworks o metodologías..."
             />
           </div>
 
@@ -1021,6 +1100,17 @@ export function RegisterForm() {
                 />
               </div>
             )}
+          </div>
+
+          {/* Resumen dinámico previo al envío */}
+          <div className="flex items-center justify-between rounded-xl border border-cyan-400/20 bg-cyan-950/30 px-3.5 py-2 text-xs text-slate-300">
+            <div className="flex items-center gap-2">
+              <Layers size={14} className="text-cyan-400" />
+              <span>
+                Postulando: <strong className="text-white">{nombres || "Estudiante"} {apellidos}</strong> · {programa}
+              </span>
+            </div>
+            <span className="font-mono text-[11px] text-cyan-300">Sede {sede.split(" ")[0]}</span>
           </div>
 
           <div className="pt-2 flex items-center gap-3">
