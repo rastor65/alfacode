@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Code2,
   Copy,
   Cpu,
@@ -27,9 +28,10 @@ import {
   User,
   UserCheck,
   Wand2,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { Alert } from "@/components/ui/alert";
@@ -56,7 +58,7 @@ const RESEARCH_LINES: ResearchLineItem[] = [
     id: "Inteligencia Artificial",
     title: "Inteligencia Artificial",
     tagline: "Machine Learning, LLMs & Visión Artificial",
-    description: "Desarrollo de agentes autónomos, modelos generativos, NLP y análisis de datos avanzados.",
+    description: "Desarrollo de agentes autónomos, modelos generativos, NLP y análisis de datos aplicados.",
     icon: Brain,
     badge: "IA & Data Science",
     tags: ["Python", "PyTorch", "LLMs", "Computer Vision", "FastAPI"],
@@ -82,17 +84,17 @@ const RESEARCH_LINES: ResearchLineItem[] = [
 ];
 
 const SEDES_UNIGUAJIRA = [
-  { id: "Riohacha (Sede Principal)", name: "Riohacha", detail: "Sede Principal · Distrito Central" },
+  { id: "Riohacha (Sede Principal)", name: "Riohacha", detail: "Sede Principal · Km 5 Vía a Maicao" },
   { id: "Maicao", name: "Maicao", detail: "Sede Fronteriza · Km 1" },
   { id: "Fonseca", name: "Fonseca", detail: "Sede Provincial Sur" },
   { id: "Villanueva", name: "Villanueva", detail: "Sede Provincial Sur" },
 ];
 
 const PROGRAMAS_INGENIERIA = [
-  { name: "Ingeniería de Sistemas", short: "Sistemas", icon: "💻", isDefault: true },
-  { name: "Ingeniería Industrial", short: "Industrial", icon: "📊", isDefault: false },
-  { name: "Ingeniería Mecánica", short: "Mecánica", icon: "⚙️", isDefault: false },
-  { name: "Ingeniería Civil", short: "Civil", icon: "🏗️", isDefault: false },
+  { name: "Ingeniería de Sistemas", short: "Sistemas", icon: "💻" },
+  { name: "Ingeniería Industrial", short: "Industrial", icon: "📊" },
+  { name: "Ingeniería Mecánica", short: "Mecánica", icon: "⚙️" },
+  { name: "Ingeniería Civil", short: "Civil", icon: "🏗️" },
 ];
 
 const SEMESTRES = [
@@ -155,7 +157,7 @@ export function RegisterForm() {
   const [isCustomPrograma, setIsCustomPrograma] = useState(false);
   const [sede, setSede] = useState("Riohacha (Sede Principal)");
   const [semestreActual, setSemestreActual] = useState("5° Semestre");
-  const [promedioAcademico, setPromedioAcademico] = useState("");
+  const [promedioAcademico, setPromedioAcademico] = useState("4.2");
 
   // 3. Trayectoria y áreas de investigación
   const [selectedLines, setSelectedLines] = useState<string[]>(["Inteligencia Artificial"]);
@@ -167,6 +169,73 @@ export function RegisterForm() {
   const [practicasPasantias, setPracticasPasantias] = useState("");
   const [message, setMessage] = useState("");
   const [showAdvancedCV, setShowAdvancedCV] = useState(false);
+  const [showCredentialPreview, setShowCredentialPreview] = useState(false);
+
+  // Efecto de celebración con confeti de partículas canvas cuando done = true
+  useEffect(() => {
+    if (!done) return;
+    const canvas = document.getElementById("celebration-canvas") as HTMLCanvasElement;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const particles: Array<{
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      color: string;
+      alpha: number;
+      rotation: number;
+      vRot: number;
+    }> = [];
+
+    const colors = ["#06b6d4", "#10b981", "#38bdf8", "#0382a1", "#0284c7", "#ffffff"];
+    for (let i = 0; i < 70; i++) {
+      particles.push({
+        x: canvas.width / 2 + (Math.random() - 0.5) * 60,
+        y: canvas.height / 3 + (Math.random() - 0.5) * 30,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 1.2) * 5.5,
+        size: Math.random() * 4.5 + 2.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1,
+        rotation: Math.random() * 360,
+        vRot: (Math.random() - 0.5) * 8,
+      });
+    }
+
+    let animId: number;
+    const start = performance.now();
+    function animate(time: number) {
+      if (time - start > 3500) return;
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.11;
+        p.alpha = Math.max(0, 1 - (time - start) / 3500);
+        p.rotation += p.vRot;
+
+        if (ctx) {
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+          ctx.restore();
+        }
+      });
+      animId = requestAnimationFrame(animate);
+    }
+    animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, [done]);
 
   // Helpers interactivos
   function toggleLine(lineId: string) {
@@ -194,7 +263,13 @@ export function RegisterForm() {
   const isEmailValidDomain = email.toLowerCase().endsWith("@uniguajira.edu.co");
   const activeSemestreObj = SEMESTRES.find((s) => s.label === semestreActual) || SEMESTRES[4];
 
-  // Hash determinista para el folio de radicación
+  // Índice dinámico de afinidad con el semillero
+  const affinityScore = Math.min(
+    100,
+    selectedLines.length * 28 + selectedTags.length * 4 + (experienciaInvestigativa ? 8 : 0) + (areasEstudio ? 6 : 0)
+  );
+
+  // Hash determinista para el folio de radicación oficial
   const radicadoFolio = `ALFA-${new Date().getFullYear()}-${Math.abs(
     (email || "uniguajira").split("").reduce((acc, c) => ((acc << 5) - acc) + c.charCodeAt(0), 0) % 90000 + 10000,
   )}`;
@@ -325,10 +400,16 @@ export function RegisterForm() {
     }
   }
 
-  // Vista de éxito / Credencial digital de postulación oficial
+  // Vista de éxito / Credencial digital oficial de postulación
   if (done) {
     return (
-      <div className="space-y-6 py-4 text-center animate-in fade-in zoom-in-95 duration-250">
+      <div className="relative space-y-6 py-4 text-center animate-in fade-in zoom-in-95 duration-250">
+        {/* Canvas de celebración de confeti */}
+        <canvas
+          id="celebration-canvas"
+          className="pointer-events-none absolute inset-0 size-full z-20"
+        />
+
         {/* Cabecera de éxito */}
         <div className="space-y-2">
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.25)]">
@@ -343,7 +424,7 @@ export function RegisterForm() {
         </div>
 
         {/* Tarjeta Credencial Digital Holográfica de Postulación */}
-        <div className="relative mx-auto max-w-md overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-900/90 via-slate-950/95 to-slate-950 p-6 text-left shadow-[0_15px_40px_-10px_rgba(3,130,161,0.25)] backdrop-blur-2xl">
+        <div className="relative mx-auto max-w-md overflow-hidden rounded-3xl border border-cyan-400/35 bg-gradient-to-b from-slate-900/95 via-slate-950 to-slate-950 p-6 text-left shadow-[0_20px_50px_-10px_rgba(3,130,161,0.3)] backdrop-blur-2xl">
           {/* Línea superior con gradiente cian */}
           <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
@@ -492,109 +573,122 @@ export function RegisterForm() {
       {/* STEPPER ELEGANTE APPLE / LINEAR                      */}
       {/* ---------------------------------------------------- */}
       <nav aria-label="Progreso de postulación" className="relative mb-3">
-        {/* Línea conectora de fondo */}
-        <div className="absolute top-4 left-6 right-6 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-white/10 -z-0">
-          <div
-            className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-400 transition-all duration-300 ease-out shadow-[0_0_12px_rgba(6,182,212,0.6)]"
-            style={{
-              width: step === 1 ? "0%" : step === 2 ? "50%" : "100%",
-            }}
-          />
+        {/* Estimador de tiempo */}
+        <div className="flex items-center justify-between text-[11px] text-slate-400 pb-2 px-1">
+          <div className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400 font-mono font-medium">
+            <Clock size={12} />
+            <span>Tiempo estimado: ~2 minutos</span>
+          </div>
+          <span className="font-mono">
+            {step === 1 ? "Paso 1 de 3 (33%)" : step === 2 ? "Paso 2 de 3 (66%)" : "Paso 3 de 3 (100%)"}
+          </span>
         </div>
 
-        {/* 3 Nodos interactivos */}
-        <div className="relative z-10 flex items-center justify-between">
-          {/* Nodo 1 */}
-          <button
-            type="button"
-            onClick={() => goToStep(1)}
-            className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-          >
+        {/* Línea conectora de fondo */}
+        <div className="relative">
+          <div className="absolute top-4 left-6 right-6 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-white/10 -z-0">
             <div
-              className={cn(
-                "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
-                step > 1
-                  ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                  : step === 1
-                    ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
-                    : "border border-white/15 bg-slate-900 text-slate-400",
-              )}
-            >
-              {step > 1 ? <Check size={14} className="stroke-[2.5]" /> : <User size={13} />}
-            </div>
-            <span
-              className={cn(
-                "text-[11px] font-semibold tracking-tight transition-colors",
-                step === 1
-                  ? "text-cyan-600 dark:text-cyan-300"
-                  : step > 1
-                    ? "text-slate-700 dark:text-slate-300"
-                    : "text-slate-400 dark:text-slate-500",
-              )}
-            >
-              01 Identificación
-            </span>
-          </button>
+              className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-400 transition-all duration-300 ease-out shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+              style={{
+                width: step === 1 ? "0%" : step === 2 ? "50%" : "100%",
+              }}
+            />
+          </div>
 
-          {/* Nodo 2 */}
-          <button
-            type="button"
-            onClick={() => goToStep(2)}
-            className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-          >
-            <div
-              className={cn(
-                "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
-                step > 2
-                  ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                  : step === 2
+          {/* 3 Nodos interactivos */}
+          <div className="relative z-10 flex items-center justify-between">
+            {/* Nodo 1 */}
+            <button
+              type="button"
+              onClick={() => goToStep(1)}
+              className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
+            >
+              <div
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                  step > 1
+                    ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                    : step === 1
+                      ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
+                      : "border border-white/15 bg-slate-900 text-slate-400",
+                )}
+              >
+                {step > 1 ? <Check size={14} className="stroke-[2.5]" /> : <User size={13} />}
+              </div>
+              <span
+                className={cn(
+                  "text-[11px] font-semibold tracking-tight transition-colors",
+                  step === 1
+                    ? "text-cyan-600 dark:text-cyan-300"
+                    : step > 1
+                      ? "text-slate-700 dark:text-slate-300"
+                      : "text-slate-400 dark:text-slate-500",
+                )}
+              >
+                01 Identificación
+              </span>
+            </button>
+
+            {/* Nodo 2 */}
+            <button
+              type="button"
+              onClick={() => goToStep(2)}
+              className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
+            >
+              <div
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                  step > 2
+                    ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
+                    : step === 2
+                      ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
+                      : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
+                )}
+              >
+                {step > 2 ? <Check size={14} className="stroke-[2.5]" /> : <GraduationCap size={14} />}
+              </div>
+              <span
+                className={cn(
+                  "text-[11px] font-semibold tracking-tight transition-colors",
+                  step === 2
+                    ? "text-cyan-600 dark:text-cyan-300"
+                    : step > 2
+                      ? "text-slate-700 dark:text-slate-300"
+                      : "text-slate-400 dark:text-slate-500",
+                )}
+              >
+                02 Académico
+              </span>
+            </button>
+
+            {/* Nodo 3 */}
+            <button
+              type="button"
+              onClick={() => goToStep(3)}
+              className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
+            >
+              <div
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                  step === 3
                     ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
                     : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
-              )}
-            >
-              {step > 2 ? <Check size={14} className="stroke-[2.5]" /> : <GraduationCap size={14} />}
-            </div>
-            <span
-              className={cn(
-                "text-[11px] font-semibold tracking-tight transition-colors",
-                step === 2
-                  ? "text-cyan-600 dark:text-cyan-300"
-                  : step > 2
-                    ? "text-slate-700 dark:text-slate-300"
+                )}
+              >
+                <Sparkles size={13} />
+              </div>
+              <span
+                className={cn(
+                  "text-[11px] font-semibold tracking-tight transition-colors",
+                  step === 3
+                    ? "text-cyan-600 dark:text-cyan-300"
                     : "text-slate-400 dark:text-slate-500",
-              )}
-            >
-              02 Académico
-            </span>
-          </button>
-
-          {/* Nodo 3 */}
-          <button
-            type="button"
-            onClick={() => goToStep(3)}
-            className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-          >
-            <div
-              className={cn(
-                "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
-                step === 3
-                  ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
-                  : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
-              )}
-            >
-              <Sparkles size={13} />
-            </div>
-            <span
-              className={cn(
-                "text-[11px] font-semibold tracking-tight transition-colors",
-                step === 3
-                  ? "text-cyan-600 dark:text-cyan-300"
-                  : "text-slate-400 dark:text-slate-500",
-              )}
-            >
-              03 Investigación
-            </span>
-          </button>
+                )}
+              >
+                03 Investigación
+              </span>
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -612,14 +706,9 @@ export function RegisterForm() {
         >
           {/* Subcabecera conversacional del paso */}
           <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                Paso 1 de 3
-              </span>
-              <span className="text-[11px] text-slate-400">
-                33% completado
-              </span>
-            </div>
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Paso 1 de 3
+            </span>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               ¿Cómo te llamas y cómo te contactamos?
             </h2>
@@ -822,14 +911,9 @@ export function RegisterForm() {
         >
           {/* Subcabecera conversacional del paso */}
           <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                Paso 2 de 3
-              </span>
-              <span className="text-[11px] text-slate-400">
-                66% completado
-              </span>
-            </div>
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Paso 2 de 3
+            </span>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               Tu trayectoria en Uniguajira
             </h2>
@@ -987,44 +1071,73 @@ export function RegisterForm() {
             </div>
           </div>
 
-          {/* Promedio Académico con Feedback Visual y Presets */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-              <div className="sm:col-span-8">
-                <FormField
-                  label="Promedio acumulado actual *"
-                  name="promedioAcademico"
-                  value={promedioAcademico}
-                  onChange={(e) => setPromedioAcademico(e.target.value)}
-                  placeholder="Ej. 4.2"
-                  icon={<Award size={15} aria-hidden="true" />}
-                  badge={
-                    promedioStatus ? (
-                      <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold", promedioStatus.color)}>
-                        {promedioStatus.label}
-                      </span>
-                    ) : null
-                  }
-                  hint="En escala de 0.0 a 5.0 según tu certificado oficial de notas."
-                  required
-                  error={fieldErrors.promedioAcademico}
-                />
+          {/* Promedio Académico con Medidor Interactivo y Presets */}
+          <div className="space-y-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Award size={15} className="text-cyan-500" />
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  Promedio académico acumulado *
+                </span>
               </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-black font-mono text-slate-900 dark:text-white">
+                  {promedioAcademico || "0.0"}
+                </span>
+                <span className="text-xs font-mono text-slate-400">/ 5.0</span>
+                {promedioStatus && (
+                  <span className={cn("ml-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold", promedioStatus.color)}>
+                    {promedioStatus.label}
+                  </span>
+                )}
+              </div>
+            </div>
 
-              {/* Botones de sugerencia rápida de promedio */}
-              <div className="sm:col-span-4 flex items-center gap-1.5 pb-2">
-                <span className="text-[10px] text-slate-400 shrink-0">Rápido:</span>
-                {PROMEDIO_PRESETS.map((val) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setPromedioAcademico(val)}
-                    className="flex-1 h-8 rounded-lg border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-cyan-500 hover:text-cyan-500 transition-colors cursor-pointer"
-                  >
-                    {val}
-                  </button>
-                ))}
+            {/* Slider interactivo de promedio */}
+            <div className="space-y-1 pt-1">
+              <input
+                type="range"
+                min="3.0"
+                max="5.0"
+                step="0.1"
+                value={promedioAcademico || "4.0"}
+                onChange={(e) => setPromedioAcademico(e.target.value)}
+                className="w-full h-2 rounded-lg bg-slate-200 dark:bg-slate-800 accent-cyan-500 cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono px-0.5">
+                <span>3.0</span>
+                <span>3.5</span>
+                <span>4.0</span>
+                <span>4.5</span>
+                <span>5.0</span>
               </div>
+            </div>
+
+            {/* Botones de sugerencia rápida */}
+            <div className="flex items-center gap-1.5 pt-1">
+              <span className="text-[10px] text-slate-400 shrink-0">Valores frecuentes:</span>
+              {PROMEDIO_PRESETS.map((val) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setPromedioAcademico(val)}
+                  className={cn(
+                    "flex-1 h-7 rounded-lg border text-xs font-mono font-medium transition-colors cursor-pointer",
+                    promedioAcademico === val
+                      ? "border-cyan-500 bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-bold"
+                      : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-cyan-500",
+                  )}
+                >
+                  {val}
+                </button>
+              ))}
+              <input
+                type="text"
+                value={promedioAcademico}
+                onChange={(e) => setPromedioAcademico(e.target.value)}
+                placeholder="Manual"
+                className="w-16 h-7 rounded-lg border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-2 text-xs font-mono text-center text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
+              />
             </div>
           </div>
 
@@ -1061,19 +1174,36 @@ export function RegisterForm() {
         >
           {/* Subcabecera conversacional del paso */}
           <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                Paso 3 de 3
-              </span>
-              <span className="text-[11px] text-slate-400">
-                100% completado
-              </span>
-            </div>
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Paso 3 de 3
+            </span>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
               Tus intereses y motivación en AlfaCode
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Elige tus líneas de interés y cuéntanos sobre tus pasiones y proyectos.
+            </p>
+          </div>
+
+          {/* Medidor dinámico de Afinidad Investigativa */}
+          <div className="rounded-2xl border border-cyan-400/25 bg-cyan-950/25 p-3.5 space-y-2 shadow-[0_0_15px_rgba(6,182,212,0.08)]">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                <Zap size={14} className="text-cyan-400" />
+                <span>Afinidad estimada con AlfaCode</span>
+              </span>
+              <span className="font-bold font-mono text-cyan-300">{affinityScore}% Match</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-slate-800/80 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-400 transition-all duration-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]"
+                style={{ width: `${affinityScore}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-slate-400">
+              {affinityScore >= 80
+                ? "🚀 Perfil de alta afinidad: tus intereses coinciden con los proyectos activos del semillero."
+                : "💡 Selecciona tus líneas y tecnologías clave para maximizar tu compatibilidad."}
             </p>
           </div>
 
@@ -1161,7 +1291,7 @@ export function RegisterForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Herramientas y tecnologías que deseas aprender o dominar
+                Herramientas y tecnologías de interés
               </label>
               <span className="text-[11px] text-slate-400">
                 {selectedTags.length} activas
@@ -1262,6 +1392,38 @@ export function RegisterForm() {
                   maxLength={800}
                   placeholder="Empresas, laboratorios o instituciones..."
                 />
+              </div>
+            )}
+          </div>
+
+          {/* Botón para previsualizar Carnet Oficial antes de radicar */}
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => setShowCredentialPreview((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-semibold"
+            >
+              <QrCode size={13} />
+              <span>{showCredentialPreview ? "Ocultar carnet preliminar" : "👁️ Ver vista previa de tu Credencial de Postulación"}</span>
+            </button>
+
+            {showCredentialPreview && (
+              <div className="mt-3 rounded-2xl border border-cyan-400/30 bg-slate-900/90 p-4 text-left space-y-2 animate-in fade-in-50 duration-150">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-cyan-950 p-1 border border-cyan-400/40">
+                      <AlfaCodeSymbol className="size-full" />
+                    </span>
+                    <span className="text-xs font-bold text-white">AlfaCode HUB · Credencial Preliminar</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-cyan-300">PREVIEW</span>
+                </div>
+                <div className="space-y-1 text-xs">
+                  <p className="font-bold text-white text-sm">{nombres || "Estudiante"} {apellidos}</p>
+                  <p className="font-mono text-cyan-400 text-[11px]">{email || "usuario@uniguajira.edu.co"}</p>
+                  <p className="text-slate-300 text-[11px]">{programa} · Sede {sede.split(" ")[0]} · {semestreActual}</p>
+                  <p className="text-teal-300 text-[11px]">Líneas: {selectedLines.join(", ")}</p>
+                </div>
               </div>
             )}
           </div>
