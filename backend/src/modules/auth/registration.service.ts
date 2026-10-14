@@ -81,7 +81,12 @@ export class RegistrationService {
           }),
         );
         const request = await manager.save(
-          manager.create(MembershipRequest, { userId: user.id, status: "pending", message: dto.message || null }),
+          manager.create(MembershipRequest, {
+            userId: user.id,
+            status: "pending",
+            message: dto.message || null,
+            cvData: dto.cvData || null,
+          }),
         );
         await recordAudit(manager, {
           actorUserId: null,

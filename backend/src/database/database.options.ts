@@ -18,6 +18,7 @@ import { IdentityFlows1728710000000 } from "./migrations/1728710000000-identity-
 import { AuditEvents1728720000000 } from "./migrations/1728720000000-audit-events";
 import { PasswordLifecycle1728730000000 } from "./migrations/1728730000000-password-lifecycle";
 import { ProjectsAndTeams1728740000000 } from "./migrations/1728740000000-projects-and-teams";
+import { MembershipRequestCv1728750000000 } from "./migrations/1728750000000-membership-request-cv";
 
 export const entities = [
   User,
@@ -38,6 +39,7 @@ export const migrations = [
   AuditEvents1728720000000,
   PasswordLifecycle1728730000000,
   ProjectsAndTeams1728740000000,
+  MembershipRequestCv1728750000000,
 ];
 
 function loadEnvFile(filePath: string) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X } from "lucide-react";
+import { Check, FileText, GraduationCap, MapPin, Microscope, User as UserIcon, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useId, useState } from "react";
 
@@ -35,9 +35,11 @@ function RequestCard({
   const router = useRouter();
   const roleSelectId = useId();
   const [mode, setMode] = useState<Mode>("idle");
+  const [showCv, setShowCv] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const roles = assignableRoles(actorRoles);
+  const cv = request.cvData;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,6 +90,29 @@ function RequestCard({
         <p className="text-xs text-hub-muted">{createdLabel}</p>
       </div>
 
+      {/* Resumen rápido si tiene datos de Hoja de Vida */}
+      {cv && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
+          {cv.programa && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-hub-surface border border-hub-border px-2 py-0.5 text-hub-soft">
+              <GraduationCap size={12} className="text-cyan-400" />
+              {cv.programa} {cv.semestreActual ? `· ${cv.semestreActual}` : ""}
+            </span>
+          )}
+          {cv.sede && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-hub-surface border border-hub-border px-2 py-0.5 text-hub-muted">
+              <MapPin size={11} />
+              {cv.sede}
+            </span>
+          )}
+          {cv.promedioAcademico && (
+            <span className="rounded-md bg-cyan-950/40 border border-cyan-500/20 px-2 py-0.5 font-medium text-cyan-300">
+              Prom: {cv.promedioAcademico}
+            </span>
+          )}
+        </div>
+      )}
+
       {request.message && (
         <blockquote className="mt-3 whitespace-pre-line border-l-2 border-hub-border pl-3 text-sm text-hub-soft">
           {request.message}
@@ -106,19 +131,196 @@ function RequestCard({
         </div>
       )}
 
-      {request.status === "pending" && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {roles.length > 0 && (
-            <Button variant="neutral" className="min-h-9 px-3.5 py-1.5" onClick={() => setMode("approve")}>
-              <Check size={15} className="mr-1.5" aria-hidden="true" />
-              Aprobar
-            </Button>
-          )}
-          <Button variant="ghost" className="min-h-9 w-auto px-3.5 py-1.5" onClick={() => setMode("reject")}>
-            <X size={15} className="mr-1.5" aria-hidden="true" />
-            Rechazar
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        {cv && (
+          <Button variant="secondary" className="min-h-9 px-3.5 py-1.5 text-xs" onClick={() => setShowCv(true)}>
+            <FileText size={14} className="mr-1.5 text-cyan-400" aria-hidden="true" />
+            Ver Hoja de Vida
           </Button>
-        </div>
+        )}
+
+        {request.status === "pending" && (
+          <>
+            {roles.length > 0 && (
+              <Button variant="neutral" className="min-h-9 px-3.5 py-1.5 text-xs" onClick={() => setMode("approve")}>
+                <Check size={14} className="mr-1.5" aria-hidden="true" />
+                Aprobar
+              </Button>
+            )}
+            <Button variant="ghost" className="min-h-9 w-auto px-3.5 py-1.5 text-xs" onClick={() => setMode("reject")}>
+              <X size={14} className="mr-1.5" aria-hidden="true" />
+              Rechazar
+            </Button>
+          </>
+        )}
+      </div>
+
+      {/* Modal de Hoja de Vida Completa del Aspirante */}
+      {cv && (
+        <Modal
+          open={showCv}
+          onClose={() => setShowCv(false)}
+          title="Hoja de Vida de Estudiante (RESUMEN)"
+          description={`${cv.nombres || request.user.fullName} ${cv.apellidos || ""} · ${request.user.email}`}
+        >
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            {/* 1. IDENTIFICACIÓN Y CONTACTO */}
+            <div className="space-y-2 rounded-xl border border-hub-border bg-hub-surface p-3.5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+                <UserIcon size={14} />
+                <span>1. Identificación Personal y Contacto</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <span className="text-hub-muted">Nombres y Apellidos:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.nombres || request.user.fullName} {cv.apellidos || ""}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Documento de identidad:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.documentoIdentidad || "No registrado"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Fecha de Nacimiento:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.fechaNacimiento || "No registrada"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Nacionalidad:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.nacionalidad || "Colombiana"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Correo institucional:</span>{" "}
+                  <span className="font-medium text-hub-text break-all">{request.user.email}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Celular:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.celular || "No registrado"}</span>
+                </div>
+                {cv.telefonoFijo && (
+                  <div>
+                    <span className="text-hub-muted">Teléfono Fijo:</span>{" "}
+                    <span className="font-medium text-hub-text">{cv.telefonoFijo}</span>
+                  </div>
+                )}
+                {cv.fechaElaboracion && (
+                  <div>
+                    <span className="text-hub-muted">Fecha elaboración:</span>{" "}
+                    <span className="font-medium text-hub-text">{cv.fechaElaboracion}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 2. INFORMACIÓN ACADÉMICA */}
+            <div className="space-y-2 rounded-xl border border-hub-border bg-hub-surface p-3.5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+                <GraduationCap size={14} />
+                <span>2. Información Académica Uniguajira</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <span className="text-hub-muted">Facultad:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.facultad || "Facultad de Ingeniería"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Programa:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.programa || "Ingeniería de Sistemas"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Sede:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.sede || "Riohacha"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Semestre Actual:</span>{" "}
+                  <span className="font-medium text-hub-text">{cv.semestreActual || "No registrado"}</span>
+                </div>
+                <div>
+                  <span className="text-hub-muted">Promedio Académico:</span>{" "}
+                  <span className="font-semibold text-cyan-400">{cv.promedioAcademico || "No registrado"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. PERFIL E INTERÉS INVESTIGATIVO */}
+            <div className="space-y-3 rounded-xl border border-hub-border bg-hub-surface p-3.5">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+                <Microscope size={14} />
+                <span>3. Perfil e Interés Investigativo</span>
+              </div>
+
+              {cv.lineasInvestigacion && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-hub-muted">Líneas de Investigación de interés en AlfaCode:</span>
+                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft border border-hub-border">
+                    {cv.lineasInvestigacion}
+                  </p>
+                </div>
+              )}
+
+              {cv.experienciaInvestigativa && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-hub-muted">Experiencia Investigativa y Proyectos:</span>
+                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
+                    {cv.experienciaInvestigativa}
+                  </p>
+                </div>
+              )}
+
+              {cv.areasEstudio && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-hub-muted">Áreas y/o Temáticas de Estudio:</span>
+                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
+                    {cv.areasEstudio}
+                  </p>
+                </div>
+              )}
+
+              {cv.publicaciones && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-hub-muted">Publicaciones Recientes:</span>
+                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
+                    {cv.publicaciones}
+                  </p>
+                </div>
+              )}
+
+              {cv.practicasPasantias && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-hub-muted">Prácticas o Pasantías Realizadas:</span>
+                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
+                    {cv.practicasPasantias}
+                  </p>
+                </div>
+              )}
+
+              {request.message && (
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-hub-muted">Motivación adicional:</span>
+                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
+                    {request.message}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-hub-border">
+              <Button variant="ghost" onClick={() => setShowCv(false)}>
+                Cerrar
+              </Button>
+              {request.status === "pending" && roles.length > 0 && (
+                <Button
+                  variant="neutral"
+                  onClick={() => {
+                    setShowCv(false);
+                    setMode("approve");
+                  }}
+                >
+                  <Check size={14} className="mr-1.5" />
+                  Proceder a Aprobar
+                </Button>
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
 
       <Modal

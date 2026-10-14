@@ -6,6 +6,7 @@ import { ThemeMenu } from "@/components/theme/theme-menu";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Auth3DScene } from "@/features/auth/components/auth-3d-scene";
 import { getThemePreference } from "@/lib/theme-server";
+import { cn } from "@/lib/utils";
 
 type AuthShellProps = {
   title: string;
@@ -15,6 +16,7 @@ type AuthShellProps = {
   badge?: string;
   heroHeadline?: string;
   heroSubheadline?: string;
+  wideCard?: boolean;
 };
 
 /**
@@ -32,6 +34,7 @@ export async function AuthShell({
   badge = "Acceso Institucional",
   heroHeadline = "AlfaCode HUB",
   heroSubheadline = "Semillero de Investigación en Ingeniería de Sistemas y Computación · Universidad de La Guajira.",
+  wideCard = false,
 }: AuthShellProps) {
   const theme = await getThemePreference();
 
@@ -103,7 +106,7 @@ export async function AuthShell({
         <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="grid w-full min-w-0 max-w-full items-center gap-8 sm:gap-10 lg:grid-cols-12 lg:gap-14">
             {/* Columna Izquierda: Escenario 3D del Isotipo Oficial y Ecosistema de Investigación */}
-            <div className="flex w-full min-w-0 max-w-full flex-col items-center lg:items-start text-center lg:text-left lg:col-span-7">
+            <div className={cn("flex w-full min-w-0 max-w-full flex-col items-center lg:items-start text-center lg:text-left", wideCard ? "lg:col-span-5" : "lg:col-span-7")}>
               {/* Escenario 3D interactivo con el logotipo oficial de AlfaCode a tamaño heroico */}
               <div className="relative w-full max-w-[680px] h-[280px] sm:h-[400px] lg:h-[520px] flex items-center justify-center min-w-0">
                 {/* Halo de resplandor ambiental y pedestal luminoso */}
@@ -154,7 +157,7 @@ export async function AuthShell({
             </div>
 
             {/* Columna Derecha: Bóveda de Acceso Seguro (Tarjeta Frosted Glass) */}
-            <div className="relative w-full min-w-0 max-w-md mx-auto lg:max-w-none lg:col-span-5">
+            <div className={cn("relative w-full min-w-0 mx-auto", wideCard ? "max-w-2xl lg:max-w-none lg:col-span-7" : "max-w-md lg:max-w-none lg:col-span-5")}>
               {/* Resplandor ambiental exterior de la tarjeta */}
               <div
                 className="pointer-events-none absolute -inset-1 rounded-[34px] bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent opacity-20 dark:opacity-40 blur-xl"

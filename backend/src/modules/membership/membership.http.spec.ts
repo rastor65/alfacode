@@ -94,6 +94,36 @@ describe("POST /auth/register (solicitud sin contrasena)", () => {
     assert.equal(mailer.messages.length, before);
   });
 
+  it("crea usuario y solicitud con hoja de vida estructurada (cvData)", async () => {
+    const cvData = {
+      fechaElaboracion: "2026-10-13",
+      nombres: "Estudiante",
+      apellidos: "Prueba",
+      documentoIdentidad: "1122334455",
+      fechaNacimiento: "2003-05-15",
+      nacionalidad: "Colombiana",
+      celular: "3001234567",
+      facultad: "Facultad de Ingeniería",
+      programa: "Ingeniería de Sistemas",
+      sede: "Riohacha",
+      semestreActual: "6",
+      promedioAcademico: "4.5",
+      lineasInvestigacion: "Inteligencia Artificial",
+      experienciaInvestigativa: "Participación en semillero escolar",
+    };
+    const { response, json } = await register("con-cv@uniguajira.edu.co", {
+      fullName: "Estudiante Prueba",
+      cvData,
+    });
+    assert.equal(response.status, 202);
+    assert.deepEqual(json, { message: REGISTRATION_ACCEPTED_MESSAGE });
+
+    const user = await h.dataSource.getRepository(User).findOneByOrFail({ emailNormalized: "con-cv@uniguajira.edu.co" });
+    const request = await h.dataSource.getRepository(MembershipRequest).findOneByOrFail({ userId: user.id });
+    assert.equal(request.status, "pending");
+    assert.deepEqual(request.cvData, cvData);
+  });
+
   it("ya no acepta una contrasena en la solicitud", async () => {
     const { response, json } = await register("con-clave@uniguajira.edu.co", { password: NEW_PASSWORD });
 
