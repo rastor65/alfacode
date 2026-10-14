@@ -7,6 +7,7 @@ import {
   ChangeProjectStatusDto,
   CreateProjectDto,
   ListProjectsQuery,
+  RemoveProjectMemberQuery,
   UpdateProjectDto,
   UpdateProjectMemberDto,
 } from "./dto/projects.dto";
@@ -85,7 +86,8 @@ export class ProjectsController {
     @CurrentAuth() auth: AuthContext,
     @Param("projectId", uuid) projectId: string,
     @Param("userId", uuid) userId: string,
+    @Query(new DtoValidationPipe(RemoveProjectMemberQuery)) query: RemoveProjectMemberQuery,
   ) {
-    return this.projects.removeMember(auth.user, projectId, userId);
+    return this.projects.removeMember(auth.user, projectId, userId, query);
   }
 }

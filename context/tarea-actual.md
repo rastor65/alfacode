@@ -1,12 +1,12 @@
-# Tarea actual - Fase 2, I-10 (proyectos y equipos) en revision
+# Tarea actual - Fase 2, I-12 (sprints opcionales)
 
 ## Estado
 
-**Fase:** 2 - Proyectos y equipos (iniciada por instruccion del responsable, DEC-018, sin aceptacion formal de la Fase 1).
-**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013).
-**Implementadas y verificadas tecnicamente, sin aprobacion explicita:** I-08 (pantallas de acceso), I-09 (gestion de perfil, solicitudes e integrantes), I-10 (proyectos y equipos, commit `f39f567` en `dev`) y DEC-016.
-**Pendiente:** revision y aprobacion del responsable de I-08, I-09, I-10 y DEC-016; prueba de interaccion en navegador real.
-**Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-10. I-11 (tareas y Kanban) requiere autorizacion.
+**Fase:** 2 - Proyectos, tareas y sprints (2A y 2B aprobadas; 2C en curso).
+**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022).
+**I-11:** aprobada (DEC-022).
+**Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
+**Trabajo actualmente autorizado:** I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21), DEC-022.
 
 ## Fases de I-08
 
@@ -72,9 +72,28 @@
 - `npm --prefix frontend test` 43 OK (nueva `features/projects/types.test.ts`; detecto que `parseProjectStatus` aceptaba claves heredadas como `constructor`, corregido); lint OK; `npm run verify` OK (43 + 145 pruebas).
 - Flujo verificado en puertos aislados 3100/4100 con base temporal (luego eliminada): redireccion sin sesion, `/panel` -> `/hub`, login, alta, listado con lider, activacion, filtros, parametros invalidos ignorados, bloqueo al retirar al unico lider de un proyecto activo, las cinco vistas `/hub/*` con 200. No se uso navegador real: la interaccion de los modales queda pendiente de revision del responsable.
 
+## I-11 (Fase 2B: tareas, backlog, Kanban y progreso, F2-07 a F2-12)
+
+**Estado:** autorizada (DEC-020); implementada y verificada tecnicamente. Decisiones en DEC-021.
+
+| Parte | Contenido | Estado |
+|---|---|---|
+| Backend | Migracion `Tasks1728750000000`; modulo `tasks` (entidad, politica, DTO, servicio, controlador); `GET/POST /projects/:id/tasks`, `GET/PATCH /projects/:id/tasks/:taskId`; `progress` en proyectos; F2-04 con `?unassignTasks=true`; auditoria de tareas (F2-21 en lo que toca a tareas) | Verificada tecnicamente |
+| Frontend | `/hub/proyectos/[id]/tareas`: tablero de cuatro columnas, filtros (todas, mis tareas, sin responsable), alta, detalle y edicion en modales, mover con selector o arrastrando; progreso en listado y detalle; enlace al tablero; confirmacion al retirar a alguien con tareas abiertas | Verificada tecnicamente |
+
+## Resultado tecnico verificado de I-11
+
+- `npm --prefix backend test`: 162 pruebas OK (17 nuevas de tareas: alta y valores por defecto, colaborador sin alta, responsable miembro activo, validacion sin `projectId`/`sprintId` del cliente, movimientos del colaborador que persisten, limites del colaborador, edicion del lider, solo lectura en proyectos finalizados, tarea de otro proyecto 404, ajeno 404, filtros y orden, progreso, F2-04 y auditoria).
+- Tres mutaciones de control detectadas y revertidas: sin filtro de proyecto al cargar la tarea, colaborador sin comprobar asignacion, retiro sin comprobar tareas abiertas.
+- Migracion aplicada, revertida y reaplicada en la base local (respaldo previo; usuarios intactos).
+- `npm --prefix frontend test`: 52 pruebas OK (progreso sin porcentaje con cero tareas, filtros, agrupacion, orden, vencimiento en hora de Bogota).
+- `npm run verify` OK (52 + 162 pruebas, sin migraciones pendientes).
+- Flujo real en puertos aislados 3100/4100 con base y outbox temporales (luego eliminadas): 20/20 comprobaciones (proyecto agil con "Backlog", tablero vacio con "Sin tareas", alta, asignacion invalida 409, colaborador mueve solo lo suyo, progreso en tablero y listado, vencida, 404 para ajenos e ID invalido, redireccion sin sesion, retiro con confirmacion y desasignacion, solo lectura al cancelar). Sin errores ni secretos en los logs.
+- **No verificado por el agente:** la interaccion en un navegador real.
+
 ## No realizar sin nueva autorizacion
 
-- No iniciar I-11 (tareas y Kanban) hasta que el responsable revise I-10.
+- No iniciar trabajo posterior a I-12 (cierre del MVP, Fase 3) sin autorizacion.
 - No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.
 - No crear datos reales de personas.

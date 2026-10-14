@@ -50,6 +50,11 @@ const MESSAGES: Record<string, string> = {
   EMAIL_ALREADY_REGISTERED: "Ya existe una cuenta con ese correo. Inicia sesión con ella.",
   REGISTRATION_DISABLED:
     "El registro público no está disponible por ahora. Pide una invitación a la coordinación del semillero.",
+  PROJECT_NOT_EDITABLE: "El proyecto está finalizado o cancelado y ya no admite cambios.",
+  PROJECT_FORBIDDEN: "No tienes permiso para esta acción en el proyecto.",
+  TASK_NOT_FOUND: "La tarea ya no existe en este proyecto.",
+  ASSIGNEE_NOT_PROJECT_MEMBER: "La persona responsable debe ser integrante activo del proyecto.",
+  MEMBER_HAS_ASSIGNED_TASKS: "La persona tiene tareas abiertas en el proyecto. Reasígnalas o desasígnalas antes de retirarla.",
   [NETWORK_ERROR_CODE]: "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.",
 };
 

@@ -1,7 +1,7 @@
 # Estado actual del proyecto — AlfaCode HUB
 
 **Actualizado:** 13 de octubre de 2026
-**Situacion:** Fase 0 e I-04 a I-07 aprobadas por el responsable; I-08, I-09 e I-10 (Fase 2: proyectos y equipos) implementadas y verificadas tecnicamente, pendientes de aprobacion; ultimo commit `f39f567` en `dev`, sincronizado con `origin/dev`; repositorio separado en frontend y backend; stack vigente verificado; PostgreSQL pausado temporalmente.
+**Situacion:** Fase 0 e I-04 a I-11 aprobadas por el responsable (DEC-020, DEC-022); I-12 (Fase 2C: sprints) autorizada y en curso; repositorio separado en frontend y backend; stack vigente verificado; PostgreSQL pausado temporalmente.
 
 ## Estado comprobado
 
@@ -18,17 +18,18 @@
 | Vinculacion de integrantes (I-06) | Aprobada | Bootstrap del primer admin, registro con verificacion, cola de solicitudes con aprobacion/rechazo, invitaciones de un solo uso, correo via outbox local, auditoria `audit_events`; 77 pruebas backend OK |
 | Administrador real | Creado | El responsable lo creo con `npm run backend:bootstrap:admin` |
 | Recuperacion, perfil e integrantes (I-07) | Aprobada | `forgot/reset-password` con revocacion de sesiones, `GET/PATCH /users/me`, `GET /users`, `GET /users/:id`, `PATCH /users/:id/status`, `POST/DELETE /users/:id/roles`; 112 pruebas backend OK |
-| Contrasena temporal (DEC-016) | Verificada tecnicamente, pendiente de aprobacion | Solicitud sin contrasena, temporal al aprobar, cambio obligatorio; migracion `PasswordLifecycle1728730000000`; contradice F1-08 del plan (documentado) |
-| Pantallas de acceso (I-08, F1-14) | Verificada tecnicamente, pendiente de aprobacion | `/ingresar`, `/registro`, `/invitacion`, `/cambiar-contrasena`, `/recuperar-contrasena`, `/restablecer-contrasena`; temas claro/oscuro/sistema |
-| Gestion (I-09, F1-14) | Verificada tecnicamente, pendiente de aprobacion | `/hub/perfil`, `/hub/solicitudes`, `/hub/integrantes` y detalle con roles, estado y contrasena temporal |
-| Proyectos y equipos (I-10, F2-01 a F2-06) | Verificada tecnicamente, pendiente de aprobacion | Migracion `ProjectsAndTeams1728740000000`, API `/projects`, `/hub/proyectos` con filtros, modales, estados y equipo; vistas privadas bajo `/hub` (DEC-019); `npm run verify` OK (43 + 145 pruebas) |
+| Contrasena temporal (DEC-016) | Aprobada (DEC-020) | Solicitud sin contrasena, temporal al aprobar, cambio obligatorio; migracion `PasswordLifecycle1728730000000`; contradice F1-08 del plan (documentado) |
+| Pantallas de acceso (I-08, F1-14) | Aprobada (DEC-020) | `/ingresar`, `/registro`, `/invitacion`, `/cambiar-contrasena`, `/recuperar-contrasena`, `/restablecer-contrasena`; temas claro/oscuro/sistema |
+| Gestion (I-09, F1-14) | Aprobada (DEC-020) | `/hub/perfil`, `/hub/solicitudes`, `/hub/integrantes` y detalle con roles, estado y contrasena temporal |
+| Proyectos y equipos (I-10, F2-01 a F2-06) | Aprobada (DEC-020) | Migracion `ProjectsAndTeams1728740000000`, API `/projects`, `/hub/proyectos` con filtros, modales, estados y equipo; vistas privadas bajo `/hub` (DEC-019); `npm run verify` OK (43 + 145 pruebas) |
+| Tareas, backlog y Kanban (I-11, F2-07 a F2-12) | Aprobada (DEC-022) | Migracion `Tasks1728750000000`, API `/projects/:id/tasks`, progreso, F2-04 con desasignacion explicita, `/hub/proyectos/[id]/tareas`; `npm run verify` OK (52 + 162 pruebas); decisiones en DEC-021 |
 | Portafolio publico | Conservado | El frontend actual mantiene la responsabilidad de portafolio publico |
 
 ## Iteracion activa propuesta
 
-- **ID:** I-11 (tareas y Kanban, Fase 2).
-- **Estado:** no iniciada; requiere revision de I-10 y autorizacion del responsable.
-- **Pendiente heredado:** impedir retirar a un miembro con tareas asignadas (F2-04) cuando existan tareas.
+- **ID:** I-12 (sprints opcionales, Fase 2C, F2-13 a F2-21).
+- **Estado:** autorizada (DEC-022), en curso.
+- **Pendiente heredado:** agregar la FK de `tasks.sprint_id` al crear `sprints` (DEC-021).
 
 ## Registro de ejecucion
 
@@ -72,12 +73,14 @@
 - 2026-10-13: commit `ac5f8bc` en `dev` con I-09 y ajustes (sin push). I-10 autorizada (DEC-018). I-10.1 ejecutada (backend de proyectos y equipos): migracion `ProjectsAndTeams1728740000000`, `backend/src/modules/projects/*` (entidades, politica, DTO, servicio, controlador, modulo, pruebas). Comandos: typecheck OK; 145/145 pruebas backend; migracion ida/vuelta/ida en la base local; `npm run verify` OK. Las mutaciones de control fueron interrumpidas por el responsable; la mutacion que quedo aplicada se restauro y se verifico.
 - 2026-10-13: vistas privadas bajo `/hub` (DEC-019) e I-10.2 ejecutada. Movidos con `git mv` `(privado)/{panel,perfil,solicitudes,integrantes}` a `(privado)/hub/...`; modificados `redirects.ts` y su prueba (`DEFAULT_AFTER_LOGIN = "/hub"`), `app-shell.tsx` (menu con Proyectos y coincidencia exacta para el Panel), `next.config.ts` (redirecciones 307). Nuevos: `frontend/src/components/ui/option-select.tsx`, `frontend/src/features/projects/{types.ts,types.test.ts,components/project-form.tsx,components/project-detail.tsx,components/projects-list.tsx}`, `frontend/src/app/(privado)/hub/proyectos/page.tsx`. Sin cambios en el backend. Comandos: `npm --prefix frontend test` 43/43 OK; lint OK; `npm run verify` OK (43 + 145); flujo en puertos aislados 3100/4100 con base temporal, 17/17 comprobaciones OK, temporales eliminados y build regenerado con `localhost:4000`. Estado: implementada, verificada_tecnicamente, pendiente de revision.
 - 2026-10-13: I-10 registrada en el commit `f39f567` en `dev` (sincronizado con `origin/dev`). Por instruccion del responsable se actualizaron los encabezados de `context/estado-actual.md` y `context/tarea-actual.md` y la linea de estado de `AGENTS.md`, que seguian refiriendose a I-08.1 o I-01; sin cambios de codigo.
+- 2026-10-13: el responsable aprobo I-08, I-09, I-10 y DEC-016 y autorizo I-11 (DEC-020). I-11 ejecutada. Backend nuevo: `backend/src/database/migrations/1728750000000-tasks.ts`, `backend/src/modules/projects/project-access.ts` (carga de acceso compartida), `backend/src/modules/tasks/{task.entity,task-policy,tasks.service,tasks.controller,tasks.module}.ts`, `dto/tasks.dto.ts`, pruebas `task-policy.spec.ts` y `tasks.http.spec.ts`. Backend modificado: `projects.service.ts` (acceso compartido, `progress`, `canManageTasks`, F2-04), `projects.controller.ts` y `projects.dto.ts` (`unassignTasks`), `projects.http.spec.ts`, `database.options.ts`, `app.module.ts`. Frontend nuevo: `frontend/src/features/tasks/{types.ts,types.test.ts,components/{progress-summary,task-form,task-board}.tsx}`, `frontend/src/app/(privado)/hub/proyectos/[id]/tareas/page.tsx`. Frontend modificado: `features/projects/{types.ts,components/project-detail.tsx,components/projects-list.tsx}`, `lib/api/errors.ts`. Documentacion: `docs/decisiones.md` (DEC-020, DEC-021). Sin dependencias nuevas. Comandos: `npm --prefix backend run typecheck` OK; `npm --prefix backend test` 162/162 OK; tres mutaciones detectadas y revertidas; `migration:show/run/revert/run` en la base local con respaldo previo, usuarios intactos; `npm --prefix frontend test` 52/52 OK; lint y typecheck del frontend OK; `npm run verify` OK; flujo real en puertos 3100/4100 con base y outbox temporales: 20/20 comprobaciones, luego eliminadas y servidores detenidos. Estado: implementada, verificada_tecnicamente, pendiente de aprobacion.
 
 Cuando el agente termine una iteracion, debe anadir una entrada con fecha, IDs, archivos modificados, comandos realmente ejecutados, resultados, bloqueos y si esta `implementada`, `verificada_tecnicamente`, `pendiente de aprobacion` o `aprobada_responsable`.
 
 ## Bloqueos y decisiones abiertas
 
 - Corregir mojibake/encoding visible en documentos si se autoriza una normalizacion de codificacion completa.
-- I-08, I-09, I-10 y DEC-016 quedan pendientes de aprobacion explicita del responsable; la interaccion en navegador real no fue verificada por el agente.
+- La interaccion en navegador real de I-08 a I-11 no fue verificada por el agente.
+- La Fase 1 y la Fase 2 no pueden cerrarse formalmente mientras PostgreSQL siga pausado (pruebas F1-9 y F2-11).
 - Produccion requiere configurar `FRONTEND_TRUSTED_PROXY_HOPS` (frontend) y `TRUST_PROXY` (backend) segun la topologia de despliegue; el backend no arranca en produccion sin `TRUST_PROXY` (DEC-006).
 - Las migraciones `IdentityBase1728700000000`, `IdentityFlows1728710000000` y `AuditEvents1728720000000` no tienen rama PostgreSQL (falla explicitamente) mientras DEC-003 siga vigente.

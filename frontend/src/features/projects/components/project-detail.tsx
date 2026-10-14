@@ -1,15 +1,18 @@
 "use client";
 
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { KanbanSquare, Pencil, Trash2, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { type FormEvent, useId, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TextAreaField } from "@/components/ui/form-field";
+import { buttonClassName } from "@/components/ui/button-styles";
 import { OptionSelect } from "@/components/ui/option-select";
+import { ProgressSummary } from "@/features/tasks/components/progress-summary";
 import { apiRequest } from "@/lib/api/client";
-import { describeError } from "@/lib/api/errors";
+import { ApiRequestError, describeError } from "@/lib/api/errors";
 
 import {
   METHODOLOGY_LABELS,
@@ -53,6 +56,8 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
   const [notice, setNotice] = useState<string | null>(null);
   const [pendingStatus, setPendingStatus] = useState<ProjectStatus | null>(null);
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
+  /** F2-04: persona con tareas abiertas cuyo retiro espera confirmacion para desasignarlas. */
+  const [pendingRemoval, setPendingRemoval] = useState<{ userId: string; fullName: string; openTasks: number } | null>(null);
   const { permissions } = project;
 
   async function run(key: string, action: () => Promise<unknown>, message: string) {
@@ -82,6 +87,34 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
     } catch (caught) {
       setError(describeError(caught));
       setCandidates(null);
+    }
+  }
+
+  async function removeMember(userId: string, fullName: string, unassignTasks: boolean) {
+    setBusy(`remove-${userId}`);
+    setError(null);
+    setNotice(null);
+
+    try {
+      await apiRequest(`/projects/${project.id}/members/${userId}${unassignTasks ? "?unassignTasks=true" : ""}`, {
+        method: "DELETE",
+      });
+      setPendingRemoval(null);
+      setNotice(
+        unassignTasks
+          ? `${fullName} ya no pertenece al proyecto; sus tareas abiertas quedaron sin responsable.`
+          : `${fullName} ya no pertenece al proyecto.`,
+      );
+      onChanged();
+    } catch (caught) {
+      if (caught instanceof ApiRequestError && caught.code === "MEMBER_HAS_ASSIGNED_TASKS" && !unassignTasks) {
+        const openTasks = Number((caught.details as { openTasks?: unknown } | null)?.openTasks) || 1;
+        setPendingRemoval({ userId, fullName, openTasks });
+      } else {
+        setError(describeError(caught));
+      }
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -128,6 +161,14 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
       </div>
 
       {project.description && <p className="whitespace-pre-line text-sm text-hub-soft">{project.description}</p>}
+
+      <div className="space-y-3 rounded-xl border border-hub-border p-4">
+        <ProgressSummary progress={project.progress} />
+        <Link href={`/hub/proyectos/${project.id}/tareas`} className={buttonClassName("neutral", "min-h-10")}>
+          <KanbanSquare size={15} className="mr-2" aria-hidden="true" />
+          {project.methodology === "agile" ? "Ver backlog y tablero" : "Ver tareas y tablero"}
+        </Link>
+      </div>
 
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -184,6 +225,29 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
       )}
 
       <Section title={`Equipo (${project.members.length})`}>
+        {pendingRemoval && (
+          <div className="mb-3 space-y-3 rounded-xl border border-hub-border p-4" role="group" aria-label="Confirmar retiro">
+            <p className="text-sm text-hub-text">
+              {pendingRemoval.fullName} tiene{" "}
+              {pendingRemoval.openTasks === 1 ? "1 tarea abierta" : `${pendingRemoval.openTasks} tareas abiertas`} en el
+              proyecto. Si la retiras, esas tareas quedarán sin responsable; las tareas hechas conservan su nombre.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                className="min-h-10"
+                pending={busy === `remove-${pendingRemoval.userId}`}
+                pendingLabel="Retirando…"
+                onClick={() => void removeMember(pendingRemoval.userId, pendingRemoval.fullName, true)}
+              >
+                Desasignar y retirar
+              </Button>
+              <Button variant="ghost" className="w-auto min-h-10 px-4" onClick={() => setPendingRemoval(null)} disabled={busy !== null}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {project.members.length === 0 ? (
           <p className="text-sm text-hub-muted">Sin integrantes. Asigna al menos un líder antes de activar el proyecto.</p>
         ) : (
@@ -214,13 +278,7 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
                     <button
                       type="button"
                       disabled={busy !== null}
-                      onClick={() =>
-                        void run(
-                          `remove-${member.userId}`,
-                          () => apiRequest(`/projects/${project.id}/members/${member.userId}`, { method: "DELETE" }),
-                          `${member.fullName} ya no pertenece al proyecto.`,
-                        )
-                      }
+                      onClick={() => void removeMember(member.userId, member.fullName, false)}
                       className="flex size-9 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:opacity-50"
                       aria-label={`Retirar a ${member.fullName} del proyecto`}
                     >

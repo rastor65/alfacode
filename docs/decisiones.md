@@ -199,6 +199,31 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Decision:** todas las vistas privadas pasan a `/hub` (`/hub`, `/hub/proyectos`, `/hub/integrantes`, `/hub/solicitudes`, `/hub/perfil`); el destino tras el login es `/hub`. Las rutas anteriores (`/panel`, `/perfil`, `/solicitudes`, `/integrantes`) redirigen con 307 desde `next.config.ts`, temporales para no fijarlas en caches mientras la estructura evoluciona. Las pantallas de acceso (`/ingresar`, `/registro`, `/cambiar-contrasena`, recuperacion) no cambian.
 - **Impacto:** el backend no cambia. Enlaces guardados a las rutas anteriores siguen funcionando.
 
+### DEC-020 - Aprobacion de I-08, I-09, I-10 y DEC-016; autorizacion de I-11
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobado ("aprobados I-08, I-09, I-10 y DEC-016. continua con i 11").
+- **Decision:** el responsable aprueba I-08 (pantallas de acceso), I-09 (gestion de perfil, solicitudes e integrantes), I-10 (proyectos y equipos) y DEC-016 (solicitud sin contrasena y contrasena temporal). Se autoriza I-11 (Fase 2B: tareas, backlog, Kanban y progreso, F2-07 a F2-12), incluida la regla pendiente de F2-04 sobre miembros con tareas asignadas.
+- **Pendiente:** la Fase 1 y la Fase 2 no pueden cerrarse formalmente mientras PostgreSQL siga pausado (pruebas F1-9 y F2-11).
+
+### DEC-021 - Decisiones de implementacion de I-11 (tareas, backlog y Kanban)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada (DEC-022).
+- **`sprint_id` sin clave foranea:** la migracion `Tasks1728750000000` crea `tasks.sprint_id` nullable y sin FK, porque `sprints` llega en la Fase 2C. La API de I-11 no acepta `sprintId` (siempre `null`). En I-12 la migracion de sprints debera reconstruir `tasks` en SQLite para agregar la FK y la regla de mismo proyecto.
+- **F2-04, retiro con tareas:** `DELETE /projects/:id/members/:userId` responde 409 `MEMBER_HAS_ASSIGNED_TASKS` (con `details.openTasks`) si la persona tiene tareas abiertas (`status != done`). Con `?unassignTasks=true` las desasigna en la misma transaccion, con auditoria por tarea. Las tareas `done` conservan a su responsable como historial.
+- **Permisos (F2-09):** autoridad y lider gestionan todos los campos; el colaborador solo cambia `status` de las tareas que tiene asignadas (si envia cualquier otro campo, 403). Proyectos `completed`/`cancelled`: tareas en solo lectura (409). No hay borrado de tareas: el plan no define `DELETE` para tareas en la API minima F2.
+- **Kanban (F2-11):** sin bibliotecas; cada tarjeta se mueve con un selector de estado accesible por teclado o arrastrandola (HTML5 nativo). Ambos hacen el mismo `PATCH` de `status`.
+- **Progreso (F2-12):** `progress` (`total`, `done`, `byStatus`) en el listado, el detalle y la lista de tareas; con cero tareas la interfaz dice "Sin tareas" y nunca muestra un porcentaje.
+- **Ruta y ancho:** el tablero vive en `/hub/proyectos/[id]/tareas` (pagina de lectura, con alta y edicion en modales, segun la convencion de DEC-017). Usa `max-w-6xl` en lugar del ancho comun `max-w-3xl` porque cuatro columnas no caben; es la unica excepcion.
+- **Aprobacion del responsable:** confirmada (DEC-022).
+
+### DEC-022 - Aprobacion de I-11 y autorizacion de I-12
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobado ("apruebo y autorizo", en respuesta a la propuesta de aprobar I-11 y DEC-021, hacer commit y autorizar I-12).
+- **Decision:** se aprueban I-11 y DEC-021; se hace commit en `dev` y se autoriza I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21).
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

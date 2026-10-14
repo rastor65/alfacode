@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { ProgressSummary } from "@/features/tasks/components/progress-summary";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
 
@@ -102,6 +103,8 @@ export function ProjectsList({ projects }: { projects: ProjectSummary[] }) {
                     : "Sin líder asignado"}
                   {" · "}
                   {project.memberCount === 1 ? "1 integrante" : `${project.memberCount} integrantes`}
+                  {" · "}
+                  <ProgressSummary progress={project.progress} variant="compact" />
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap justify-end gap-1.5">

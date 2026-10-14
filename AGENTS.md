@@ -63,4 +63,4 @@ Si existe una contradiccion relevante, documentarla en `docs/decisiones.md` y pe
 - Criterios de aceptacion satisfechos, pendientes o bloqueados.
 - Decisiones/riesgos y siguiente paso recomendado.
 
-**Estado operativo actual:** Fase 0 e I-04 a I-07 aprobadas; I-08, I-09 e I-10 (Fase 2: proyectos y equipos) implementadas y verificadas tecnicamente, pendientes de aprobacion del responsable. Consultar `context/tarea-actual.md` antes de iniciar cualquier nueva iteracion.
+**Estado operativo actual:** Fase 0 e I-04 a I-11 aprobadas; I-12 (Fase 2C: sprints opcionales) autorizada. Consultar `context/tarea-actual.md` antes de iniciar cualquier nueva iteracion.
