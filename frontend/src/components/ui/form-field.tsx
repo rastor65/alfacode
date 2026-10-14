@@ -10,15 +10,16 @@ type FormFieldProps = Omit<ComponentProps<"input">, "id"> & {
   hint?: string;
   error?: string;
   icon?: React.ReactNode;
+  badge?: React.ReactNode;
 };
 
-const inputClassName =
-  "block w-full rounded-xl border border-hub-input-border bg-hub-input px-3.5 py-2 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-2xs transition-colors duration-150 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20";
+const inputBaseClass =
+  "block w-full h-10 sm:h-10.5 rounded-xl border border-hub-input-border bg-hub-input px-3.5 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-150 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15";
 
 /**
  * Campo minimalista y elegante con etiqueta, ayuda y error asociados por `aria-describedby`.
  */
-export function FormField({ label, hint, error, icon, type = "text", className, ...props }: FormFieldProps) {
+export function FormField({ label, hint, error, icon, badge, type = "text", className, ...props }: FormFieldProps) {
   const id = useId();
   const [revealed, setRevealed] = useState(false);
   const isPassword = type === "password";
@@ -26,13 +27,16 @@ export function FormField({ label, hint, error, icon, type = "text", className, 
 
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-hub-soft">
-        {label}
-      </label>
-      <div className="relative">
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-hub-soft">
+          {label}
+        </label>
+        {badge && <div>{badge}</div>}
+      </div>
+      <div className="relative group">
         {icon && (
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-slate-400 dark:text-cyan-400/70"
+            className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-slate-400 dark:text-cyan-400/60 transition-colors group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400"
             aria-hidden="true"
           >
             {icon}
@@ -44,10 +48,10 @@ export function FormField({ label, hint, error, icon, type = "text", className, 
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(
-            inputClassName,
+            inputBaseClass,
             icon && "pl-10",
             isPassword && "pr-10",
-            error ? "border-hub-field-error" : "hover:border-slate-400 dark:hover:border-white/20",
+            error ? "border-hub-field-error focus:border-hub-field-error focus:ring-rose-500/15" : "hover:border-slate-400 dark:hover:border-white/25",
           )}
           {...props}
         />
@@ -64,7 +68,7 @@ export function FormField({ label, hint, error, icon, type = "text", className, 
         )}
       </div>
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-[11px] text-hub-muted">
+        <p id={`${id}-hint`} className="text-[11px] text-hub-muted leading-tight">
           {hint}
         </p>
       )}
@@ -82,19 +86,20 @@ type TextAreaFieldProps = Omit<ComponentProps<"textarea">, "id"> & {
   hint?: string;
   error?: string;
   icon?: React.ReactNode;
+  badge?: React.ReactNode;
 };
 
-export function TextAreaField({ label, hint, error, icon, className, rows = 3, ...props }: TextAreaFieldProps) {
+export function TextAreaField({ label, hint, error, icon, badge, className, rows = 3, ...props }: TextAreaFieldProps) {
   const id = useId();
   const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-hub-soft">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-hub-soft">
           {label}
         </label>
-        {icon && <span className="text-slate-400 dark:text-cyan-400/60">{icon}</span>}
+        {badge ? <div>{badge}</div> : icon && <span className="text-slate-400 dark:text-cyan-400/60">{icon}</span>}
       </div>
       <textarea
         id={id}
@@ -102,14 +107,13 @@ export function TextAreaField({ label, hint, error, icon, className, rows = 3, .
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={cn(
-          inputClassName,
-          "resize-y min-h-[56px]",
-          error ? "border-hub-field-error" : "hover:border-slate-400 dark:hover:border-white/20",
+          "block w-full rounded-xl border border-hub-input-border bg-hub-input px-3.5 py-2.5 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-150 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 resize-y min-h-[68px]",
+          error ? "border-hub-field-error focus:border-hub-field-error focus:ring-rose-500/15" : "hover:border-slate-400 dark:hover:border-white/25",
         )}
         {...props}
       />
       {hint && !error && (
-        <p id={`${id}-hint`} className="text-[11px] text-hub-muted">
+        <p id={`${id}-hint`} className="text-[11px] text-hub-muted leading-tight">
           {hint}
         </p>
       )}
