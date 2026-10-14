@@ -1,12 +1,12 @@
-# Tarea actual - Fase 1, I-08 (pantallas de acceso, F1-14) por fases
+# Tarea actual - Fase 2, I-10 (proyectos y equipos) en revision
 
 ## Estado
 
-**Fase:** 1 - Identidad, autenticacion e integrantes
+**Fase:** 2 - Proyectos y equipos (iniciada por instruccion del responsable, DEC-018, sin aceptacion formal de la Fase 1).
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013).
-**I-08:** autorizada por fases (DEC-013). Las tres fases estan implementadas y verificadas tecnicamente.
-**Pendiente:** revision y aprobacion del responsable de I-08 (en particular I-08.2 e I-08.3) y de DEC-016.
-**Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-08.
+**Implementadas y verificadas tecnicamente, sin aprobacion explicita:** I-08 (pantallas de acceso), I-09 (gestion de perfil, solicitudes e integrantes), I-10 (proyectos y equipos, commit `f39f567` en `dev`) y DEC-016.
+**Pendiente:** revision y aprobacion del responsable de I-08, I-09, I-10 y DEC-016; prueba de interaccion en navegador real.
+**Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-10. I-11 (tareas y Kanban) requiere autorizacion.
 
 ## Fases de I-08
 
