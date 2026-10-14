@@ -1,12 +1,13 @@
-# Tarea actual - Fase 2, I-12 (sprints opcionales)
+# Tarea actual - Fase 2, I-12 (sprints opcionales) en revision
 
 ## Estado
 
-**Fase:** 2 - Proyectos, tareas y sprints (2A y 2B aprobadas; 2C en curso).
+**Fase:** 2 - Proyectos, tareas y sprints (2A y 2B aprobadas; 2C implementada, en revision).
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022).
 **I-11:** aprobada (DEC-022).
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
-**Trabajo actualmente autorizado:** I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21), DEC-022.
+**I-12:** autorizada (DEC-022); implementada y verificada tecnicamente, sin commit.
+**Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-12.
 
 ## Fases de I-08
 
@@ -90,6 +91,26 @@
 - `npm run verify` OK (52 + 162 pruebas, sin migraciones pendientes).
 - Flujo real en puertos aislados 3100/4100 con base y outbox temporales (luego eliminadas): 20/20 comprobaciones (proyecto agil con "Backlog", tablero vacio con "Sin tareas", alta, asignacion invalida 409, colaborador mueve solo lo suyo, progreso en tablero y listado, vencida, 404 para ajenos e ID invalido, redireccion sin sesion, retiro con confirmacion y desasignacion, solo lectura al cancelar). Sin errores ni secretos en los logs.
 - **No verificado por el agente:** la interaccion en un navegador real.
+
+## I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21)
+
+**Estado:** autorizada (DEC-022); implementada y verificada tecnicamente. Decisiones en DEC-023.
+
+| Parte | Contenido | Estado |
+|---|---|---|
+| Backend | Migracion `Sprints1728760000000` (`sprints`, `sprint_closure_items`, reconstruccion de `tasks` con clave compuesta, indice de un activo); modulo `sprints`; `GET/POST /projects/:id/sprints`, `GET/PATCH /projects/:id/sprints/:sprintId`, `POST/DELETE .../tasks`, `POST .../start`, `.../complete`, `.../cancel`; `POST /projects/:id/methodology`; filtro `sprintId` en tareas; reapertura al backlog; auditoria de sprints | Verificada tecnicamente |
+| Frontend | `/hub/proyectos/[id]/sprints` con lista, alta, detalle, planificacion, ciclo de vida e historial; selector de sprint en el tablero agil; pestanas del proyecto; cambio de modalidad en el detalle del proyecto | Verificada tecnicamente |
+
+## Resultado tecnico verificado de I-12
+
+- `npm --prefix backend test`: 181 pruebas OK (19 nuevas de sprints: tradicional sin sprints, planificacion, fechas, tarea de otro proyecto rechazada por API y por la clave compuesta, tarea ya planificada, devolver al backlog y edicion solo planificada, segundo activo rechazado, cuatro inicios simultaneos con un solo activo, indice unico ante escritura directa, proyecto finalizado, tablero del sprint, cierre con registro y backlog, registro inmutable y reapertura, cancelacion con motivo, permisos del colaborador, ajeno 404, sprint de otro proyecto, cambio de modalidad y auditoria).
+- Tres mutaciones de control detectadas y revertidas: cierre sin devolver pendientes al backlog, planificacion sin filtrar por proyecto, cambio a tradicional sin comprobar sprints.
+- Migracion aplicada, revertida y reaplicada en la base local con respaldo previo (usuarios intactos, `PRAGMA foreign_key_check` sin errores).
+- `npm --prefix frontend test`: 55 pruebas OK; lint y typecheck OK.
+- `npm run verify` OK (55 + 181 pruebas, sin migraciones pendientes).
+- Recorrido E2E (prueba F2-12) en puertos aislados 3100/4100 con base y outbox temporales: registro publico, aprobacion, contrasena temporal por correo, cambio obligatorio, proyecto agil, equipo, tareas, sprint, inicios simultaneos, tablero del sprint, cierre, historial, modalidad y proyecto tradicional sin sprints: 17/17 (una comprobacion del script usaba un nombre invalido; corregido y confirmado aparte). Tras reiniciar el backend, sprint, historial y tareas persisten (prueba F2-9): 2/2. Sin errores ni secretos en los logs; base, outbox y respaldos eliminados.
+- **No verificado por el agente:** la interaccion en un navegador real.
+- **Bloqueado:** la prueba F2-11 (SQLite y PostgreSQL) mientras PostgreSQL siga pausado; por eso no se declara "MVP listo" (puerta MVP del plan).
 
 ## No realizar sin nueva autorizacion
 

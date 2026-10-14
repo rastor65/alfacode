@@ -1,6 +1,6 @@
 "use client";
 
-import { KanbanSquare, Pencil, Trash2, UserPlus } from "lucide-react";
+import { KanbanSquare, Pencil, Timer, Trash2, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useId, useState } from "react";
 
@@ -55,6 +55,7 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pendingStatus, setPendingStatus] = useState<ProjectStatus | null>(null);
+  const [confirmMethodology, setConfirmMethodology] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   /** F2-04: persona con tareas abiertas cuyo retiro espera confirmacion para desasignarlas. */
   const [pendingRemoval, setPendingRemoval] = useState<{ userId: string; fullName: string; openTasks: number } | null>(null);
@@ -164,10 +165,18 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
 
       <div className="space-y-3 rounded-xl border border-hub-border p-4">
         <ProgressSummary progress={project.progress} />
-        <Link href={`/hub/proyectos/${project.id}/tareas`} className={buttonClassName("neutral", "min-h-10")}>
-          <KanbanSquare size={15} className="mr-2" aria-hidden="true" />
-          {project.methodology === "agile" ? "Ver backlog y tablero" : "Ver tareas y tablero"}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/hub/proyectos/${project.id}/tareas`} className={buttonClassName("neutral", "min-h-10")}>
+            <KanbanSquare size={15} className="mr-2" aria-hidden="true" />
+            {project.methodology === "agile" ? "Ver backlog y tablero" : "Ver tareas y tablero"}
+          </Link>
+          {project.methodology === "agile" && (
+            <Link href={`/hub/proyectos/${project.id}/sprints`} className={buttonClassName("neutral", "min-h-10")}>
+              <Timer size={15} className="mr-2" aria-hidden="true" />
+              Ver sprints
+            </Link>
+          )}
+        </div>
       </div>
 
       <dl className="grid gap-4 sm:grid-cols-2">
@@ -220,6 +229,44 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
                 </Button>
               ))}
             </div>
+          )}
+        </Section>
+      )}
+
+      {permissions.canChangeMethodology && (
+        <Section title="Modalidad">
+          {confirmMethodology ? (
+            <div className="space-y-3">
+              <p className="text-sm text-hub-text">
+                {project.methodology === "traditional"
+                  ? "El proyecto pasará a modalidad ágil: todas sus tareas quedarán en el backlog y podrás organizarlas en sprints."
+                  : "El proyecto pasará a modalidad tradicional. Solo es posible si nunca ha tenido sprints."}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  className="min-h-10"
+                  pending={busy === "methodology"}
+                  pendingLabel="Guardando…"
+                  onClick={() => {
+                    const methodology = project.methodology === "agile" ? "traditional" : "agile";
+                    void run(
+                      "methodology",
+                      () => apiRequest(`/projects/${project.id}/methodology`, { method: "POST", body: { methodology } }),
+                      `El proyecto ahora es de modalidad ${METHODOLOGY_LABELS[methodology].toLowerCase()}.`,
+                    ).then(() => setConfirmMethodology(false));
+                  }}
+                >
+                  Confirmar
+                </Button>
+                <Button variant="ghost" className="w-auto min-h-10 px-4" onClick={() => setConfirmMethodology(false)} disabled={busy !== null}>
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="neutral" className="min-h-10" onClick={() => setConfirmMethodology(true)} disabled={busy !== null}>
+              Cambiar a {METHODOLOGY_LABELS[project.methodology === "agile" ? "traditional" : "agile"].toLowerCase()}
+            </Button>
           )}
         </Section>
       )}

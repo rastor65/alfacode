@@ -224,6 +224,7 @@ describe("estados (F2-02)", () => {
       canEdit: false,
       canManageMembers: false,
       canManageTasks: false,
+      canChangeMethodology: false,
       allowedTransitions: [],
     });
     assert.equal(reactivate.json.code, "INVALID_PROJECT_STATUS_TRANSITION");

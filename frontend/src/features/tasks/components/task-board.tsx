@@ -1,7 +1,7 @@
 "use client";
 
-import { CalendarDays, Pencil, Plus, UserRound } from "lucide-react";
-import { type DragEvent, useState } from "react";
+import { CalendarDays, Pencil, Plus, Timer, UserRound } from "lucide-react";
+import { type DragEvent, useId, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { OptionSelect } from "@/components/ui/option-select";
 import { formatCalendarDate } from "@/features/projects/types";
+import {
+  type BoardScope,
+  SPRINT_STATUS_LABELS,
+  type SprintSummary,
+  defaultScope,
+  parseScope,
+  scopeValue,
+  tasksInScope,
+} from "@/features/sprints/types";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
@@ -45,14 +54,18 @@ type TaskBoardProps = {
   assignees: AssigneeOption[];
   currentUserId: string;
   canManageTasks: boolean;
+  /** Solo en proyectos agiles: permite ver el sprint activo, el backlog o todo (F2-10, F2-20). */
+  sprints?: SprintSummary[];
 };
 
 /**
  * Tablero Kanban basico (F2-11): una tarjeta por tarea y columnas fijas por estado. Mover una
  * tarjeta (con el selector o arrastrandola) es un PATCH de `status` que el backend autoriza.
  */
-export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, currentUserId, canManageTasks }: TaskBoardProps) {
+export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, currentUserId, canManageTasks, sprints }: TaskBoardProps) {
+  const scopeId = useId();
   const [tasks, setTasks] = useState(() => sortTasks(initialTasks));
+  const [scope, setScope] = useState<BoardScope>(() => (sprints ? defaultScope(sprints) : { kind: "all" }));
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [dialog, setDialog] = useState<Dialog>(null);
   const [moving, setMoving] = useState<string | null>(null);
@@ -60,7 +73,19 @@ export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, curr
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const today = todayInBogota();
-  const columns = groupByStatus(filterTasks(tasks, filter, currentUserId));
+  const scoped = tasksInScope(tasks, scope);
+  const columns = groupByStatus(filterTasks(scoped, filter, currentUserId));
+  const sprintNames = new Map((sprints ?? []).map((sprint) => [sprint.id, sprint.name]));
+  const scopeSprint = scope.kind === "sprint" ? sprints?.find((sprint) => sprint.id === scope.sprintId) : undefined;
+  const scopeOptions = sprints
+    ? [
+        ...sprints
+          .filter((sprint) => sprint.status === "active" || sprint.status === "planned")
+          .map((sprint) => ({ value: sprint.id, label: `${sprint.name} (${SPRINT_STATUS_LABELS[sprint.status].toLowerCase()})` })),
+        { value: "backlog", label: "Backlog (sin sprint)" },
+        { value: "all", label: "Todas las tareas" },
+      ]
+    : [];
   const selected = dialog && dialog.mode !== "create" ? tasks.find((task) => task.id === dialog.taskId) : undefined;
 
   function replace(saved: TaskItem) {
@@ -89,6 +114,24 @@ export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, curr
     }
   }
 
+  /** Una tarea creada mientras se ve un sprint planificable se incorpora a ese sprint (F2-15). */
+  async function created(saved: TaskItem) {
+    if (!scopeSprint?.permissions.canPlan) {
+      replace(saved);
+      setNotice(`Tarea «${saved.title}» creada.`);
+      return;
+    }
+
+    try {
+      await apiRequest(`/projects/${projectId}/sprints/${scopeSprint.id}/tasks`, { method: "POST", body: { taskIds: [saved.id] } });
+      replace({ ...saved, sprintId: scopeSprint.id });
+      setNotice(`Tarea «${saved.title}» creada en ${scopeSprint.name}.`);
+    } catch (caught) {
+      replace(saved);
+      setError(`La tarea se creó en el backlog, pero no se pudo agregar al sprint: ${describeError(caught)}`);
+    }
+  }
+
   function handleDrop(event: DragEvent<HTMLElement>, status: TaskStatus) {
     event.preventDefault();
     setDropTarget(null);
@@ -101,7 +144,32 @@ export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, curr
 
   return (
     <div className="space-y-5">
-      <ProgressSummary progress={computeProgress(tasks)} />
+      {sprints && (
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-full space-y-1.5 sm:w-72">
+            <label htmlFor={scopeId} className="block text-sm font-medium text-hub-soft">
+              Ver
+            </label>
+            <OptionSelect
+              id={scopeId}
+              options={scopeOptions}
+              value={scopeValue(scope)}
+              onValueChange={(value) => {
+                const next = parseScope(value, sprints);
+                if (next) setScope(next);
+              }}
+            />
+          </div>
+          {scopeSprint && (
+            <p className="pb-2.5 text-sm text-hub-muted">
+              {formatCalendarDate(scopeSprint.startDate)} – {formatCalendarDate(scopeSprint.endDate)}
+              {scopeSprint.goal ? ` · ${scopeSprint.goal}` : ""}
+            </p>
+          )}
+        </div>
+      )}
+
+      <ProgressSummary progress={computeProgress(scoped)} />
 
       {totalTasks > tasks.length && (
         <Alert tone="info">
@@ -187,6 +255,7 @@ export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, curr
                     key={task.id}
                     task={task}
                     today={today}
+                    sprintName={scope.kind === "all" && task.sprintId ? sprintNames.get(task.sprintId) : undefined}
                     busy={moving === task.id}
                     disabled={moving !== null}
                     onOpen={() => setDialog({ mode: "view", taskId: task.id })}
@@ -212,9 +281,8 @@ export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, curr
             initialStatus={dialog.status}
             onCancel={() => setDialog(null)}
             onSaved={(saved) => {
-              replace(saved);
-              setNotice(`Tarea «${saved.title}» creada.`);
               setDialog(null);
+              void created(saved);
             }}
           />
         )}
@@ -248,13 +316,15 @@ export function TaskBoard({ projectId, initialTasks, totalTasks, assignees, curr
 type TaskCardProps = {
   task: TaskItem;
   today: string;
+  /** Nombre del sprint, cuando el tablero muestra todas las tareas. */
+  sprintName?: string;
   busy: boolean;
   disabled: boolean;
   onOpen: () => void;
   onMove: (status: TaskStatus) => void;
 };
 
-function TaskCard({ task, today, busy, disabled, onOpen, onMove }: TaskCardProps) {
+function TaskCard({ task, today, sprintName, busy, disabled, onOpen, onMove }: TaskCardProps) {
   const overdue = isOverdue(task, today);
 
   return (
@@ -281,6 +351,12 @@ function TaskCard({ task, today, busy, disabled, onOpen, onMove }: TaskCardProps
       </button>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <Badge className={cn(task.priority === "high" && "border-amber-500/60")}>Prioridad {TASK_PRIORITY_LABELS[task.priority].toLowerCase()}</Badge>
+        {sprintName && (
+          <Badge>
+            <Timer size={12} className="mr-1" aria-hidden="true" />
+            {sprintName}
+          </Badge>
+        )}
         {task.dueDate && (
           <Badge className={cn(overdue && "border-red-500/60")}>
             <CalendarDays size={12} className="mr-1" aria-hidden="true" />

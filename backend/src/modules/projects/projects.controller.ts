@@ -4,6 +4,7 @@ import { DtoValidationPipe } from "../../common/dto-validation.pipe";
 import { type AuthContext, CurrentAuth } from "../auth/auth.decorators";
 import {
   AddProjectMemberDto,
+  ChangeProjectMethodologyDto,
   ChangeProjectStatusDto,
   CreateProjectDto,
   ListProjectsQuery,
@@ -55,6 +56,16 @@ export class ProjectsController {
     @Body(new DtoValidationPipe(ChangeProjectStatusDto)) dto: ChangeProjectStatusDto,
   ) {
     return this.projects.changeStatus(auth.user, projectId, dto);
+  }
+
+  @Post(":projectId/methodology")
+  @HttpCode(200)
+  changeMethodology(
+    @CurrentAuth() auth: AuthContext,
+    @Param("projectId", uuid) projectId: string,
+    @Body(new DtoValidationPipe(ChangeProjectMethodologyDto)) dto: ChangeProjectMethodologyDto,
+  ) {
+    return this.projects.changeMethodology(auth.user, projectId, dto);
   }
 
   @Get(":projectId/members")

@@ -24,7 +24,7 @@ export class Task {
   @JoinColumn({ name: "project_id" })
   project!: Project;
 
-  /** Sin sprints hasta la Fase 2C: siempre `null` (backlog o modalidad tradicional). */
+  /** `null`: backlog (o modalidad tradicional). Si existe, es un sprint del mismo proyecto (F2-08). */
   @Column({ name: "sprint_id", type: "varchar", length: 36, nullable: true })
   sprintId!: string | null;
 

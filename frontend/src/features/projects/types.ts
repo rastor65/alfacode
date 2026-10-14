@@ -73,6 +73,7 @@ export type ProjectDetail = Omit<ProjectSummary, "memberCount" | "leaders"> & {
     canEdit: boolean;
     canManageMembers: boolean;
     canManageTasks: boolean;
+    canChangeMethodology: boolean;
     allowedTransitions: ProjectStatus[];
   };
 };

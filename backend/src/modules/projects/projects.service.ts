@@ -4,10 +4,12 @@ import { DataSource, type EntityManager, In } from "typeorm";
 
 import { ApiError } from "../../common/api-error";
 import { recordAudit } from "../audit/audit";
+import { Sprint } from "../sprints/sprint.entity";
 import { TASK_STATUSES, Task, type TaskStatus } from "../tasks/task.entity";
 import { User } from "../users/user.entity";
 import type {
   AddProjectMemberDto,
+  ChangeProjectMethodologyDto,
   ChangeProjectStatusDto,
   CreateProjectDto,
   ListProjectsQuery,
@@ -293,6 +295,39 @@ export class ProjectsService {
     });
   }
 
+  /**
+   * F2-19: `traditional -> agile` deja todas las tareas en el backlog (ya tienen `sprint_id` nulo);
+   * `agile -> traditional` solo sin sprints, ni siquiera historicos, hasta definir una conversion.
+   */
+  async changeMethodology(actor: Actor, id: string, dto: ChangeProjectMethodologyDto) {
+    return this.dataSource.transaction(async (manager) => {
+      const { project, access } = await loadManageableProject(manager, actor, id);
+
+      if (project.methodology === dto.methodology) {
+        return this.detailView(manager, project, access, actor);
+      }
+
+      if (dto.methodology === "traditional" && (await manager.existsBy(Sprint, { projectId: id }))) {
+        throw new ApiError(
+          409,
+          "PROJECT_HAS_SPRINTS",
+          "El proyecto tiene sprints (aun historicos); no puede pasar a modalidad tradicional",
+        );
+      }
+
+      await manager.update(Project, { id }, { methodology: dto.methodology });
+      await recordAudit(manager, {
+        actorUserId: actor.id,
+        action: "project.methodology_changed",
+        targetType: "project",
+        targetId: id,
+        details: { from: project.methodology, to: dto.methodology },
+      });
+
+      return this.detailView(manager, await manager.findOneByOrFail(Project, { id }), access, actor);
+    });
+  }
+
   async members(actor: Actor, id: string) {
     const { access } = await loadProjectWithAccess(this.dataSource.manager, actor, id);
     const members = await this.dataSource.getRepository(ProjectMember).find({
@@ -496,6 +531,7 @@ export class ProjectsService {
         canEdit: manageable && editable,
         canManageMembers: manageable && editable,
         canManageTasks: manageable && editable,
+        canChangeMethodology: manageable && editable,
         allowedTransitions: manageable ? allowedProjectTransitions(project.status) : [],
       },
     };

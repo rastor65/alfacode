@@ -11,6 +11,7 @@ import { MembershipRequest } from "../modules/membership/membership-request.enti
 import { ProjectMember } from "../modules/projects/project-member.entity";
 import { Project } from "../modules/projects/project.entity";
 import { Role } from "../modules/roles/role.entity";
+import { Sprint, SprintClosureItem } from "../modules/sprints/sprint.entity";
 import { Task } from "../modules/tasks/task.entity";
 import { User } from "../modules/users/user.entity";
 import { SchemaBootstrap1728690000000 } from "./migrations/1728690000000-schema-bootstrap";
@@ -20,6 +21,7 @@ import { AuditEvents1728720000000 } from "./migrations/1728720000000-audit-event
 import { PasswordLifecycle1728730000000 } from "./migrations/1728730000000-password-lifecycle";
 import { ProjectsAndTeams1728740000000 } from "./migrations/1728740000000-projects-and-teams";
 import { Tasks1728750000000 } from "./migrations/1728750000000-tasks";
+import { Sprints1728760000000 } from "./migrations/1728760000000-sprints";
 
 export const entities = [
   User,
@@ -32,6 +34,8 @@ export const entities = [
   Project,
   ProjectMember,
   Task,
+  Sprint,
+  SprintClosureItem,
 ];
 
 export const migrations = [
@@ -42,6 +46,7 @@ export const migrations = [
   PasswordLifecycle1728730000000,
   ProjectsAndTeams1728740000000,
   Tasks1728750000000,
+  Sprints1728760000000,
 ];
 
 function loadEnvFile(filePath: string) {

@@ -9,7 +9,7 @@ const toInt = Transform(({ value }) => (typeof value === "string" && /^\d+$/.tes
 /** Fecha de calendario `YYYY-MM-DD`; la validez real se comprueba en el servicio. */
 const CALENDAR_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** `projectId` y `sprintId` no se aceptan: el proyecto sale de la URL y los sprints llegan en la Fase 2C. */
+/** `projectId` y `sprintId` no se aceptan: el proyecto sale de la URL y el sprint se gestiona desde sus rutas (F2-15). */
 export class CreateTaskDto {
   @trim
   @IsString()
@@ -87,6 +87,12 @@ export class ListTasksQuery {
   @ValidateIf((_object, value) => value !== "none")
   @IsUUID("4")
   assigneeId?: string;
+
+  /** UUID de un sprint del proyecto, o `none` para el backlog (`sprint_id IS NULL`, F2-10). */
+  @IsOptional()
+  @ValidateIf((_object, value) => value !== "none")
+  @IsUUID("4")
+  sprintId?: string;
 
   @toInt
   @IsOptional()

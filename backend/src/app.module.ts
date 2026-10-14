@@ -9,6 +9,7 @@ import { MailModule } from "./modules/mail/mail.module";
 import { MembershipModule } from "./modules/membership/membership.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
 import { RolesModule } from "./modules/roles/roles.module";
+import { SprintsModule } from "./modules/sprints/sprints.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -30,6 +31,7 @@ import { UsersModule } from "./modules/users/users.module";
     MembershipModule,
     ProjectsModule,
     TasksModule,
+    SprintsModule,
   ],
 })
 export class AppModule {}

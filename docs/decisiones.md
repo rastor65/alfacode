@@ -224,6 +224,19 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Estado:** aprobado ("apruebo y autorizo", en respuesta a la propuesta de aprobar I-11 y DEC-021, hacer commit y autorizar I-12).
 - **Decision:** se aprueban I-11 y DEC-021; se hace commit en `dev` y se autoriza I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21).
 
+### DEC-023 - Decisiones de implementacion de I-12 (sprints opcionales)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aplicada en I-12; pendiente de revision del responsable.
+- **Estados del sprint:** `planned`, `active`, `completed`, `cancelled`, segun F2-13 del plan; el diseno tecnico v0.2 menciona `closed`, pero prevalece el plan.
+- **Integridad en la base de datos:** la migracion `Sprints1728760000000` reconstruye `tasks` (SQLite no agrega claves foraneas con `ALTER TABLE`) con la clave compuesta `(sprint_id, project_id) -> sprints (id, project_id)`, que impide asociar una tarea a un sprint de otro proyecto aunque se salte la API. Un indice unico parcial (`project_id WHERE status = 'active'`) garantiza un solo sprint activo por proyecto; el servicio lo comprueba antes y traduce el conflicto del indice a 409. Revertir la migracion devuelve todas las tareas al backlog.
+- **Historial:** `sprint_closure_items` se escribe al cerrar y tambien al cancelar (F2-18 pide conservar historial); no hay API para modificarlo. El progreso de un sprint finalizado se calcula con ese registro, no con las tareas actuales.
+- **Reabrir una tarea:** si una tarea `done` de un sprint finalizado cambia a otro estado, vuelve al backlog (`sprint_id = null`, auditado como `task.sprint_changed` con `reason: reopened`) para poder planificarla de nuevo; el registro de cierre no cambia.
+- **Planificacion:** se agregan tareas del backlog y se devuelven al backlog mientras el sprint este planificado o activo. Solo se edita (nombre, objetivo, fechas) un sprint planificado. Cancelar exige motivo.
+- **F2-19, cambio de modalidad:** `POST /projects/:id/methodology` (ruta nueva, no listada en la API minima, porque la modalidad no forma parte de la edicion general). `agile -> traditional` responde 409 `PROJECT_HAS_SPRINTS` si existe cualquier sprint.
+- **Interfaz:** `/hub/proyectos/[id]/sprints` (solo agiles; 404 en tradicionales) con lista, alta, detalle, planificacion, inicio, cierre, cancelacion e historial en modales. El tablero de un proyecto agil tiene un selector (sprint activo o planificado, backlog, todas); por defecto muestra el sprint activo. Una tarea creada mientras se ve un sprint planificable se agrega a ese sprint. Los proyectos tradicionales no muestran pestana ni enlaces de sprints.
+- **Aprobacion del responsable:** pendiente.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

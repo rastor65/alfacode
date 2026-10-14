@@ -55,6 +55,14 @@ const MESSAGES: Record<string, string> = {
   TASK_NOT_FOUND: "La tarea ya no existe en este proyecto.",
   ASSIGNEE_NOT_PROJECT_MEMBER: "La persona responsable debe ser integrante activo del proyecto.",
   MEMBER_HAS_ASSIGNED_TASKS: "La persona tiene tareas abiertas en el proyecto. Reasígnalas o desasígnalas antes de retirarla.",
+  PROJECT_NOT_AGILE: "Los sprints solo existen en proyectos de modalidad ágil.",
+  PROJECT_HAS_SPRINTS: "El proyecto ya tiene sprints (aunque sean antiguos), así que no puede volver a modalidad tradicional.",
+  SPRINT_NOT_FOUND: "El sprint ya no existe en este proyecto.",
+  SPRINT_ALREADY_ACTIVE: "Ya hay un sprint activo en el proyecto. Ciérralo o cancélalo antes de iniciar otro.",
+  SPRINT_NOT_EDITABLE: "Solo se pueden editar los sprints planificados.",
+  SPRINT_CLOSED: "El sprint ya finalizó; sus tareas forman parte del historial.",
+  TASK_NOT_IN_BACKLOG: "Alguna tarea ya no está en el backlog. Actualiza la lista e intenta de nuevo.",
+  INVALID_SPRINT_TRANSITION: "Ese cambio de estado del sprint no está permitido.",
   [NETWORK_ERROR_CODE]: "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.",
 };
 

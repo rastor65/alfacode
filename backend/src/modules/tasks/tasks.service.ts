@@ -16,6 +16,8 @@ import { ProjectMember } from "../projects/project-member.entity";
 import type { ProjectAccess } from "../projects/project-policy";
 import type { Project } from "../projects/project.entity";
 import { isCalendarDate, projectProgress } from "../projects/projects.service";
+import { FINAL_SPRINT_STATUSES } from "../sprints/sprint-policy";
+import { Sprint } from "../sprints/sprint.entity";
 import type { CreateTaskDto, ListTasksQuery, UpdateTaskDto } from "./dto/tasks.dto";
 import { canChangeTaskStatus, canManageTasks } from "./task-policy";
 import { Task } from "./task.entity";
@@ -42,7 +44,7 @@ export class TasksService {
     private readonly dataSource: DataSource,
   ) {}
 
-  /** F2-10: sin sprints todas las tareas estan en el backlog (`sprint_id IS NULL`). */
+  /** F2-10: el backlog son las tareas con `sprint_id IS NULL` (`sprintId=none`). */
   async list(actor: Actor, projectId: string, query: ListTasksQuery) {
     const manager = this.dataSource.manager;
     const { project, access } = await loadProjectWithAccess(manager, actor, projectId);
@@ -74,6 +76,12 @@ export class TasksService {
       builder.andWhere("task.assigneeId IS NULL");
     } else if (query.assigneeId) {
       builder.andWhere("task.assigneeId = :assigneeId", { assigneeId: query.assigneeId });
+    }
+
+    if (query.sprintId === "none") {
+      builder.andWhere("task.sprintId IS NULL");
+    } else if (query.sprintId) {
+      builder.andWhere("task.sprintId = :sprintId", { sprintId: query.sprintId });
     }
 
     if (query.q) {
@@ -171,6 +179,16 @@ export class TasksService {
         changes.assigneeId = dto.assigneeId;
       }
 
+      // Reabrir una tarea de un sprint finalizado la devuelve al backlog: el historial del sprint
+      // queda en su registro de cierre y la tarea puede planificarse de nuevo.
+      if (changes.status !== undefined && changes.status !== "done" && task.sprintId) {
+        const sprint = await manager.findOneBy(Sprint, { id: task.sprintId });
+
+        if (sprint && FINAL_SPRINT_STATUSES.includes(sprint.status)) {
+          changes.sprintId = null;
+        }
+      }
+
       if (Object.keys(changes).length > 0) {
         await manager.update(Task, { id: taskId }, changes);
         await this.auditChanges(manager, actor, task, changes);
@@ -200,7 +218,15 @@ export class TasksService {
       });
     }
 
-    const fields = Object.keys(changes).filter((field) => field !== "status" && field !== "assigneeId");
+    if (changes.sprintId !== undefined) {
+      await recordAudit(manager, {
+        ...base,
+        action: "task.sprint_changed",
+        details: { projectId: task.projectId, from: task.sprintId, to: changes.sprintId, reason: "reopened" },
+      });
+    }
+
+    const fields = Object.keys(changes).filter((field) => !["status", "assigneeId", "sprintId"].includes(field));
 
     if (fields.length > 0) {
       await recordAudit(manager, { ...base, action: "task.updated", details: { projectId: task.projectId, fields } });

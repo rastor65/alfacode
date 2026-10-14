@@ -147,3 +147,9 @@ export class RemoveProjectMemberQuery {
   @IsBoolean()
   unassignTasks?: boolean;
 }
+
+/** F2-19: cambio de modalidad con reglas propias (no forma parte de la edicion general). */
+export class ChangeProjectMethodologyDto {
+  @IsIn(PROJECT_METHODOLOGIES)
+  methodology!: ProjectMethodology;
+}
