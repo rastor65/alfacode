@@ -129,6 +129,20 @@ const SUGGESTED_TAGS = [
 
 const PROMEDIO_PRESETS = ["3.8", "4.0", "4.2", "4.5"];
 
+function ColombiaFlag({ className = "size-3.5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 900 600"
+      className={cn("inline-block rounded-[2px] shadow-xs overflow-hidden shrink-0", className)}
+      aria-label="Bandera de Colombia"
+    >
+      <rect width="900" height="300" fill="#FCD116" />
+      <rect y="300" width="900" height="150" fill="#003893" />
+      <rect y="450" width="900" height="150" fill="#CE1126" />
+    </svg>
+  );
+}
+
 export function RegisterForm() {
   const [step, setStep] = useState<Step>(1);
   const [direction, setDirection] = useState<"next" | "prev">("next");
@@ -570,125 +584,88 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* ---------------------------------------------------- */}
-      {/* STEPPER ELEGANTE APPLE / LINEAR                      */}
+      {/* STEPPER ELEGANTE APPLE / LINEAR (SEGMENTED TABS)     */}
       {/* ---------------------------------------------------- */}
-      <nav aria-label="Progreso de postulación" className="relative mb-3">
-        {/* Estimador de tiempo */}
-        <div className="flex items-center justify-between text-[11px] text-slate-400 pb-2 px-1">
-          <div className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400 font-mono font-medium">
-            <Clock size={12} />
+      <nav aria-label="Progreso de postulación" className="space-y-3">
+        {/* Estimador de tiempo y porcentaje */}
+        <div className="flex items-center justify-between text-xs px-0.5">
+          <div className="flex items-center gap-1.5 font-mono text-hub-accent font-semibold">
+            <Clock size={13} className="animate-pulse" />
             <span>Tiempo estimado: ~2 minutos</span>
           </div>
-          <span className="font-mono">
-            {step === 1 ? "Paso 1 de 3 (33%)" : step === 2 ? "Paso 2 de 3 (66%)" : "Paso 3 de 3 (100%)"}
+          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-hub-muted bg-hub-subtle px-2.5 py-0.5 rounded-full border border-hub-border">
+            <span>Paso {step} de 3</span>
+            <span className="text-hub-accent font-mono font-bold">
+              ({step === 1 ? "33%" : step === 2 ? "66%" : "100%"})
+            </span>
           </span>
         </div>
 
-        {/* Línea conectora de fondo */}
-        <div className="relative">
-          <div className="absolute top-4 left-6 right-6 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-white/10 -z-0">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-400 transition-all duration-300 ease-out shadow-[0_0_12px_rgba(6,182,212,0.6)]"
-              style={{
-                width: step === 1 ? "0%" : step === 2 ? "50%" : "100%",
-              }}
-            />
-          </div>
-
-          {/* 3 Nodos interactivos */}
-          <div className="relative z-10 flex items-center justify-between">
-            {/* Nodo 1 */}
-            <button
-              type="button"
-              onClick={() => goToStep(1)}
-              className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-            >
-              <div
+        {/* 3 Barras segmentadas interactivas */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {[
+            { s: 1, title: "01 Identificación", icon: User },
+            { s: 2, title: "02 Académico", icon: GraduationCap },
+            { s: 3, title: "03 Investigación", icon: Sparkles },
+          ].map(({ s, title, icon: IconComponent }) => {
+            const isCompleted = step > s;
+            const isCurrent = step === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => goToStep(s as Step)}
                 className={cn(
-                  "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
-                  step > 1
-                    ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                    : step === 1
-                      ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
-                      : "border border-white/15 bg-slate-900 text-slate-400",
+                  "group relative flex flex-col gap-1.5 rounded-xl p-2 sm:p-2.5 text-left transition-all duration-200 cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                  isCurrent
+                    ? "border-cyan-500/60 bg-cyan-500/10 shadow-xs"
+                    : isCompleted
+                      ? "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50"
+                      : "border-hub-border bg-hub-subtle/50 opacity-60 hover:opacity-100",
                 )}
               >
-                {step > 1 ? <Check size={14} className="stroke-[2.5]" /> : <User size={13} />}
-              </div>
-              <span
-                className={cn(
-                  "text-[11px] font-semibold tracking-tight transition-colors",
-                  step === 1
-                    ? "text-cyan-600 dark:text-cyan-300"
-                    : step > 1
-                      ? "text-slate-700 dark:text-slate-300"
-                      : "text-slate-400 dark:text-slate-500",
-                )}
-              >
-                01 Identificación
-              </span>
-            </button>
-
-            {/* Nodo 2 */}
-            <button
-              type="button"
-              onClick={() => goToStep(2)}
-              className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-            >
-              <div
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
-                  step > 2
-                    ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-                    : step === 2
-                      ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
-                      : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
-                )}
-              >
-                {step > 2 ? <Check size={14} className="stroke-[2.5]" /> : <GraduationCap size={14} />}
-              </div>
-              <span
-                className={cn(
-                  "text-[11px] font-semibold tracking-tight transition-colors",
-                  step === 2
-                    ? "text-cyan-600 dark:text-cyan-300"
-                    : step > 2
-                      ? "text-slate-700 dark:text-slate-300"
-                      : "text-slate-400 dark:text-slate-500",
-                )}
-              >
-                02 Académico
-              </span>
-            </button>
-
-            {/* Nodo 3 */}
-            <button
-              type="button"
-              onClick={() => goToStep(3)}
-              className="group flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-            >
-              <div
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
-                  step === 3
-                    ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)] ring-4 ring-cyan-500/20"
-                    : "border border-slate-300 dark:border-white/15 bg-slate-100 dark:bg-slate-900 text-slate-400",
-                )}
-              >
-                <Sparkles size={13} />
-              </div>
-              <span
-                className={cn(
-                  "text-[11px] font-semibold tracking-tight transition-colors",
-                  step === 3
-                    ? "text-cyan-600 dark:text-cyan-300"
-                    : "text-slate-400 dark:text-slate-500",
-                )}
-              >
-                03 Investigación
-              </span>
-            </button>
-          </div>
+                {/* Track horizontal superior */}
+                <div className="h-1 w-full rounded-full bg-hub-border overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-300",
+                      isCompleted
+                        ? "w-full bg-emerald-500"
+                        : isCurrent
+                          ? "w-full bg-gradient-to-r from-cyan-500 to-teal-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"
+                          : "w-0",
+                    )}
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div
+                    className={cn(
+                      "flex size-4 sm:size-4.5 shrink-0 items-center justify-center rounded-full text-[10px]",
+                      isCompleted
+                        ? "bg-emerald-500 text-white"
+                        : isCurrent
+                          ? "bg-cyan-500 text-white shadow-xs"
+                          : "bg-hub-hover text-hub-muted",
+                    )}
+                  >
+                    {isCompleted ? <Check size={10} className="stroke-[3]" /> : <IconComponent size={10} />}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[10px] sm:text-xs font-bold truncate",
+                      isCurrent
+                        ? "text-hub-accent"
+                        : isCompleted
+                          ? "text-hub-text"
+                          : "text-hub-muted",
+                    )}
+                  >
+                    {title}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </nav>
 
@@ -700,31 +677,31 @@ export function RegisterForm() {
       {step === 1 && (
         <div
           className={cn(
-            "space-y-4 pt-1 animate-in fade-in-50 duration-200",
+            "space-y-5 pt-1 animate-in fade-in-50 duration-200",
             direction === "next" ? "slide-in-from-right-3" : "slide-in-from-left-3",
           )}
         >
           {/* Subcabecera conversacional del paso */}
-          <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Paso 1 de 3
+          <div className="space-y-1">
+            <span className="inline-block text-[11px] font-mono font-bold uppercase tracking-wider text-hub-accent">
+              Fase 01 · Identificación Personal
             </span>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-black text-hub-text tracking-tight">
               ¿Cómo te llamas y cómo te contactamos?
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Datos oficiales requeridos para asociar tu postulación al semillero de investigación.
+            <p className="text-xs sm:text-sm text-hub-muted leading-relaxed">
+              Datos oficiales requeridos para radicar tu postulación al semillero de investigación.
             </p>
           </div>
 
-          {/* Grupo 1: Identidad Personal */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3.5">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
-              <User size={14} className="text-cyan-500" />
+          {/* Sección 1: Datos Personales */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 pb-1 border-b border-hub-border text-xs font-bold text-hub-text">
+              <User size={14} className="text-hub-accent" />
               <span>Identidad del Postulante</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <FormField
                 label="Nombres *"
                 name="nombres"
@@ -747,11 +724,11 @@ export function RegisterForm() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-              {/* Documento de Identidad con selector de tipo */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+              {/* Documento de Identidad con selector de tipo integrado */}
               <div className="sm:col-span-7 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <label className="block text-xs font-semibold text-hub-text">
                     Documento de identidad *
                   </label>
                   <div className="flex items-center gap-1">
@@ -761,10 +738,10 @@ export function RegisterForm() {
                         type="button"
                         onClick={() => setTipoDocumento(tipo)}
                         className={cn(
-                          "px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer",
+                          "px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border",
                           tipoDocumento === tipo
-                            ? "bg-cyan-500 text-white"
-                            : "bg-slate-200 dark:bg-white/10 text-slate-500 hover:text-cyan-400",
+                            ? "border-cyan-500 bg-cyan-500 text-white shadow-xs"
+                            : "border-hub-border bg-hub-subtle text-hub-muted hover:text-hub-text hover:bg-hub-hover",
                         )}
                       >
                         {tipo}
@@ -799,10 +776,10 @@ export function RegisterForm() {
             </div>
           </div>
 
-          {/* Grupo 2: Contacto Institucional */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3.5">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
-              <Mail size={14} className="text-cyan-500" />
+          {/* Sección 2: Canales de Contacto */}
+          <div className="space-y-3.5 pt-2">
+            <div className="flex items-center gap-2 pb-1 border-b border-hub-border text-xs font-bold text-hub-text">
+              <Mail size={14} className="text-hub-accent" />
               <span>Canales de Contacto Oficial</span>
             </div>
 
@@ -818,14 +795,14 @@ export function RegisterForm() {
               icon={<Mail size={15} aria-hidden="true" />}
               badge={
                 isEmailValidDomain ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-500 dark:text-emerald-400">
-                    <ShieldCheck size={11} className="stroke-[2.5]" /> Dominio Institucional Verificado
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    <ShieldCheck size={11} className="stroke-[2.5]" /> Dominio Verificado
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={handleEmailDomainAppend}
-                    className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20"
+                    className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-hub-accent hover:underline cursor-pointer bg-hub-accent-soft px-2 py-0.5 rounded-full border border-hub-border"
                   >
                     <Wand2 size={10} />
                     <span>+ @uniguajira.edu.co</span>
@@ -846,7 +823,12 @@ export function RegisterForm() {
               onChange={(e) => setCelular(e.target.value)}
               placeholder="300 123 4567"
               icon={<Phone size={15} aria-hidden="true" />}
-              badge={<span className="text-[10px] text-slate-400 font-mono">🇨🇴 +57</span>}
+              badge={
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-hub-subtle border border-hub-border px-2 py-0.5 text-[10px] font-mono font-semibold text-hub-text">
+                  <ColombiaFlag className="w-3.5 h-2.5" />
+                  <span>+57 COL</span>
+                </span>
+              }
               hint="Número activo para notificaciones y convocatorias."
               required
               error={fieldErrors.celular}
@@ -858,13 +840,13 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowOptionalFields((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium"
+              className="inline-flex items-center gap-1.5 text-xs text-hub-accent hover:underline cursor-pointer font-semibold"
             >
               <span>{showOptionalFields ? "Ocultar teléfono fijo y nacionalidad" : "+ Agregar teléfono fijo o modificar nacionalidad"}</span>
             </button>
 
             {showOptionalFields && (
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4 animate-in fade-in-50 duration-150">
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3.5 rounded-2xl border border-hub-border bg-hub-subtle/50 p-4 animate-in fade-in-50 duration-150">
                 <FormField
                   label="Teléfono fijo (opcional)"
                   name="telefonoFijo"
@@ -886,11 +868,11 @@ export function RegisterForm() {
             )}
           </div>
 
-          <div className="pt-2">
+          <div className="pt-3">
             <button
               type="button"
               onClick={handleNext}
-              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
+              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
             >
               <span>Continuar a información académica</span>
               <ChevronRight size={16} />
@@ -905,29 +887,29 @@ export function RegisterForm() {
       {step === 2 && (
         <div
           className={cn(
-            "space-y-4 pt-1 animate-in fade-in-50 duration-200",
+            "space-y-5 pt-1 animate-in fade-in-50 duration-200",
             direction === "next" ? "slide-in-from-right-3" : "slide-in-from-left-3",
           )}
         >
           {/* Subcabecera conversacional del paso */}
-          <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Paso 2 de 3
+          <div className="space-y-1">
+            <span className="inline-block text-[11px] font-mono font-bold uppercase tracking-wider text-hub-accent">
+              Fase 02 · Trayectoria Académica
             </span>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-black text-hub-text tracking-tight">
               Tu trayectoria en Uniguajira
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Programa académico, sede de estudios, semestre y rendimiento acumulado.
+            <p className="text-xs sm:text-sm text-hub-muted leading-relaxed">
+              Programa de ingeniería, sede de estudios, semestre y rendimiento acumulado.
             </p>
           </div>
 
           {/* Selector de Programa de Ingeniería con Cards */}
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-xs font-semibold text-hub-text">
               Programa académico *
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {PROGRAMAS_INGENIERIA.map((item) => {
                 const isSelected = programa === item.name && !isCustomPrograma;
                 return (
@@ -939,15 +921,15 @@ export function RegisterForm() {
                       setIsCustomPrograma(false);
                     }}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl p-2.5 text-left transition-all duration-150 cursor-pointer border active:scale-[0.98]",
+                      "flex items-center gap-2.5 rounded-xl p-3 text-left transition-all duration-150 cursor-pointer border active:scale-[0.98]",
                       isSelected
-                        ? "border-cyan-500 bg-cyan-500/15 text-slate-900 dark:text-white shadow-[0_0_12px_rgba(6,182,212,0.25)] ring-1 ring-cyan-500/40"
-                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/20",
+                        ? "border-cyan-500 bg-cyan-500/10 text-hub-text shadow-xs ring-2 ring-cyan-500/40 font-bold"
+                        : "border-hub-border bg-hub-input text-hub-text hover:bg-hub-hover",
                     )}
                   >
-                    <span className="text-base">{item.icon}</span>
+                    <span className="text-lg">{item.icon}</span>
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold block truncate leading-tight">
+                      <span className="text-xs block truncate leading-tight">
                         {item.short}
                       </span>
                     </div>
@@ -976,7 +958,7 @@ export function RegisterForm() {
 
           {/* Selector de Sede Uniguajira Interactivo */}
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-xs font-semibold text-hub-text">
               Sede Uniguajira *
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -990,14 +972,14 @@ export function RegisterForm() {
                     className={cn(
                       "flex flex-col items-start justify-between rounded-xl p-3 text-left transition-all duration-150 cursor-pointer border active:scale-[0.98]",
                       isSelected
-                        ? "border-cyan-500 dark:border-cyan-400 bg-cyan-500/15 text-slate-900 dark:text-white shadow-[0_0_15px_rgba(6,182,212,0.25)] ring-1 ring-cyan-500/40"
-                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/25",
+                        ? "border-cyan-500 bg-cyan-500/10 text-hub-text shadow-xs ring-2 ring-cyan-500/40"
+                        : "border-hub-border bg-hub-input text-hub-text hover:bg-hub-hover",
                     )}
                   >
                     <div className="flex w-full items-center justify-between mb-1.5">
                       <MapPin
                         size={15}
-                        className={isSelected ? "text-cyan-600 dark:text-cyan-400" : "text-slate-400"}
+                        className={isSelected ? "text-hub-accent" : "text-hub-muted"}
                       />
                       {isSelected && (
                         <div className="flex size-4 items-center justify-center rounded-full bg-cyan-500 text-white">
@@ -1005,10 +987,10 @@ export function RegisterForm() {
                         </div>
                       )}
                     </div>
-                    <span className="font-semibold text-xs text-slate-900 dark:text-white leading-tight">
+                    <span className="font-bold text-xs text-hub-text leading-tight">
                       {item.name}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate w-full">
+                    <span className="text-[10px] text-hub-muted truncate w-full">
                       {item.detail}
                     </span>
                   </button>
@@ -1016,20 +998,20 @@ export function RegisterForm() {
               })}
             </div>
             {fieldErrors.sede && (
-              <p className="text-xs text-rose-500 font-medium">{fieldErrors.sede}</p>
+              <p className="text-xs text-hub-field-error font-medium">{fieldErrors.sede}</p>
             )}
           </div>
 
           {/* Selector de Semestre Segmentado con Barra de Progreso y Marcadores */}
-          <div className="space-y-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4">
+          <div className="space-y-3 rounded-2xl border border-hub-border bg-hub-subtle/50 p-4 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <GraduationCap size={15} className="text-cyan-500" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <div className="flex items-center gap-2">
+                <GraduationCap size={15} className="text-hub-accent" />
+                <span className="text-xs font-bold text-hub-text">
                   Semestre en curso *
                 </span>
               </div>
-              <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
+              <span className="text-xs font-bold text-hub-accent font-mono">
                 {semestreActual}
               </span>
             </div>
@@ -1046,8 +1028,8 @@ export function RegisterForm() {
                     className={cn(
                       "h-10 flex flex-col items-center justify-center rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer border active:scale-[0.98]",
                       isSelected
-                        ? "border-cyan-500 dark:border-cyan-400 bg-gradient-to-b from-cyan-600 to-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)] scale-105"
-                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/25",
+                        ? "border-cyan-500 bg-gradient-to-b from-cyan-600 to-cyan-500 text-white shadow-md scale-105"
+                        : "border-hub-border bg-hub-input text-hub-text hover:bg-hub-hover",
                     )}
                   >
                     <span>{sem.num}°</span>
@@ -1057,12 +1039,12 @@ export function RegisterForm() {
             </div>
 
             {/* Barra de progreso de avance curricular */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-[11px] text-hub-muted">
                 <span>{activeSemestreObj.cycle}</span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">~{activeSemestreObj.pct}% avance de carrera</span>
+                <span className="font-semibold text-hub-text">~{activeSemestreObj.pct}% avance de carrera</span>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+              <div className="h-1.5 w-full rounded-full bg-hub-border overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-400 transition-all duration-300"
                   style={{ width: `${activeSemestreObj.pct}%` }}
@@ -1072,19 +1054,19 @@ export function RegisterForm() {
           </div>
 
           {/* Promedio Académico con Medidor Interactivo y Presets */}
-          <div className="space-y-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4">
+          <div className="space-y-3 rounded-2xl border border-hub-border bg-hub-subtle/50 p-4 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Award size={15} className="text-cyan-500" />
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <div className="flex items-center gap-2">
+                <Award size={15} className="text-hub-accent" />
+                <span className="text-xs font-bold text-hub-text">
                   Promedio académico acumulado *
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-black font-mono text-slate-900 dark:text-white">
+                <span className="text-base font-black font-mono text-hub-text">
                   {promedioAcademico || "0.0"}
                 </span>
-                <span className="text-xs font-mono text-slate-400">/ 5.0</span>
+                <span className="text-xs font-mono text-hub-muted">/ 5.0</span>
                 {promedioStatus && (
                   <span className={cn("ml-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold", promedioStatus.color)}>
                     {promedioStatus.label}
@@ -1102,9 +1084,9 @@ export function RegisterForm() {
                 step="0.1"
                 value={promedioAcademico || "4.0"}
                 onChange={(e) => setPromedioAcademico(e.target.value)}
-                className="w-full h-2 rounded-lg bg-slate-200 dark:bg-slate-800 accent-cyan-500 cursor-pointer"
+                className="w-full h-2 rounded-lg bg-hub-border accent-cyan-500 cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono px-0.5">
+              <div className="flex justify-between text-[10px] text-hub-muted font-mono px-0.5">
                 <span>3.0</span>
                 <span>3.5</span>
                 <span>4.0</span>
@@ -1115,7 +1097,7 @@ export function RegisterForm() {
 
             {/* Botones de sugerencia rápida */}
             <div className="flex items-center gap-1.5 pt-1">
-              <span className="text-[10px] text-slate-400 shrink-0">Valores frecuentes:</span>
+              <span className="text-[10px] text-hub-muted shrink-0">Valores frecuentes:</span>
               {PROMEDIO_PRESETS.map((val) => (
                 <button
                   key={val}
@@ -1124,8 +1106,8 @@ export function RegisterForm() {
                   className={cn(
                     "flex-1 h-7 rounded-lg border text-xs font-mono font-medium transition-colors cursor-pointer",
                     promedioAcademico === val
-                      ? "border-cyan-500 bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-bold"
-                      : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-cyan-500",
+                      ? "border-cyan-500 bg-cyan-500/20 text-hub-accent font-bold ring-1 ring-cyan-500/30"
+                      : "border-hub-border bg-hub-input text-hub-text hover:border-cyan-500/50",
                   )}
                 >
                   {val}
@@ -1136,7 +1118,7 @@ export function RegisterForm() {
                 value={promedioAcademico}
                 onChange={(e) => setPromedioAcademico(e.target.value)}
                 placeholder="Manual"
-                className="w-16 h-7 rounded-lg border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-2 text-xs font-mono text-center text-slate-900 dark:text-white focus:outline-none focus:border-cyan-500"
+                className="w-16 h-7 rounded-lg border border-hub-input-border bg-hub-input px-2 text-xs font-mono text-center text-hub-text focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -1145,7 +1127,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={handlePrev}
-              className="flex-1 h-12 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/80 dark:border-white/12 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-semibold text-xs sm:text-sm transition-all duration-150 cursor-pointer"
+              className="flex-1 h-12 flex items-center justify-center gap-1.5 rounded-xl border border-hub-border bg-hub-input hover:bg-hub-hover active:scale-[0.98] text-hub-text font-semibold text-xs sm:text-sm transition-all duration-150 cursor-pointer shadow-xs"
             >
               <ChevronLeft size={16} />
               <span>Atrás</span>
@@ -1153,7 +1135,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={handleNext}
-              className="flex-[2] h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
+              className="flex-[2] h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
             >
               <span>Continuar a perfil investigativo</span>
               <ChevronRight size={16} />
@@ -1168,39 +1150,39 @@ export function RegisterForm() {
       {step === 3 && (
         <div
           className={cn(
-            "space-y-4 pt-1 animate-in fade-in-50 duration-200",
+            "space-y-5 pt-1 animate-in fade-in-50 duration-200",
             direction === "next" ? "slide-in-from-right-3" : "slide-in-from-left-3",
           )}
         >
           {/* Subcabecera conversacional del paso */}
-          <div className="border-b border-slate-200 dark:border-white/10 pb-3">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-              Paso 3 de 3
+          <div className="space-y-1">
+            <span className="inline-block text-[11px] font-mono font-bold uppercase tracking-wider text-hub-accent">
+              Fase 03 · Líneas de Investigación
             </span>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-black text-hub-text tracking-tight">
               Tus intereses y motivación en AlfaCode
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs sm:text-sm text-hub-muted leading-relaxed">
               Elige tus líneas de interés y cuéntanos sobre tus pasiones y proyectos.
             </p>
           </div>
 
           {/* Medidor dinámico de Afinidad Investigativa */}
-          <div className="rounded-2xl border border-cyan-400/25 bg-cyan-950/25 p-3.5 space-y-2 shadow-[0_0_15px_rgba(6,182,212,0.08)]">
+          <div className="rounded-2xl border border-hub-border bg-hub-subtle/50 p-4 space-y-2 shadow-xs">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                <Zap size={14} className="text-cyan-400" />
+              <span className="font-bold text-hub-text flex items-center gap-1.5">
+                <Zap size={14} className="text-hub-accent" />
                 <span>Afinidad estimada con AlfaCode</span>
               </span>
-              <span className="font-bold font-mono text-cyan-300">{affinityScore}% Match</span>
+              <span className="font-bold font-mono text-hub-accent">{affinityScore}% Match</span>
             </div>
-            <div className="h-2 w-full rounded-full bg-slate-800/80 overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-hub-border overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-400 transition-all duration-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]"
                 style={{ width: `${affinityScore}%` }}
               />
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-hub-muted leading-relaxed">
               {affinityScore >= 80
                 ? "🚀 Perfil de alta afinidad: tus intereses coinciden con los proyectos activos del semillero."
                 : "💡 Selecciona tus líneas y tecnologías clave para maximizar tu compatibilidad."}
@@ -1210,10 +1192,10 @@ export function RegisterForm() {
           {/* Líneas de Investigación Oficiales en Tarjetas Ricas */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-semibold text-hub-text">
                 Líneas oficiales del semillero AlfaCode *
               </label>
-              <span className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
+              <span className="text-[11px] font-bold text-hub-accent font-mono">
                 {selectedLines.length} seleccionada(s)
               </span>
             </div>
@@ -1231,16 +1213,16 @@ export function RegisterForm() {
                     className={cn(
                       "group flex items-start gap-3.5 rounded-2xl p-4 text-left transition-all duration-150 cursor-pointer border active:scale-[0.99]",
                       isSelected
-                        ? "border-cyan-500 dark:border-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.18)] ring-1 ring-cyan-500/30"
-                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 hover:border-slate-400 dark:hover:border-white/25",
+                        ? "border-cyan-500 bg-cyan-500/10 shadow-xs ring-2 ring-cyan-500/30"
+                        : "border-hub-border bg-hub-input hover:bg-hub-hover",
                     )}
                   >
                     <div
                       className={cn(
                         "flex size-11 shrink-0 items-center justify-center rounded-xl transition-all",
                         isSelected
-                          ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]"
-                          : "bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 group-hover:text-cyan-400",
+                          ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-md"
+                          : "bg-hub-subtle text-hub-muted group-hover:text-cyan-500",
                       )}
                     >
                       <IconComponent size={22} />
@@ -1249,10 +1231,10 @@ export function RegisterForm() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                          <span className="font-bold text-xs sm:text-sm text-hub-text">
                             {item.title}
                           </span>
-                          <span className="hidden sm:inline-block ml-2 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
+                          <span className="hidden sm:inline-block ml-2 text-[10px] font-mono text-hub-accent">
                             · {item.badge}
                           </span>
                         </div>
@@ -1261,20 +1243,20 @@ export function RegisterForm() {
                             "flex size-5 items-center justify-center rounded-md border transition-colors shrink-0",
                             isSelected
                               ? "border-cyan-500 bg-cyan-500 text-white"
-                              : "border-slate-300 dark:border-white/20 bg-transparent",
+                              : "border-hub-border bg-transparent",
                           )}
                         >
                           {isSelected && <Check size={12} className="stroke-[3]" />}
                         </div>
                       </div>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <p className="mt-1 text-xs text-hub-muted leading-relaxed">
                         {item.description}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {item.tags.map((t) => (
                           <span
                             key={t}
-                            className="rounded px-1.5 py-0.5 text-[9px] font-mono bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-400"
+                            className="rounded px-1.5 py-0.5 text-[9px] font-mono bg-hub-subtle text-hub-muted border border-hub-border"
                           >
                             {t}
                           </span>
@@ -1290,10 +1272,10 @@ export function RegisterForm() {
           {/* Tags Interactivos de Tecnologías */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-semibold text-hub-text">
                 Herramientas y tecnologías de interés
               </label>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-hub-muted">
                 {selectedTags.length} activas
               </span>
             </div>
@@ -1309,11 +1291,11 @@ export function RegisterForm() {
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-150 cursor-pointer border active:scale-[0.97]",
                       isSelected
-                        ? "border-cyan-500 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold ring-1 ring-cyan-500/40"
-                        : "border-slate-300/80 dark:border-white/10 bg-slate-100/60 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/25",
+                        ? "border-cyan-500 bg-cyan-500/20 text-hub-accent font-bold ring-1 ring-cyan-500/40"
+                        : "border-hub-border bg-hub-subtle text-hub-text hover:bg-hub-hover",
                     )}
                   >
-                    <Tag size={10} className={isSelected ? "text-cyan-500" : "text-slate-400"} />
+                    <Tag size={10} className={isSelected ? "text-cyan-500" : "text-hub-muted"} />
                     <span>{tag}</span>
                     {isSelected && <Check size={10} className="stroke-[3]" />}
                   </button>
@@ -1326,7 +1308,7 @@ export function RegisterForm() {
               value={lineasAdicionales}
               onChange={(e) => setLineasAdicionales(e.target.value)}
               placeholder="Otras herramientas o áreas de interés (ej. Rust, Ciberseguridad, Redes neuronales)..."
-              className="block w-full h-10 rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-3.5 text-xs sm:text-sm text-slate-900 dark:text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 focus:outline-none"
+              className="block w-full h-10 rounded-xl border border-hub-input-border bg-hub-input px-3.5 text-xs sm:text-sm text-hub-text placeholder:text-hub-muted shadow-xs transition-all focus:border-cyan-500 focus:bg-hub-input focus:ring-4 focus:ring-cyan-500/15 focus:outline-none"
             />
           </div>
 
@@ -1367,7 +1349,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowAdvancedCV((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium"
+              className="inline-flex items-center gap-1.5 text-xs text-hub-accent hover:underline cursor-pointer font-semibold"
             >
               <span>{showAdvancedCV ? "Ocultar publicaciones y pasantías" : "+ ¿Tienes publicaciones científicas o pasantías previas?"}</span>
             </button>
@@ -1401,48 +1383,48 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowCredentialPreview((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-semibold"
+              className="inline-flex items-center gap-1.5 text-xs text-hub-accent hover:underline cursor-pointer font-bold"
             >
               <QrCode size={13} />
               <span>{showCredentialPreview ? "Ocultar carnet preliminar" : "👁️ Ver vista previa de tu Credencial de Postulación"}</span>
             </button>
 
             {showCredentialPreview && (
-              <div className="mt-3 rounded-2xl border border-cyan-400/30 bg-slate-900/90 p-4 text-left space-y-2 animate-in fade-in-50 duration-150">
-                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <div className="mt-3 rounded-2xl border border-hub-border bg-hub-panel p-4 text-left space-y-2 animate-in fade-in-50 duration-150 shadow-md">
+                <div className="flex items-center justify-between border-b border-hub-border pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="flex size-6 items-center justify-center rounded-lg bg-cyan-950 p-1 border border-cyan-400/40">
+                    <span className="flex size-6 items-center justify-center rounded-lg bg-cyan-500/10 p-1 border border-cyan-500/30">
                       <AlfaCodeSymbol className="size-full" />
                     </span>
-                    <span className="text-xs font-bold text-white">AlfaCode HUB · Credencial Preliminar</span>
+                    <span className="text-xs font-bold text-hub-text">AlfaCode HUB · Credencial Preliminar</span>
                   </div>
-                  <span className="text-[10px] font-mono text-cyan-300">PREVIEW</span>
+                  <span className="text-[10px] font-mono text-hub-accent font-bold">PREVIEW</span>
                 </div>
                 <div className="space-y-1 text-xs">
-                  <p className="font-bold text-white text-sm">{nombres || "Estudiante"} {apellidos}</p>
-                  <p className="font-mono text-cyan-400 text-[11px]">{email || "usuario@uniguajira.edu.co"}</p>
-                  <p className="text-slate-300 text-[11px]">{programa} · Sede {sede.split(" ")[0]} · {semestreActual}</p>
-                  <p className="text-teal-300 text-[11px]">Líneas: {selectedLines.join(", ")}</p>
+                  <p className="font-bold text-hub-text text-sm">{nombres || "Estudiante"} {apellidos}</p>
+                  <p className="font-mono text-hub-accent text-[11px]">{email || "usuario@uniguajira.edu.co"}</p>
+                  <p className="text-hub-muted text-[11px]">{programa} · Sede {sede.split(" ")[0]} · {semestreActual}</p>
+                  <p className="text-teal-600 dark:text-teal-400 text-[11px] font-medium">Líneas: {selectedLines.join(", ")}</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Ficha Pre-Envío Holográfica de Confirmación */}
-          <div className="rounded-2xl border border-cyan-400/25 bg-cyan-950/30 p-3.5 text-xs text-slate-300 space-y-1.5 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+          <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-xs text-hub-text space-y-1.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Layers size={14} className="text-cyan-400" />
-                <span className="font-semibold text-white">
+                <Layers size={14} className="text-hub-accent" />
+                <span className="font-bold text-hub-text">
                   {nombres || "Estudiante"} {apellidos}
                 </span>
-                <span className="text-slate-400">· {programa}</span>
+                <span className="text-hub-muted">· {programa}</span>
               </div>
-              <span className="font-mono text-[10px] text-cyan-300">Sede {sede.split(" ")[0]}</span>
+              <span className="font-mono text-[10px] text-hub-accent font-bold">Sede {sede.split(" ")[0]}</span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5 border-t border-white/5">
+            <div className="flex items-center justify-between text-[11px] text-hub-muted pt-0.5 border-t border-hub-border">
               <span>{semestreActual} · Promedio {promedioAcademico || "N/A"}</span>
-              <span className="text-teal-300 font-medium">{selectedLines.join(", ")}</span>
+              <span className="text-teal-600 dark:text-teal-300 font-medium">{selectedLines.join(", ")}</span>
             </div>
           </div>
 
@@ -1451,7 +1433,7 @@ export function RegisterForm() {
               type="button"
               onClick={handlePrev}
               disabled={pending}
-              className="flex-1 h-12 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/80 dark:border-white/12 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.98] text-slate-700 dark:text-slate-300 font-semibold text-xs sm:text-sm transition-all duration-150 cursor-pointer disabled:opacity-50"
+              className="flex-1 h-12 flex items-center justify-center gap-1.5 rounded-xl border border-hub-border bg-hub-input hover:bg-hub-hover active:scale-[0.98] text-hub-text font-semibold text-xs sm:text-sm transition-all duration-150 cursor-pointer disabled:opacity-50 shadow-xs"
             >
               <ChevronLeft size={16} />
               <span>Atrás</span>
@@ -1460,7 +1442,7 @@ export function RegisterForm() {
               type="submit"
               pending={pending}
               pendingLabel="Radicando postulación..."
-              className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
+              className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
             >
               <span>Radicar postulación oficial</span>
               <Sparkles size={16} className="ml-1 text-cyan-100" />

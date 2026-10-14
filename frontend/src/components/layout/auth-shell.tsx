@@ -42,8 +42,8 @@ export async function AuthShell({
   const theme = await getThemePreference();
 
   return (
-    <ThemeProvider initialTheme={theme} className="public-site flex min-h-dvh w-full max-w-full flex-col justify-between overflow-x-hidden">
-      <div className="relative flex min-h-dvh w-full max-w-full flex-col justify-between overflow-x-hidden bg-site-page text-hub-text selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-300">
+    <ThemeProvider initialTheme={theme} className="flex min-h-dvh w-full max-w-full flex-col justify-between overflow-x-hidden">
+      <div className="relative flex min-h-dvh w-full max-w-full flex-col justify-between overflow-x-hidden bg-hub-bg text-hub-text selection:bg-cyan-500/30 selection:text-cyan-900 dark:selection:text-cyan-200 transition-colors duration-300">
         {/* Capa de atmósfera y fondos ambientales confinada al contenedor sin desborde */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           {/* Atmósfera Ambiental: Nebulosas en capas */}
@@ -73,17 +73,17 @@ export async function AuthShell({
 
         {/* Cabecera superior con barra translúcida institucional */}
         <header className="relative z-20 mx-auto w-full max-w-7xl shrink-0 px-3 py-2 sm:px-6 sm:py-2.5 lg:px-8">
-          <div className="flex items-center justify-between gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-1.5 sm:px-4 sm:py-1.5 backdrop-blur-xl shadow-site-header transition-colors">
+          <div className="flex items-center justify-between gap-3 sm:gap-4 rounded-xl sm:rounded-2xl border border-hub-border bg-hub-panel/85 px-3 py-1.5 sm:px-4 sm:py-1.5 backdrop-blur-xl shadow-xs transition-colors">
             <Link
               href="/"
-              className="group flex items-center gap-2.5 sm:gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="group flex items-center gap-2.5 sm:gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
             >
-              <span className="flex size-7 sm:size-8 items-center justify-center rounded-xl border border-cyan-400/35 bg-cyan-950/70 p-1 sm:p-1.5 shadow-[0_0_20px_rgba(3,130,161,0.3)] transition-transform duration-300 group-hover:scale-105">
+              <span className="flex size-7 sm:size-8 items-center justify-center rounded-xl border border-cyan-500/40 bg-cyan-500/10 p-1 sm:p-1.5 shadow-xs transition-transform duration-300 group-hover:scale-105">
                 <AlfaCodeSymbol className="size-full" />
               </span>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-sm sm:text-base font-bold tracking-tight text-white">
-                  Alfa<span className="text-hub-accent">Code</span>{" "}
+                <span className="text-sm sm:text-base font-bold tracking-tight text-hub-text">
+                  Alfa<span className="text-cyan-500">Code</span>{" "}
                   <span className="font-mono text-[10px] sm:text-xs font-semibold text-hub-muted">HUB</span>
                 </span>
               </div>
@@ -92,7 +92,7 @@ export async function AuthShell({
             <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300 transition hover:border-cyan-400/40 hover:bg-cyan-950/50 hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-hub-border bg-hub-subtle px-3 py-1 text-xs font-medium text-hub-text transition hover:border-cyan-500/50 hover:bg-hub-hover hover:text-cyan-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
               >
                 <ArrowLeft size={13} aria-hidden="true" />
                 Volver al portal
@@ -104,9 +104,9 @@ export async function AuthShell({
 
         {/* Contenido principal: Grid split de 2 columnas o Centered Onboarding */}
         {layout === "centered" ? (
-          <main className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <main className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-start px-3 sm:px-6 lg:px-8 py-5 sm:py-7 lg:py-9">
             {/* Escenario 3D interactivo del Isotipo Oficial AlfaCode centrado */}
-            <div className="relative mx-auto w-full max-w-[280px] sm:max-w-[320px] h-[130px] sm:h-[160px] flex items-center justify-center -mb-2">
+            <div className="relative mx-auto w-full max-w-[240px] sm:max-w-[280px] h-[95px] sm:h-[120px] flex items-center justify-center mb-1">
               <div
                 className="pointer-events-none absolute inset-x-6 inset-y-2 rounded-full bg-gradient-to-tr from-cyan-500/25 via-teal-500/15 to-transparent blur-[50px]"
                 aria-hidden="true"
@@ -119,20 +119,20 @@ export async function AuthShell({
             </div>
 
             {/* Cabecera del flujo */}
-            <div className="mb-5 sm:mb-7 text-center space-y-2 max-w-xl mx-auto">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/60 px-3.5 py-1 text-xs font-semibold text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.25)] backdrop-blur-md">
+            <div className="mb-5 sm:mb-6 text-center space-y-2 max-w-xl mx-auto">
+              <div className="inline-flex items-center gap-2 rounded-full border border-hub-border bg-hub-accent-soft px-3.5 py-1 text-xs font-semibold text-hub-accent shadow-xs backdrop-blur-md">
                 <span className="flex size-3.5 items-center justify-center">
                   <AlfaCodeSymbol className="size-full" />
                 </span>
                 <span>{badge}</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white text-balance">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-hub-text text-balance">
                 {title}
               </h1>
 
               {description && (
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg mx-auto">
+                <p className="text-xs sm:text-sm text-hub-muted leading-relaxed max-w-lg mx-auto">
                   {description}
                 </p>
               )}
@@ -141,16 +141,16 @@ export async function AuthShell({
             {/* Tarjeta Centrada Bóveda de Grado Institucional */}
             <div className="relative w-full max-w-2xl sm:max-w-3xl">
               <div
-                className="pointer-events-none absolute -inset-2 rounded-[36px] bg-gradient-to-b from-cyan-500/15 via-transparent to-transparent opacity-30 dark:opacity-50 blur-2xl"
+                className="pointer-events-none absolute -inset-2 rounded-[36px] bg-gradient-to-b from-cyan-500/15 via-transparent to-transparent opacity-25 blur-2xl"
                 aria-hidden="true"
               />
               <section
                 aria-labelledby="auth-title"
-                className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-5 sm:p-7 lg:p-9 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_25px_rgba(3,130,161,0.12)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
+                className="hub-panel relative overflow-hidden rounded-3xl p-5 sm:p-7 lg:p-9 shadow-xl backdrop-blur-3xl transition-all duration-300"
               >
                 {/* Línea superior con gradiente de luz cian */}
                 <div
-                  className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
+                  className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"
                   aria-hidden="true"
                 />
 
@@ -159,7 +159,7 @@ export async function AuthShell({
 
                 {/* Pie de la tarjeta */}
                 {footer && (
-                  <div className="mt-5 border-t border-white/10 pt-4 text-center text-xs text-slate-400">
+                  <div className="mt-5 border-t border-hub-border pt-4 text-center text-xs text-hub-muted">
                     {footer}
                   </div>
                 )}
@@ -168,7 +168,7 @@ export async function AuthShell({
                 <p className="mt-3 text-center">
                   <Link
                     href="/"
-                    className="inline-flex items-center gap-1.5 rounded-md text-xs text-slate-400 transition hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                    className="inline-flex items-center gap-1.5 rounded-md text-xs text-hub-muted transition hover:text-hub-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                   >
                     <ArrowLeft size={13} aria-hidden="true" />
                     Volver al sitio principal
@@ -203,33 +203,33 @@ export async function AuthShell({
 
                 {/* Identidad y foco institucional */}
                 <div className="space-y-1.5 max-w-xl w-full pt-1 px-1 sm:px-0">
-                  <h1 className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-black tracking-tight text-white leading-tight">
+                  <h1 className="text-xl sm:text-2xl lg:text-2xl xl:text-3xl font-black tracking-tight text-slate-950 dark:text-white leading-tight">
                     {heroHeadline === "AlfaCode HUB" ? (
                       <>
-                        Alfa<span className="text-hub-accent">Code</span>{" "}
-                        <span className="font-mono text-cyan-400">HUB</span>
+                        Alfa<span className="text-cyan-600 dark:text-cyan-400">Code</span>{" "}
+                        <span className="font-mono text-cyan-600 dark:text-cyan-400">HUB</span>
                       </>
                     ) : (
                       heroHeadline
                     )}
                   </h1>
 
-                  <p className="text-xs sm:text-xs xl:text-sm leading-relaxed text-slate-300 max-w-lg mx-auto lg:mx-0">
+                  <p className="text-xs sm:text-xs xl:text-sm leading-relaxed text-slate-600 dark:text-slate-300 max-w-lg mx-auto lg:mx-0">
                     {heroSubheadline}
                   </p>
 
                   {/* 3 Pills minimalistas con áreas de enfoque */}
                   <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1 sm:gap-1.5 pt-0.5">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-slate-900/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-300 backdrop-blur-md">
-                      <Cpu size={11} className="text-cyan-400 shrink-0" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-700 dark:text-slate-300 backdrop-blur-md shadow-xs">
+                      <Cpu size={11} className="text-cyan-600 dark:text-cyan-400 shrink-0" aria-hidden="true" />
                       Inteligencia Artificial
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-slate-900/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-300 backdrop-blur-md">
-                      <Code2 size={11} className="text-cyan-400 shrink-0" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-700 dark:text-slate-300 backdrop-blur-md shadow-xs">
+                      <Code2 size={11} className="text-cyan-600 dark:text-cyan-400 shrink-0" aria-hidden="true" />
                       Desarrollo de Software
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-slate-900/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-300 backdrop-blur-md">
-                      <ShieldCheck size={11} className="text-cyan-400 shrink-0" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-slate-700 dark:text-slate-300 backdrop-blur-md shadow-xs">
+                      <ShieldCheck size={11} className="text-cyan-600 dark:text-cyan-400 shrink-0" aria-hidden="true" />
                       Internet de las cosas (IoT)
                     </span>
                   </div>
@@ -245,17 +245,17 @@ export async function AuthShell({
                 />
                 <section
                   aria-labelledby="auth-title"
-                  className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-4 sm:p-5 lg:p-6 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
+                  className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-cyan-400/20 bg-white/95 dark:bg-slate-950/85 p-4 sm:p-5 lg:p-6 shadow-xl dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-slate-300 dark:hover:border-cyan-400/35"
                 >
                   {/* Línea superior con gradiente de luz cian */}
                   <div
-                    className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
+                    className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 dark:via-cyan-400/30 to-transparent"
                     aria-hidden="true"
                   />
 
                   {/* Insignia superior de la tarjeta */}
                   <div className="flex items-center gap-2">
-                    <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-300 shadow-sm">
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 dark:border-cyan-400/25 bg-cyan-50 dark:bg-cyan-950/60 px-2.5 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 shadow-xs">
                       <span className="flex size-3.5 items-center justify-center">
                         <AlfaCodeSymbol className="size-full" />
                       </span>
@@ -267,12 +267,12 @@ export async function AuthShell({
                   <div className="mt-2 sm:mt-2.5">
                     <h2
                       id="auth-title"
-                      className="text-lg sm:text-xl font-bold tracking-tight text-white text-balance"
+                      className="text-lg sm:text-xl font-bold tracking-tight text-slate-950 dark:text-white text-balance"
                     >
                       {title}
                     </h2>
                     {description && (
-                      <p className="mt-0.5 sm:mt-1 text-xs leading-relaxed text-slate-300">
+                      <p className="mt-0.5 sm:mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                         {description}
                       </p>
                     )}
@@ -283,7 +283,7 @@ export async function AuthShell({
 
                   {/* Pie de la tarjeta */}
                   {footer && (
-                    <div className="mt-2.5 border-t border-white/10 pt-2 text-center text-xs text-slate-400">
+                    <div className="mt-2.5 border-t border-slate-200 dark:border-white/10 pt-2 text-center text-xs text-slate-600 dark:text-slate-400">
                       {footer}
                     </div>
                   )}
@@ -292,7 +292,7 @@ export async function AuthShell({
                   <p className="mt-2 text-center">
                     <Link
                       href="/"
-                      className="inline-flex items-center gap-1.5 rounded-md text-xs text-slate-400 transition hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                      className="inline-flex items-center gap-1.5 rounded-md text-xs text-slate-600 dark:text-slate-400 transition hover:text-cyan-600 dark:hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                     >
                       <ArrowLeft size={13} aria-hidden="true" />
                       Volver al sitio principal
@@ -305,7 +305,7 @@ export async function AuthShell({
         )}
 
         {/* Pie de página institucional */}
-        <footer className="relative z-20 mx-auto w-full max-w-7xl shrink-0 px-4 py-1.5 text-center text-[11px] text-slate-400 sm:px-6 sm:py-2 border-t border-white/5">
+        <footer className="relative z-20 mx-auto w-full max-w-7xl shrink-0 px-4 py-2 text-center text-[11px] text-slate-500 dark:text-slate-400 sm:px-6 border-t border-slate-200/80 dark:border-white/5">
           <p>
             © 2026 Semillero de Investigación AlfaCode · Universidad de La Guajira · Todos los derechos reservados.
           </p>
