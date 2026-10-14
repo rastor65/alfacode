@@ -87,15 +87,16 @@ export function LoginForm({ next }: LoginFormProps) {
       </p>
       <Button
         type="submit"
-        className="w-full group relative overflow-hidden shadow-[0_0_25px_rgba(70,158,180,0.35)] hover:shadow-[0_0_35px_rgba(70,158,180,0.55)] transition-all"
+        className="w-full group relative overflow-hidden !text-[#ffffff] shadow-[0_0_25px_rgba(70,158,180,0.35)] hover:shadow-[0_0_35px_rgba(70,158,180,0.55)] transition-all font-semibold"
+        style={{ color: "#ffffff" }}
         pending={pending}
         pendingLabel="Ingresando…"
       >
-        <span className="flex items-center justify-center gap-2">
-          <span>Ingresar</span>
+        <span className="flex items-center justify-center gap-2 text-[#ffffff]">
+          <span className="text-[#ffffff]">Ingresar</span>
           <ArrowRight
             size={16}
-            className="transition-transform duration-200 group-hover:translate-x-1"
+            className="transition-transform duration-200 group-hover:translate-x-1 text-[#ffffff]"
             aria-hidden="true"
           />
         </span>
