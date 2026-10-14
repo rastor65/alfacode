@@ -55,7 +55,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
       {error && <Alert tone="error">{error}</Alert>}
       <FormField
         label="Correo institucional"

@@ -201,9 +201,9 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
       {/* Indicador de Pasos del Wizard */}
-      <div className="space-y-2.5 pb-2 border-b border-white/10">
+      <div className="space-y-1.5 pb-1.5 border-b border-white/10">
         <div className="flex items-center justify-between text-xs">
           <button
             type="button"
@@ -215,7 +215,7 @@ export function RegisterForm() {
           >
             <span
               className={cn(
-                "flex size-6 items-center justify-center rounded-full text-[11px] font-bold border",
+                "flex size-5 sm:size-6 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold border",
                 step === 1
                   ? "border-cyan-400 bg-cyan-950/80 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)]"
                   : step > 1
@@ -223,7 +223,7 @@ export function RegisterForm() {
                     : "border-white/10 bg-white/5 text-slate-500",
               )}
             >
-              {step > 1 ? <Check size={12} /> : "1"}
+              {step > 1 ? <Check size={11} /> : "1"}
             </span>
             <span className="hidden sm:inline">Identificación</span>
           </button>
@@ -240,7 +240,7 @@ export function RegisterForm() {
           >
             <span
               className={cn(
-                "flex size-6 items-center justify-center rounded-full text-[11px] font-bold border",
+                "flex size-5 sm:size-6 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold border",
                 step === 2
                   ? "border-cyan-400 bg-cyan-950/80 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)]"
                   : step > 2
@@ -248,7 +248,7 @@ export function RegisterForm() {
                     : "border-white/10 bg-white/5 text-slate-500",
               )}
             >
-              {step > 2 ? <Check size={12} /> : "2"}
+              {step > 2 ? <Check size={11} /> : "2"}
             </span>
             <span className="hidden sm:inline">Académico</span>
           </button>
@@ -265,7 +265,7 @@ export function RegisterForm() {
           >
             <span
               className={cn(
-                "flex size-6 items-center justify-center rounded-full text-[11px] font-bold border",
+                "flex size-5 sm:size-6 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold border",
                 step === 3
                   ? "border-cyan-400 bg-cyan-950/80 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.3)]"
                   : "border-white/10 bg-white/5 text-slate-500",
@@ -290,13 +290,13 @@ export function RegisterForm() {
 
       {/* PASO 1: IDENTIFICACIÓN Y CONTACTO */}
       {step === 1 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-            <User size={14} />
+        <div className="space-y-2.5 sm:space-y-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+            <User size={13} />
             <span>1. Identificación Personal y Contacto</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <FormField
               label="Nombres *"
               name="nombres"
@@ -325,11 +325,10 @@ export function RegisterForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="usuario@uniguajira.edu.co"
             required
-            hint="Ahí llegará tu confirmación y clave de acceso institucional."
             error={fieldErrors.email}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <FormField
               label="Documento de identidad *"
               name="documentoIdentidad"
@@ -350,7 +349,7 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <FormField
               label="Celular de contacto *"
               name="celular"
@@ -371,7 +370,7 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <FormField
               label="Nacionalidad"
               name="nacionalidad"
@@ -388,10 +387,10 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1">
             <Button type="button" onClick={handleNext} className="w-full flex items-center justify-center gap-2">
               <span>Continuar a Datos Académicos</span>
-              <ChevronRight size={16} />
+              <ChevronRight size={15} />
             </Button>
           </div>
         </div>
@@ -399,13 +398,13 @@ export function RegisterForm() {
 
       {/* PASO 2: INFORMACIÓN ACADÉMICA */}
       {step === 2 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-            <GraduationCap size={14} />
+        <div className="space-y-2.5 sm:space-y-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+            <GraduationCap size={13} />
             <span>2. Información Académica Uniguajira</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <FormField
               label="Facultad *"
               name="facultad"
@@ -426,13 +425,13 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-slate-300">Sede *</label>
               <select
                 value={sede}
                 onChange={(e) => setSede(e.target.value)}
-                className="block w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/70"
+                className="block w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/70"
               >
                 {SEDES_UNIGUAJIRA.map((s) => (
                   <option key={s} value={s} className="bg-slate-900 text-white">
@@ -447,7 +446,7 @@ export function RegisterForm() {
               <select
                 value={semestreActual}
                 onChange={(e) => setSemestreActual(e.target.value)}
-                className="block w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/70"
+                className="block w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/70"
               >
                 {SEMESTRES.map((sem) => (
                   <option key={sem} value={sem} className="bg-slate-900 text-white">
@@ -468,14 +467,14 @@ export function RegisterForm() {
             />
           </div>
 
-          <div className="pt-2 flex items-center gap-3">
+          <div className="pt-1 flex items-center gap-3">
             <Button
               type="button"
               variant="secondary"
               onClick={handlePrev}
               className="flex-1 flex items-center justify-center gap-1.5"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={15} />
               <span>Atrás</span>
             </Button>
             <Button
@@ -484,7 +483,7 @@ export function RegisterForm() {
               className="flex-[2] flex items-center justify-center gap-2"
             >
               <span>Continuar a Perfil Investigativo</span>
-              <ChevronRight size={16} />
+              <ChevronRight size={15} />
             </Button>
           </div>
         </div>
@@ -492,18 +491,18 @@ export function RegisterForm() {
 
       {/* PASO 3: TRAYECTORIA E INTERÉS INVESTIGATIVO */}
       {step === 3 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-            <Microscope size={14} />
+        <div className="space-y-2.5 sm:space-y-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+            <Microscope size={13} />
             <span>3. Perfil e Interés Investigativo</span>
           </div>
 
           {/* Líneas de Investigación de Interés */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-300">
-              Líneas de Investigación de tu interés en AlfaCode
+          <div className="space-y-1.5">
+            <label className="block text-xs sm:text-sm font-medium text-slate-300">
+              Líneas de Investigación en AlfaCode
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {RESEARCH_LINES.map((line) => {
                 const isSelected = selectedLines.includes(line);
                 return (
@@ -512,7 +511,7 @@ export function RegisterForm() {
                     type="button"
                     onClick={() => toggleLine(line)}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-all",
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-all",
                       isSelected
                         ? "border-cyan-400 bg-cyan-950/70 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                         : "border-white/10 bg-slate-900/60 text-slate-400 hover:border-white/20 hover:text-slate-200",
@@ -528,63 +527,64 @@ export function RegisterForm() {
               type="text"
               value={lineasAdicionales}
               onChange={(e) => setLineasAdicionales(e.target.value)}
-              placeholder="Otras líneas o tecnologías de interés..."
-              className="block w-full rounded-xl border border-white/10 bg-slate-900/90 px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/70"
+              placeholder="Otras líneas de interés..."
+              className="block w-full rounded-xl border border-white/10 bg-slate-900/90 px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/70"
             />
           </div>
 
-          <TextAreaField
-            label="Experiencia Investigativa y Proyectos"
-            name="experienciaInvestigativa"
-            value={experienciaInvestigativa}
-            onChange={(e) => setExperienciaInvestigativa(e.target.value)}
-            rows={2}
-            maxLength={1000}
-            placeholder="Proyectos de aula, ferias científicas, semilleros previos o desarrollo independiente..."
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
+            <TextAreaField
+              label="Experiencia Investigativa"
+              name="experienciaInvestigativa"
+              value={experienciaInvestigativa}
+              onChange={(e) => setExperienciaInvestigativa(e.target.value)}
+              rows={2}
+              maxLength={1000}
+              placeholder="Proyectos de aula, ferias, etc."
+            />
+            <TextAreaField
+              label="Áreas de Estudio"
+              name="areasEstudio"
+              value={areasEstudio}
+              onChange={(e) => setAreasEstudio(e.target.value)}
+              rows={2}
+              maxLength={1000}
+              placeholder="Temas que más te apasionan..."
+            />
+          </div>
 
-          <TextAreaField
-            label="Áreas y/o Temáticas de Estudio"
-            name="areasEstudio"
-            value={areasEstudio}
-            onChange={(e) => setAreasEstudio(e.target.value)}
-            rows={2}
-            maxLength={1000}
-            placeholder="Temas de computación que más te apasionan o en los que deseas profundizar..."
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <TextAreaField
               label="Publicaciones recientes (si aplica)"
               name="publicaciones"
               value={publicaciones}
               onChange={(e) => setPublicaciones(e.target.value)}
-              rows={2}
+              rows={1}
               maxLength={800}
-              placeholder="Artículos, ponencias o posters..."
+              placeholder="Artículos, ponencias..."
             />
             <TextAreaField
               label="Prácticas o pasantías (si aplica)"
               name="practicasPasantias"
               value={practicasPasantias}
               onChange={(e) => setPracticasPasantias(e.target.value)}
-              rows={2}
+              rows={1}
               maxLength={800}
-              placeholder="Empresas, laboratorios o instituciones..."
+              placeholder="Empresas, laboratorios..."
             />
           </div>
 
           <TextAreaField
-            label="Mensaje o motivación para el semillero (opcional)"
+            label="Mensaje o motivación (opcional)"
             name="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows={2}
+            rows={1}
             maxLength={1000}
             placeholder="¿Por qué te gustaría formar parte del semillero AlfaCode?"
           />
 
-          <div className="pt-2 flex items-center gap-3">
+          <div className="pt-1 flex items-center gap-3">
             <Button
               type="button"
               variant="secondary"
@@ -592,7 +592,7 @@ export function RegisterForm() {
               disabled={pending}
               className="flex-1 flex items-center justify-center gap-1.5"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={15} />
               <span>Atrás</span>
             </Button>
             <Button
@@ -602,7 +602,7 @@ export function RegisterForm() {
               className="flex-[2] flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
             >
               <span>Enviar Hoja de Vida</span>
-              <Sparkles size={16} className="text-cyan-200" />
+              <Sparkles size={15} className="text-cyan-200" />
             </Button>
           </div>
         </div>

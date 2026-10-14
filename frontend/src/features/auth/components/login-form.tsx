@@ -53,7 +53,7 @@ export function LoginForm({ next }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
       {error && <Alert tone="error">{error}</Alert>}
       <FormField
         label="Correo institucional"
@@ -77,7 +77,7 @@ export function LoginForm({ next }: LoginFormProps) {
         maxLength={256}
         error={fieldErrors.password}
       />
-      <p className="-mt-2 text-right text-sm">
+      <p className="-mt-1 text-right text-xs">
         <Link
           href="/recuperar-contrasena"
           className="text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline"
