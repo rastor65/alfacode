@@ -560,10 +560,11 @@ export function RegisterForm() {
 
           <Link
             href="/ingresar"
-            className="w-full sm:w-auto h-11 px-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-xs font-semibold text-white shadow-[0_0_24px_rgba(6,182,212,0.3)] transition-all"
+            style={{ color: "#ffffff" }}
+            className="w-full sm:w-auto h-11 px-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-xs font-semibold !text-[#ffffff] shadow-[0_0_24px_rgba(6,182,212,0.3)] transition-all"
           >
-            <span>Ir al Portal de Miembros</span>
-            <ChevronRight size={15} />
+            <span className="!text-[#ffffff]">Ir al Portal de Miembros</span>
+            <ChevronRight size={15} className="!text-[#ffffff]" />
           </Link>
         </div>
       </div>
@@ -642,9 +643,9 @@ export function RegisterForm() {
                     className={cn(
                       "flex size-4 sm:size-4.5 shrink-0 items-center justify-center rounded-full text-[10px]",
                       isCompleted
-                        ? "bg-emerald-500 text-white"
+                        ? "bg-emerald-500 !text-[#ffffff]"
                         : isCurrent
-                          ? "bg-cyan-500 text-white shadow-xs"
+                          ? "bg-cyan-500 !text-[#ffffff] shadow-xs"
                           : "bg-hub-hover text-hub-muted",
                     )}
                   >
@@ -740,9 +741,10 @@ export function RegisterForm() {
                         className={cn(
                           "px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border",
                           tipoDocumento === tipo
-                            ? "border-cyan-500 bg-cyan-500 text-white shadow-xs"
+                            ? "border-cyan-500 bg-cyan-500 !text-[#ffffff] shadow-xs"
                             : "border-hub-border bg-hub-subtle text-hub-muted hover:text-hub-text hover:bg-hub-hover",
                         )}
+                        style={tipoDocumento === tipo ? { color: "#ffffff" } : undefined}
                       >
                         {tipo}
                       </button>
@@ -872,10 +874,11 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={handleNext}
-              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
+              style={{ color: "#ffffff" }}
+              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] !text-[#ffffff] font-bold text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
             >
-              <span>Continuar a información académica</span>
-              <ChevronRight size={16} />
+              <span className="!text-[#ffffff]">Continuar a información académica</span>
+              <ChevronRight size={16} className="!text-[#ffffff]" />
             </button>
           </div>
         </div>
@@ -982,8 +985,8 @@ export function RegisterForm() {
                         className={isSelected ? "text-hub-accent" : "text-hub-muted"}
                       />
                       {isSelected && (
-                        <div className="flex size-4 items-center justify-center rounded-full bg-cyan-500 text-white">
-                          <Check size={10} className="stroke-[3]" />
+                        <div className="flex size-4 items-center justify-center rounded-full bg-cyan-500 !text-[#ffffff]">
+                          <Check size={10} className="stroke-[3] !text-[#ffffff]" />
                         </div>
                       )}
                     </div>
@@ -1028,11 +1031,12 @@ export function RegisterForm() {
                     className={cn(
                       "h-10 flex flex-col items-center justify-center rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer border active:scale-[0.98]",
                       isSelected
-                        ? "border-cyan-500 bg-gradient-to-b from-cyan-600 to-cyan-500 text-white shadow-md scale-105"
+                        ? "border-cyan-500 bg-gradient-to-b from-cyan-600 to-cyan-500 !text-[#ffffff] shadow-md scale-105"
                         : "border-hub-border bg-hub-input text-hub-text hover:bg-hub-hover",
                     )}
+                    style={isSelected ? { color: "#ffffff" } : undefined}
                   >
-                    <span>{sem.num}°</span>
+                    <span className={isSelected ? "!text-[#ffffff]" : undefined}>{sem.num}°</span>
                   </button>
                 );
               })}
@@ -1135,10 +1139,11 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={handleNext}
-              className="flex-[2] h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
+              style={{ color: "#ffffff" }}
+              className="flex-[2] h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] !text-[#ffffff] font-bold text-xs sm:text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
             >
-              <span>Continuar a perfil investigativo</span>
-              <ChevronRight size={16} />
+              <span className="!text-[#ffffff]">Continuar a perfil investigativo</span>
+              <ChevronRight size={16} className="!text-[#ffffff]" />
             </button>
           </div>
         </div>
@@ -1221,11 +1226,12 @@ export function RegisterForm() {
                       className={cn(
                         "flex size-11 shrink-0 items-center justify-center rounded-xl transition-all",
                         isSelected
-                          ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 text-white shadow-md"
+                          ? "bg-gradient-to-tr from-cyan-600 to-cyan-400 !text-[#ffffff] shadow-md"
                           : "bg-hub-subtle text-hub-muted group-hover:text-cyan-500",
                       )}
+                      style={isSelected ? { color: "#ffffff" } : undefined}
                     >
-                      <IconComponent size={22} />
+                      <IconComponent size={22} className={isSelected ? "!text-[#ffffff]" : undefined} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -1242,11 +1248,12 @@ export function RegisterForm() {
                           className={cn(
                             "flex size-5 items-center justify-center rounded-md border transition-colors shrink-0",
                             isSelected
-                              ? "border-cyan-500 bg-cyan-500 text-white"
+                              ? "border-cyan-500 bg-cyan-500 !text-[#ffffff]"
                               : "border-hub-border bg-transparent",
                           )}
+                          style={isSelected ? { color: "#ffffff" } : undefined}
                         >
-                          {isSelected && <Check size={12} className="stroke-[3]" />}
+                          {isSelected && <Check size={12} className="stroke-[3] !text-[#ffffff]" />}
                         </div>
                       </div>
                       <p className="mt-1 text-xs text-hub-muted leading-relaxed">
@@ -1442,10 +1449,13 @@ export function RegisterForm() {
               type="submit"
               pending={pending}
               pendingLabel="Radicando postulación..."
-              className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-bold text-xs sm:text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
+              style={{ color: "#ffffff" }}
+              className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] !text-[#ffffff] font-bold text-xs sm:text-sm shadow-md shadow-cyan-500/25 transition-all duration-150 cursor-pointer"
             >
-              <span>Radicar postulación oficial</span>
-              <Sparkles size={16} className="ml-1 text-cyan-100" />
+              <span className="flex items-center justify-center gap-1.5 !text-[#ffffff]">
+                <span className="!text-[#ffffff]">Radicar postulación oficial</span>
+                <Sparkles size={16} className="ml-1 text-cyan-100" />
+              </span>
             </Button>
           </div>
         </div>
