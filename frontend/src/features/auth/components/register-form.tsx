@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Code2,
+  Copy,
   Cpu,
   GraduationCap,
   IdCard,
@@ -18,15 +19,19 @@ import {
   MapPin,
   Phone,
   PhoneCall,
+  QrCode,
   School,
+  ShieldCheck,
   Sparkles,
   Tag,
   User,
   UserCheck,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
+import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FormField, TextAreaField } from "@/components/ui/form-field";
@@ -43,7 +48,7 @@ interface ResearchLineItem {
   description: string;
   icon: typeof Brain;
   badge: string;
-  gradient: string;
+  tags: string[];
 }
 
 const RESEARCH_LINES: ResearchLineItem[] = [
@@ -51,10 +56,10 @@ const RESEARCH_LINES: ResearchLineItem[] = [
     id: "Inteligencia Artificial",
     title: "Inteligencia Artificial",
     tagline: "Machine Learning, LLMs & Visión Artificial",
-    description: "Desarrollo de agentes inteligentes, procesamiento del lenguaje natural y modelos predictivos aplicados.",
+    description: "Desarrollo de agentes autónomos, modelos generativos, NLP y análisis de datos avanzados.",
     icon: Brain,
     badge: "IA & Data Science",
-    gradient: "from-cyan-500/20 to-sky-500/10 border-cyan-500/40 text-cyan-400",
+    tags: ["Python", "PyTorch", "LLMs", "Computer Vision", "FastAPI"],
   },
   {
     id: "Desarrollo de Software",
@@ -63,7 +68,7 @@ const RESEARCH_LINES: ResearchLineItem[] = [
     description: "Construcción de aplicaciones distribuidas modernas con TypeScript, microservicios, seguridad y DevOps.",
     icon: Code2,
     badge: "Modern Web & Cloud",
-    gradient: "from-blue-500/20 to-cyan-500/10 border-blue-500/40 text-blue-400",
+    tags: ["Next.js", "TypeScript", "Node.js", "PostgreSQL", "Docker"],
   },
   {
     id: "Internet de las Cosas (IoT)",
@@ -72,22 +77,22 @@ const RESEARCH_LINES: ResearchLineItem[] = [
     description: "Automatización con microcontroladores (ESP32/Arduino), robótica educativa y monitoreo telemétrico.",
     icon: Cpu,
     badge: "Hardware & Robótica",
-    gradient: "from-teal-500/20 to-emerald-500/10 border-teal-500/40 text-teal-400",
+    tags: ["ESP32 / Arduino", "Robótica", "MQTT", "Sensores", "C++"],
   },
 ];
 
 const SEDES_UNIGUAJIRA = [
-  { id: "Riohacha (Sede Principal)", name: "Riohacha", detail: "Sede Principal" },
-  { id: "Maicao", name: "Maicao", detail: "Sede Provincial" },
-  { id: "Fonseca", name: "Fonseca", detail: "Sede Sur" },
-  { id: "Villanueva", name: "Villanueva", detail: "Sede Sur" },
+  { id: "Riohacha (Sede Principal)", name: "Riohacha", detail: "Sede Principal · Distrito Central" },
+  { id: "Maicao", name: "Maicao", detail: "Sede Fronteriza · Km 1" },
+  { id: "Fonseca", name: "Fonseca", detail: "Sede Provincial Sur" },
+  { id: "Villanueva", name: "Villanueva", detail: "Sede Provincial Sur" },
 ];
 
-const PROGRAMAS_SUGERIDOS = [
-  "Ingeniería de Sistemas",
-  "Ingeniería Industrial",
-  "Ingeniería Mecánica",
-  "Ingeniería Civil",
+const PROGRAMAS_INGENIERIA = [
+  { name: "Ingeniería de Sistemas", short: "Sistemas", icon: "💻", isDefault: true },
+  { name: "Ingeniería Industrial", short: "Industrial", icon: "📊", isDefault: false },
+  { name: "Ingeniería Mecánica", short: "Mecánica", icon: "⚙️", isDefault: false },
+  { name: "Ingeniería Civil", short: "Civil", icon: "🏗️", isDefault: false },
 ];
 
 const SEMESTRES = [
@@ -116,6 +121,8 @@ const SUGGESTED_TAGS = [
   "Microcontroladores",
   "Cloud",
   "Linux",
+  "Tailwind CSS",
+  "Git / GitHub",
 ];
 
 const PROMEDIO_PRESETS = ["3.8", "4.0", "4.2", "4.5"];
@@ -125,10 +132,12 @@ export function RegisterForm() {
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  const [copiedRadicado, setCopiedRadicado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // 1. Identificación y contacto
+  const [tipoDocumento, setTipoDocumento] = useState<"C.C." | "T.I." | "C.E.">("C.C.");
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [email, setEmail] = useState("");
@@ -143,13 +152,14 @@ export function RegisterForm() {
   // 2. Información académica
   const [facultad, setFacultad] = useState("Facultad de Ingeniería");
   const [programa, setPrograma] = useState("Ingeniería de Sistemas");
+  const [isCustomPrograma, setIsCustomPrograma] = useState(false);
   const [sede, setSede] = useState("Riohacha (Sede Principal)");
   const [semestreActual, setSemestreActual] = useState("5° Semestre");
   const [promedioAcademico, setPromedioAcademico] = useState("");
 
   // 3. Trayectoria y áreas de investigación
   const [selectedLines, setSelectedLines] = useState<string[]>(["Inteligencia Artificial"]);
-  const [selectedTags, setSelectedTags] = useState<string[]>(["Python", "TypeScript"]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(["Python", "TypeScript", "Next.js"]);
   const [lineasAdicionales, setLineasAdicionales] = useState("");
   const [experienciaInvestigativa, setExperienciaInvestigativa] = useState("");
   const [areasEstudio, setAreasEstudio] = useState("");
@@ -176,11 +186,26 @@ export function RegisterForm() {
       setEmail("@uniguajira.edu.co");
     } else if (!email.includes("@")) {
       setEmail(`${email.trim()}@uniguajira.edu.co`);
+    } else if (email.endsWith("@")) {
+      setEmail(`${email.trim()}uniguajira.edu.co`);
     }
   }
 
   const isEmailValidDomain = email.toLowerCase().endsWith("@uniguajira.edu.co");
   const activeSemestreObj = SEMESTRES.find((s) => s.label === semestreActual) || SEMESTRES[4];
+
+  // Hash determinista para el folio de radicación
+  const radicadoFolio = `ALFA-${new Date().getFullYear()}-${Math.abs(
+    (email || "uniguajira").split("").reduce((acc, c) => ((acc << 5) - acc) + c.charCodeAt(0), 0) % 90000 + 10000,
+  )}`;
+
+  function handleCopyRadicado() {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(radicadoFolio);
+      setCopiedRadicado(true);
+      setTimeout(() => setCopiedRadicado(false), 2500);
+    }
+  }
 
   function validateStep(currentStep: Step): boolean {
     const errors: Record<string, string> = {};
@@ -259,6 +284,7 @@ export function RegisterForm() {
       allLines.push(lineasAdicionales.trim());
     }
 
+    const docIdentidadCompleto = `${tipoDocumento} ${documentoIdentidad.trim()}`;
     const fullName = `${nombres.trim()} ${apellidos.trim()}`;
 
     try {
@@ -274,7 +300,7 @@ export function RegisterForm() {
             nombres: nombres.trim(),
             fechaNacimiento,
             nacionalidad: nacionalidad.trim() || "Colombiana",
-            documentoIdentidad: documentoIdentidad.trim(),
+            documentoIdentidad: docIdentidadCompleto,
             celular: celular.trim(),
             ...(telefonoFijo.trim() ? { telefonoFijo: telefonoFijo.trim() } : {}),
             facultad: facultad.trim(),
@@ -299,56 +325,150 @@ export function RegisterForm() {
     }
   }
 
-  // Vista de éxito / confirmación digital de postulación
+  // Vista de éxito / Credencial digital de postulación oficial
   if (done) {
     return (
-      <div className="space-y-6 py-6 text-center animate-in fade-in zoom-in-95 duration-200">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.25)]">
-          <CheckCircle2 size={36} className="stroke-[2.2]" />
-        </div>
-
-        <div className="space-y-1.5">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-semibold text-emerald-400">
-            Postulación Radicada Exitosamente
-          </span>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            ¡Tu solicitud está en marcha!
+      <div className="space-y-6 py-4 text-center animate-in fade-in zoom-in-95 duration-250">
+        {/* Cabecera de éxito */}
+        <div className="space-y-2">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.25)]">
+            <CheckCircle2 size={32} className="stroke-[2.2]" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            ¡Postulación Radicada con Éxito!
           </h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
-            Tu hoja de vida institucional ha sido radicada formalmente ante el semillero de investigación <strong>AlfaCode</strong>.
+            Tu hoja de vida institucional fue recibida por la coordinación de <strong>AlfaCode HUB</strong>. Se ha generado tu credencial oficial de postulación:
           </p>
         </div>
 
-        <div className="mx-auto max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-100/70 dark:bg-slate-900/60 p-4 text-left text-xs space-y-2.5 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
-            <span className="text-slate-500 dark:text-slate-400">Postulante:</span>
-            <span className="font-semibold text-slate-900 dark:text-white">{nombres} {apellidos}</span>
+        {/* Tarjeta Credencial Digital Holográfica de Postulación */}
+        <div className="relative mx-auto max-w-md overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-900/90 via-slate-950/95 to-slate-950 p-6 text-left shadow-[0_15px_40px_-10px_rgba(3,130,161,0.25)] backdrop-blur-2xl">
+          {/* Línea superior con gradiente cian */}
+          <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+
+          {/* Insignia y Folio */}
+          <div className="flex items-start justify-between border-b border-white/10 pb-4">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl border border-cyan-400/40 bg-cyan-950/80 p-1.5 shadow-[0_0_15px_rgba(3,130,161,0.4)]">
+                <AlfaCodeSymbol className="size-full" />
+              </span>
+              <div>
+                <span className="text-xs font-black tracking-tight text-white block">
+                  Alfa<span className="text-cyan-400">Code</span> <span className="font-mono text-[10px] text-cyan-300">HUB</span>
+                </span>
+                <span className="text-[10px] text-slate-400 block font-mono">
+                  Universidad de La Guajira
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[9px] uppercase font-mono tracking-wider text-slate-400 block">
+                Folio de Radicación
+              </span>
+              <span className="font-mono text-xs font-bold text-cyan-300">
+                {radicadoFolio}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
-            <span className="text-slate-500 dark:text-slate-400">Correo institucional:</span>
-            <span className="font-mono text-cyan-600 dark:text-cyan-300 font-medium">{email}</span>
+
+          {/* Datos del Postulante */}
+          <div className="py-4 space-y-3">
+            <div>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">
+                Postulante Oficial
+              </span>
+              <h3 className="text-base font-bold text-white tracking-tight">
+                {nombres} {apellidos}
+              </h3>
+              <p className="font-mono text-xs text-cyan-400">
+                {email}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">
+                  Programa & Sede
+                </span>
+                <span className="font-medium text-slate-200">
+                  {programa}
+                </span>
+                <span className="text-[11px] text-slate-400 block">
+                  Sede {sede.split(" ")[0]}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block">
+                  Nivel Académico
+                </span>
+                <span className="font-medium text-slate-200">
+                  {semestreActual}
+                </span>
+                <span className="text-[11px] font-semibold text-emerald-400 block">
+                  Promedio {promedioAcademico} / 5.0
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 block mb-1">
+                Líneas de Investigación Seleccionadas
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {selectedLines.map((l) => (
+                  <span
+                    key={l}
+                    className="inline-flex items-center gap-1 rounded-full border border-cyan-400/30 bg-cyan-950/60 px-2.5 py-0.5 text-[10px] font-medium text-cyan-200"
+                  >
+                    <Sparkles size={9} className="text-cyan-400" />
+                    {l}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
-            <span className="text-slate-500 dark:text-slate-400">Programa y Sede:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-medium">{programa} · {sede.split(" ")[0]}</span>
-          </div>
-          <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
-            <span className="text-slate-500 dark:text-slate-400">Semestre y Promedio:</span>
-            <span className="text-slate-800 dark:text-slate-200 font-medium">{semestreActual} · Promedio {promedioAcademico}</span>
-          </div>
-          <div className="flex items-center justify-between pt-0.5">
-            <span className="text-slate-500 dark:text-slate-400">Enfoque:</span>
-            <span className="font-medium text-teal-600 dark:text-teal-300 text-right">{selectedLines.join(", ")}</span>
+
+          {/* Pie de la Credencial con Sello Criptográfico Simulado */}
+          <div className="border-t border-white/10 pt-3 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+            <div className="flex items-center gap-1.5">
+              <QrCode size={16} className="text-cyan-400" />
+              <span>RADICADO OFICIAL · 2026</span>
+            </div>
+            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              EN REVISIÓN
+            </span>
           </div>
         </div>
 
-        <div className="pt-2">
+        {/* Acciones de la confirmación */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={handleCopyRadicado}
+            className="w-full sm:w-auto h-11 px-5 inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-slate-900/80 hover:bg-white/10 active:scale-[0.98] text-xs font-semibold text-slate-200 transition-all cursor-pointer"
+          >
+            {copiedRadicado ? (
+              <>
+                <Check size={14} className="text-emerald-400" />
+                <span className="text-emerald-300">¡Folio Copiado al Portapapeles!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={14} className="text-cyan-400" />
+                <span>Copiar Folio de Radicación</span>
+              </>
+            )}
+          </button>
+
           <Link
             href="/ingresar"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 px-7 text-xs sm:text-sm font-semibold text-white shadow-[0_0_24px_rgba(6,182,212,0.3)] transition-all duration-150 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98]"
+            className="w-full sm:w-auto h-11 px-6 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-xs font-semibold text-white shadow-[0_0_24px_rgba(6,182,212,0.3)] transition-all"
           >
-            <span>Ir a iniciar sesión</span>
-            <ChevronRight size={16} />
+            <span>Ir al Portal de Miembros</span>
+            <ChevronRight size={15} />
           </Link>
         </div>
       </div>
@@ -538,27 +658,55 @@ export function RegisterForm() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormField
-                label="Documento de identidad *"
-                name="documentoIdentidad"
-                value={documentoIdentidad}
-                onChange={(e) => setDocumentoIdentidad(e.target.value)}
-                placeholder="C.C. o T.I. N°"
-                icon={<IdCard size={15} aria-hidden="true" />}
-                required
-                error={fieldErrors.documentoIdentidad}
-              />
-              <FormField
-                label="Fecha de nacimiento *"
-                name="fechaNacimiento"
-                type="date"
-                value={fechaNacimiento}
-                onChange={(e) => setFechaNacimiento(e.target.value)}
-                icon={<Calendar size={15} aria-hidden="true" />}
-                required
-                error={fieldErrors.fechaNacimiento}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              {/* Documento de Identidad con selector de tipo */}
+              <div className="sm:col-span-7 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Documento de identidad *
+                  </label>
+                  <div className="flex items-center gap-1">
+                    {(["C.C.", "T.I.", "C.E."] as const).map((tipo) => (
+                      <button
+                        key={tipo}
+                        type="button"
+                        onClick={() => setTipoDocumento(tipo)}
+                        className={cn(
+                          "px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold transition-colors cursor-pointer",
+                          tipoDocumento === tipo
+                            ? "bg-cyan-500 text-white"
+                            : "bg-slate-200 dark:bg-white/10 text-slate-500 hover:text-cyan-400",
+                        )}
+                      >
+                        {tipo}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <FormField
+                  label=""
+                  name="documentoIdentidad"
+                  value={documentoIdentidad}
+                  onChange={(e) => setDocumentoIdentidad(e.target.value)}
+                  placeholder={`Número de ${tipoDocumento}`}
+                  icon={<IdCard size={15} aria-hidden="true" />}
+                  required
+                  error={fieldErrors.documentoIdentidad}
+                />
+              </div>
+
+              <div className="sm:col-span-5">
+                <FormField
+                  label="Fecha de nacimiento *"
+                  name="fechaNacimiento"
+                  type="date"
+                  value={fechaNacimiento}
+                  onChange={(e) => setFechaNacimiento(e.target.value)}
+                  icon={<Calendar size={15} aria-hidden="true" />}
+                  required
+                  error={fieldErrors.fechaNacimiento}
+                />
+              </div>
             </div>
           </div>
 
@@ -582,15 +730,16 @@ export function RegisterForm() {
               badge={
                 isEmailValidDomain ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-500 dark:text-emerald-400">
-                    <Check size={10} className="stroke-[3]" /> Dominio Institucional Verificado
+                    <ShieldCheck size={11} className="stroke-[2.5]" /> Dominio Institucional Verificado
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={handleEmailDomainAppend}
-                    className="text-[10px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20"
                   >
-                    + @uniguajira.edu.co
+                    <Wand2 size={10} />
+                    <span>+ @uniguajira.edu.co</span>
                   </button>
                 )
               }
@@ -608,6 +757,7 @@ export function RegisterForm() {
               onChange={(e) => setCelular(e.target.value)}
               placeholder="300 123 4567"
               icon={<Phone size={15} aria-hidden="true" />}
+              badge={<span className="text-[10px] text-slate-400 font-mono">🇨🇴 +57</span>}
               hint="Número activo para notificaciones y convocatorias."
               required
               error={fieldErrors.celular}
@@ -688,52 +838,56 @@ export function RegisterForm() {
             </p>
           </div>
 
-          {/* Selector y programa */}
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Programa académico *
-              </label>
-              {/* Quick Pills de carreras */}
-              <div className="flex flex-wrap gap-1.5 pb-1">
-                {PROGRAMAS_SUGERIDOS.map((prog) => (
+          {/* Selector de Programa de Ingeniería con Cards */}
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+              Programa académico *
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {PROGRAMAS_INGENIERIA.map((item) => {
+                const isSelected = programa === item.name && !isCustomPrograma;
+                return (
                   <button
-                    key={prog}
+                    key={item.name}
                     type="button"
-                    onClick={() => setPrograma(prog)}
+                    onClick={() => {
+                      setPrograma(item.name);
+                      setIsCustomPrograma(false);
+                    }}
                     className={cn(
-                      "rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-150 cursor-pointer border active:scale-[0.97]",
-                      programa === prog
-                        ? "border-cyan-500 bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 font-semibold ring-1 ring-cyan-500/40"
-                        : "border-slate-300/80 dark:border-white/10 bg-slate-100/60 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/20",
+                      "flex items-center gap-2 rounded-xl p-2.5 text-left transition-all duration-150 cursor-pointer border active:scale-[0.98]",
+                      isSelected
+                        ? "border-cyan-500 bg-cyan-500/15 text-slate-900 dark:text-white shadow-[0_0_12px_rgba(6,182,212,0.25)] ring-1 ring-cyan-500/40"
+                        : "border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-white/20",
                     )}
                   >
-                    {prog}
+                    <span className="text-base">{item.icon}</span>
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold block truncate leading-tight">
+                        {item.short}
+                      </span>
+                    </div>
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+
+            {/* Input para personalizar o escribir otro programa */}
+            <div className="pt-1">
               <FormField
-                label=""
+                label="Nombre exacto del programa registrado en Uniguajira"
                 name="programa"
                 value={programa}
-                onChange={(e) => setPrograma(e.target.value)}
+                onChange={(e) => {
+                  setPrograma(e.target.value);
+                  setIsCustomPrograma(true);
+                }}
                 placeholder="Ingeniería de Sistemas"
                 icon={<BookOpen size={15} aria-hidden="true" />}
                 required
                 error={fieldErrors.programa}
               />
             </div>
-
-            <FormField
-              label="Facultad *"
-              name="facultad"
-              value={facultad}
-              onChange={(e) => setFacultad(e.target.value)}
-              placeholder="Facultad de Ingeniería"
-              icon={<School size={15} aria-hidden="true" />}
-              required
-              error={fieldErrors.facultad}
-            />
           </div>
 
           {/* Selector de Sede Uniguajira Interactivo */}
@@ -782,13 +936,13 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Selector de Semestre Segmentado (1 a 10) con Barra de Avance */}
+          {/* Selector de Semestre Segmentado con Barra de Progreso y Marcadores */}
           <div className="space-y-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <GraduationCap size={15} className="text-cyan-500" />
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  Semestre actual en curso *
+                  Semestre en curso *
                 </span>
               </div>
               <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">
@@ -818,15 +972,15 @@ export function RegisterForm() {
               })}
             </div>
 
-            {/* Avance de carrera dinámico */}
+            {/* Barra de progreso de avance curricular */}
             <div className="space-y-1.5 pt-2">
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                 <span>{activeSemestreObj.cycle}</span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">~{activeSemestreObj.pct}% avance curricular</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">~{activeSemestreObj.pct}% avance de carrera</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-cyan-500 via-sky-400 to-teal-400 transition-all duration-300"
                   style={{ width: `${activeSemestreObj.pct}%` }}
                 />
               </div>
@@ -929,7 +1083,7 @@ export function RegisterForm() {
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                 Líneas oficiales del semillero AlfaCode *
               </label>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
                 {selectedLines.length} seleccionada(s)
               </span>
             </div>
@@ -986,6 +1140,16 @@ export function RegisterForm() {
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                         {item.description}
                       </p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {item.tags.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded px-1.5 py-0.5 text-[9px] font-mono bg-slate-200/60 dark:bg-white/5 text-slate-600 dark:text-slate-400"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </button>
                 );
@@ -997,10 +1161,10 @@ export function RegisterForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                Tecnologías y herramientas que te interesan
+                Herramientas y tecnologías que deseas aprender o dominar
               </label>
               <span className="text-[11px] text-slate-400">
-                Toca para activar
+                {selectedTags.length} activas
               </span>
             </div>
 
@@ -1045,7 +1209,7 @@ export function RegisterForm() {
               onChange={(e) => setExperienciaInvestigativa(e.target.value)}
               rows={2}
               maxLength={1000}
-              placeholder="Proyectos de clase, desarrollos personales, ferias..."
+              placeholder="Proyectos de clase, desarrollos personales, ferias o hackathons..."
             />
             <TextAreaField
               label="Temas o áreas que deseas profundizar"
@@ -1054,7 +1218,7 @@ export function RegisterForm() {
               onChange={(e) => setAreasEstudio(e.target.value)}
               rows={2}
               maxLength={1000}
-              placeholder="Algoritmos, frameworks o metodologías..."
+              placeholder="Algoritmos, frameworks, arquitecturas o metodologías..."
             />
           </div>
 
@@ -1102,15 +1266,22 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* Resumen dinámico previo al envío */}
-          <div className="flex items-center justify-between rounded-xl border border-cyan-400/20 bg-cyan-950/30 px-3.5 py-2 text-xs text-slate-300">
-            <div className="flex items-center gap-2">
-              <Layers size={14} className="text-cyan-400" />
-              <span>
-                Postulando: <strong className="text-white">{nombres || "Estudiante"} {apellidos}</strong> · {programa}
-              </span>
+          {/* Ficha Pre-Envío Holográfica de Confirmación */}
+          <div className="rounded-2xl border border-cyan-400/25 bg-cyan-950/30 p-3.5 text-xs text-slate-300 space-y-1.5 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-cyan-400" />
+                <span className="font-semibold text-white">
+                  {nombres || "Estudiante"} {apellidos}
+                </span>
+                <span className="text-slate-400">· {programa}</span>
+              </div>
+              <span className="font-mono text-[10px] text-cyan-300">Sede {sede.split(" ")[0]}</span>
             </div>
-            <span className="font-mono text-[11px] text-cyan-300">Sede {sede.split(" ")[0]}</span>
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5 border-t border-white/5">
+              <span>{semestreActual} · Promedio {promedioAcademico || "N/A"}</span>
+              <span className="text-teal-300 font-medium">{selectedLines.join(", ")}</span>
+            </div>
           </div>
 
           <div className="pt-2 flex items-center gap-3">
@@ -1126,10 +1297,10 @@ export function RegisterForm() {
             <Button
               type="submit"
               pending={pending}
-              pendingLabel="Enviando postulación..."
+              pendingLabel="Radicando postulación..."
               className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] text-white font-semibold text-xs sm:text-sm shadow-[0_0_24px_rgba(6,182,212,0.3)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)] transition-all duration-150 cursor-pointer"
             >
-              <span>Enviar postulación oficial</span>
+              <span>Radicar postulación oficial</span>
               <Sparkles size={16} className="ml-1 text-cyan-100" />
             </Button>
           </div>
