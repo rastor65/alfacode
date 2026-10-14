@@ -14,7 +14,7 @@ type FormFieldProps = Omit<ComponentProps<"input">, "id"> & {
 };
 
 const inputBaseClass =
-  "block w-full h-10 sm:h-10.5 rounded-xl border border-hub-input-border bg-hub-input px-3.5 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-150 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15";
+  "block w-full h-10.5 sm:h-11 rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-3.5 text-sm text-slate-900 dark:text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15";
 
 /**
  * Campo minimalista y elegante con etiqueta, ayuda y error asociados por `aria-describedby`.
@@ -28,7 +28,7 @@ export function FormField({ label, hint, error, icon, badge, type = "text", clas
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-hub-soft">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-slate-300">
           {label}
         </label>
         {badge && <div>{badge}</div>}
@@ -36,7 +36,7 @@ export function FormField({ label, hint, error, icon, badge, type = "text", clas
       <div className="relative group">
         {icon && (
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-slate-400 dark:text-cyan-400/60 transition-colors group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400"
+            className="pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center text-slate-400 dark:text-slate-500 transition-colors group-focus-within:text-cyan-600 dark:group-focus-within:text-cyan-400"
             aria-hidden="true"
           >
             {icon}
@@ -49,9 +49,9 @@ export function FormField({ label, hint, error, icon, badge, type = "text", clas
           aria-describedby={describedBy}
           className={cn(
             inputBaseClass,
-            icon && "pl-10",
+            icon && "pl-9",
             isPassword && "pr-10",
-            error ? "border-hub-field-error focus:border-hub-field-error focus:ring-rose-500/15" : "hover:border-slate-400 dark:hover:border-white/25",
+            error ? "border-rose-500 dark:border-hub-field-error focus:border-rose-500 focus:ring-rose-500/15" : "hover:border-slate-400 dark:hover:border-white/25",
           )}
           {...props}
         />
@@ -96,7 +96,7 @@ export function TextAreaField({ label, hint, error, icon, badge, className, rows
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-hub-soft">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-700 dark:text-slate-300">
           {label}
         </label>
         {badge ? <div>{badge}</div> : icon && <span className="text-slate-400 dark:text-cyan-400/60">{icon}</span>}
@@ -107,8 +107,8 @@ export function TextAreaField({ label, hint, error, icon, badge, className, rows
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={cn(
-          "block w-full rounded-xl border border-hub-input-border bg-hub-input px-3.5 py-2.5 text-sm text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] dark:shadow-none transition-all duration-150 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 resize-y min-h-[68px]",
-          error ? "border-hub-field-error focus:border-hub-field-error focus:ring-rose-500/15" : "hover:border-slate-400 dark:hover:border-white/25",
+          "block w-full rounded-xl border border-slate-300/80 dark:border-white/12 bg-slate-100/70 dark:bg-slate-900/60 px-3.5 py-2.5 text-sm text-slate-900 dark:text-hub-text placeholder:text-slate-400 dark:placeholder:text-hub-muted shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-150 focus:outline-none focus:border-cyan-500 dark:focus:border-cyan-400 focus:bg-white dark:focus:bg-slate-900/90 focus:ring-4 focus:ring-cyan-500/15 resize-y min-h-[68px]",
+          error ? "border-rose-500 dark:border-hub-field-error focus:border-rose-500 focus:ring-rose-500/15" : "hover:border-slate-400 dark:hover:border-white/25",
         )}
         {...props}
       />
@@ -118,7 +118,7 @@ export function TextAreaField({ label, hint, error, icon, badge, className, rows
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className="text-xs text-hub-field-error font-medium">
+        <p id={`${id}-error`} className="text-xs text-rose-500 dark:text-hub-field-error font-medium">
           {error}
         </p>
       )}
