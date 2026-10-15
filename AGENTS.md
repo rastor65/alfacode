@@ -63,4 +63,4 @@ Si existe una contradiccion relevante, documentarla en `docs/decisiones.md` y pe
 - Criterios de aceptacion satisfechos, pendientes o bloqueados.
 - Decisiones/riesgos y siguiente paso recomendado.
 
-**Estado operativo actual:** Fase 0 e I-04 a I-11 aprobadas; I-12 (Fase 2C: sprints opcionales) y el registro con Hoja de Vida implementados y verificados tecnicamente, pendientes de aprobacion del responsable. Consultar `context/tarea-actual.md` antes de iniciar cualquier nueva iteracion.
+**Estado operativo actual:** Fase 0 e I-04 a I-12 aprobadas, junto con el registro con Hoja de Vida; I-13 (cierre de la Fase 2, solo SQLite por DEC-025) aprobada. Fase 3 autorizada por iteraciones (DEC-026): I-14 (investigacion) en curso. Consultar `context/tarea-actual.md` antes de iniciar cualquier nueva iteracion.

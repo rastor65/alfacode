@@ -1,14 +1,11 @@
-# Tarea actual - Fase 2, I-12 (sprints opcionales) en revision
+# Tarea actual - Fase 3, I-14 (investigacion) autorizada
 
 ## Estado
 
-**Fase:** 2 - Proyectos, tareas y sprints (2A y 2B aprobadas; 2C implementada, en revision).
-**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022).
-**I-11:** aprobada (DEC-022).
+**Fase:** 3 - Investigacion y documentos. Fase 2 cerrada y aprobada (I-13, DEC-026), validada solo en SQLite (DEC-025).
+**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026).
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
-**I-12:** autorizada (DEC-022); implementada y verificada tecnicamente, registrada en el commit `e1b022a` en `dev`; pendiente de aprobacion.
-**Registro con Hoja de Vida (2026-10-14, trabajo hecho en `main` e integrado en `dev` con `04bb40d`):** implementado y verificado tecnicamente; pendiente de aprobacion.
-**Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-12.
+**Trabajo actualmente autorizado:** I-14 (F3-01 a F3-04: lineas de investigacion, asociacion con proyectos, ficha investigativa, resultados). I-15 e I-16 tras la revision de I-14 (DEC-026).
 
 ## Fases de I-08
 
@@ -95,7 +92,7 @@
 
 ## I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21)
 
-**Estado:** autorizada (DEC-022); implementada y verificada tecnicamente. Decisiones en DEC-023.
+**Estado:** aprobada (DEC-024). Decisiones en DEC-023.
 
 | Parte | Contenido | Estado |
 |---|---|---|
@@ -113,9 +110,48 @@
 - **No verificado por el agente:** la interaccion en un navegador real.
 - **Bloqueado:** la prueba F2-11 (SQLite y PostgreSQL) mientras PostgreSQL siga pausado; por eso no se declara "MVP listo" (puerta MVP del plan).
 
+## I-13 (cierre de la Fase 2, puerta MVP)
+
+**Estado:** aprobada (DEC-026). PostgreSQL fuera del cierre por DEC-025.
+
+### Pruebas de aceptacion F2
+
+| # | Criterio | Evidencia | Estado |
+|---|---|---|---|
+| 1 | Tradicional sin sprints, ni por API | `sprints.http.spec.ts` "modalidad tradicional" | Cumplido |
+| 2 | Agil con tareas en backlog | `sprints.http.spec.ts` "crear y planificar"; E2E | Cumplido |
+| 3 | Lider crea, planifica, activa; Kanban | `sprints.http.spec.ts` "tablero del sprint activo"; E2E | Cumplido |
+| 4 | Un solo sprint activo, tambien concurrente | `sprints.http.spec.ts` (inicios simultaneos e indice unico) | Cumplido |
+| 5 | Tarea de otro proyecto rechazada | `sprints.http.spec.ts` (API y clave compuesta) | Cumplido |
+| 6 | Cierre con registro; pendientes al backlog | `sprints.http.spec.ts` "cierre y cancelacion"; E2E | Cumplido |
+| 7 | Ajeno no accede cambiando ID | `projects`, `tasks` y `sprints.http.spec.ts`; E2E | Cumplido |
+| 8 | Colaborador no crea sprints ni reasigna | `sprints.http.spec.ts`, `tasks.http.spec.ts`; E2E | Cumplido |
+| 9 | Persistencia tras reiniciar | E2E: reinicio del backend con sprint activo, sesiones y tareas intactas | Cumplido (servidor; navegador no probado) |
+| 10 | "Sin tareas", sin porcentaje | `frontend/src/features/tasks/types.test.ts`; E2E (progreso 0 de 0) | Cumplido |
+| 11 | Migraciones desde cero y flujos en SQLite y PostgreSQL | E2E: 9 migraciones ida, vuelta completa e ida en SQLite | SQLite cumplido; PostgreSQL diferido (DEC-025) |
+| 12 | E2E registro/invitacion -> ... -> historial | `npm run e2e:mvp`: 32/32 | Cumplido (a nivel de API) |
+
+### Resultado tecnico verificado de I-13
+
+- Nuevo `scripts/e2e-mvp.mjs` y script raiz `npm run e2e:mvp`: base, outbox y puerto (4100) temporales; migraciones desde cero, reversion completa y reaplicacion; admin por bootstrap no interactivo; invitacion y aceptacion; registro con Hoja de Vida, aprobacion, contrasena temporal y cambio obligatorio; proyecto agil, equipo, tareas, sprint, tablero, reinicio del backend, cierre, historial, progreso y acceso ajeno. Ejecutado dos veces: 32/32 en ambas; temporales eliminados y puerto liberado.
+- `npm audit`: backend 0 (todas y produccion); frontend 0 en produccion y 5 altas solo de desarrollo en la cadena de `eslint-config-next` (`braces`/`micromatch`/`fast-glob`), las mismas registradas en I-08.1; la correccion automatica degrada a `eslint-config-next@14` y no se aplico.
+- `register-form.tsx`: eliminadas las 3 advertencias de lint (import y setters sin uso), sin cambio de comportamiento.
+- `npm run verify` OK (55 + 182 pruebas, lint sin advertencias).
+- Base local: respaldo `backend/data/alfacode-hub.backup-2026-10-15.sqlite` y `migration:run` aplico `MembershipRequestCv1728750000000`; sin pendientes.
+
+### Pendientes documentados (puerta MVP)
+
+- **PostgreSQL (DEC-025):** implementar las migraciones para PostgreSQL y repetir F2 #11 antes de cualquier publicacion con usuarios reales.
+- **Navegador real:** la interaccion (arrastrar tarjetas, selectores, modales, formulario de registro en 3 pasos) no la verifico el agente; requiere una revision manual.
+- **Despliegue en Koyeb:** `Dockerfile`, `backend/Dockerfile` y `backend/docker-entrypoint.sh` llegaron desde `main`, fuera del plan (Railway, produccion pausada). Requiere decision del responsable.
+- **Bootstrap no interactivo del admin** (`BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_PASSWORD`, desde `main`): util para despliegue y pruebas, pero la contrasena viaja en variables de entorno; revisar antes de produccion.
+- **Timestamp repetido:** `MembershipRequestCv1728750000000` y `Tasks1728750000000`; funciona (nombres distintos), no se renombra.
+- **Dependencias de desarrollo:** 5 vulnerabilidades en la cadena de ESLint, sin correccion compatible por ahora.
+- **Hoja de Vida:** la migracion de `cv_data` tampoco soporta PostgreSQL (como las demas).
+
 ## No realizar sin nueva autorizacion
 
-- No iniciar trabajo posterior a I-12 (cierre del MVP, Fase 3) sin autorizacion.
+- No iniciar I-15 (documentos) ni publicar con usuarios reales sin autorizacion.
 - No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.
 - No crear datos reales de personas.

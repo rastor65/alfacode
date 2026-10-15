@@ -235,7 +235,32 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Planificacion:** se agregan tareas del backlog y se devuelven al backlog mientras el sprint este planificado o activo. Solo se edita (nombre, objetivo, fechas) un sprint planificado. Cancelar exige motivo.
 - **F2-19, cambio de modalidad:** `POST /projects/:id/methodology` (ruta nueva, no listada en la API minima, porque la modalidad no forma parte de la edicion general). `agile -> traditional` responde 409 `PROJECT_HAS_SPRINTS` si existe cualquier sprint.
 - **Interfaz:** `/hub/proyectos/[id]/sprints` (solo agiles; 404 en tradicionales) con lista, alta, detalle, planificacion, inicio, cierre, cancelacion e historial en modales. El tablero de un proyecto agil tiene un selector (sprint activo o planificado, backlog, todas); por defecto muestra el sprint activo. Una tarea creada mientras se ve un sprint planificable se agrega a ese sprint. Los proyectos tradicionales no muestran pestana ni enlaces de sprints.
-- **Aprobacion del responsable:** pendiente.
+- **Aprobacion del responsable:** confirmada en DEC-024.
+
+### DEC-024 - Aprobacion de I-12 y del registro con Hoja de Vida; autorizacion de I-13 (cierre de la Fase 2)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado ("cerremos la fase 2"; en la consulta posterior el responsable eligio aprobar I-12 y el registro con Hoja de Vida).
+- **Decision:** se aprueban I-12, DEC-023 y el registro con Hoja de Vida (trabajo de `main` del 2026-10-14, integrado en `dev` con `04bb40d`). Se autoriza I-13: cierre de la Fase 2 segun la puerta MVP del plan (pruebas de aceptacion F2, prueba E2E completa, revision de dependencias de seguridad y registro de pendientes).
+- **Fuera de alcance:** iniciar la Fase 3, publicar con usuarios reales, el despliegue en Koyeb.
+
+### DEC-025 - Cierre de la Fase 2 validado solo en SQLite
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado (opcion "Excepcion documentada" elegida por el responsable).
+- **Contexto/problema:** la prueba de aceptacion F2 #11 exige aplicar las migraciones desde cero y ejecutar los flujos criticos en SQLite y en PostgreSQL. PostgreSQL esta pausado por decision del responsable (DEC-003) y las migraciones lanzan un error explicito con `DB_TYPE=postgres`.
+- **Opciones analizadas:** reactivar PostgreSQL ahora; cerrar con excepcion documentada.
+- **Decision:** la Fase 2 se cierra validada solo en SQLite. La parte PostgreSQL de F2 #11 queda como requisito obligatorio, sin excepcion posible, antes de cualquier publicacion con usuarios reales o despliegue en produccion.
+- **Consecuencia:** no se declara el MVP listo para produccion; se declara funcionalmente cerrado en desarrollo local.
+- **Aprobacion del responsable:** confirmada.
+
+### DEC-026 - Aprobacion de I-13 y autorizacion de la Fase 3 por iteraciones
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado ("autorizo i 13, continua con la fase 3"; en la consulta posterior el responsable eligio ejecutar por iteraciones y hacer commit y push de I-13).
+- **Decision:** se aprueba I-13; la Fase 2 queda cerrada (validada en SQLite, DEC-025). Se autoriza la Fase 3 en tres iteraciones, con revision del responsable entre ellas: I-14 investigacion (F3-01 a F3-04), I-15 documentos (F3-05 a F3-09), I-16 cierre de la Fase 3 (solo verificacion). Queda autorizada ahora I-14; I-15 e I-16 se inician tras la revision de la anterior.
+- **Numeracion:** `docs/backlog-maestro.md` llama I-10, I-11 e I-12 a estas iteraciones; la numeracion real avanzo, por lo que se usan I-14, I-15 e I-16.
+- **Decisiones del responsable:** se piden con el selector de respuestas.
 
 ## Referencias vigentes
 
