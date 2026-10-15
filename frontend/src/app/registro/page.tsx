@@ -19,8 +19,10 @@ export default async function RegisterPage() {
 
   return (
     <AuthShell
-      title="Solicitar acceso"
-      description="Envía tu solicitud con tu correo institucional. Si la coordinación del semillero la aprueba, recibirás en ese correo una contraseña temporal para ingresar."
+      layout="centered"
+      title="Postulación al Semillero"
+      badge="Hoja de Vida de Estudiantes"
+      description="Completa tu resumen de hoja de vida institucional para postularte al semillero AlfaCode."
       footer={
         <>
           ¿Ya tienes cuenta?{" "}

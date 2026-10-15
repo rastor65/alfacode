@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.github
+frontend
+backend/data/*.sqlite*
+backend/data/outbox
+.env*
+*.log
+.DS_Store

@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <AuthShell
       title="Ingresar a AlfaCode HUB"
-      description="Accede con tu cuenta institucional del semillero."
+      description="Accede con tu cuenta institucional."
       footer={
         <>
           ¿Aún no tienes cuenta?{" "}

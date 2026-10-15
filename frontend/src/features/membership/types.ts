@@ -2,10 +2,32 @@ import type { RoleCode } from "@/lib/auth/roles";
 
 export type MembershipRequestStatus = "pending" | "approved" | "rejected";
 
+export type StudentCvData = {
+  fechaElaboracion?: string;
+  apellidos?: string;
+  nombres?: string;
+  fechaNacimiento?: string;
+  nacionalidad?: string;
+  documentoIdentidad?: string;
+  celular?: string;
+  telefonoFijo?: string;
+  facultad?: string;
+  programa?: string;
+  sede?: string;
+  semestreActual?: string;
+  promedioAcademico?: string;
+  experienciaInvestigativa?: string;
+  areasEstudio?: string;
+  lineasInvestigacion?: string;
+  publicaciones?: string;
+  practicasPasantias?: string;
+};
+
 export type MembershipRequestItem = {
   id: string;
   status: MembershipRequestStatus;
   message: string | null;
+  cvData?: StudentCvData | null;
   createdAt: string;
   user: { id: string; fullName: string; email: string; emailVerified: boolean };
   approvedRole: RoleCode | null;

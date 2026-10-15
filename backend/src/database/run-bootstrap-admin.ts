@@ -45,6 +45,35 @@ async function readLine(prompt: string, { secret = false } = {}) {
 }
 
 async function main() {
+  const envEmail = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim();
+  const envPassword = process.env.BOOTSTRAP_ADMIN_PASSWORD?.trim();
+  const envFullName = process.env.BOOTSTRAP_ADMIN_NAME?.trim() ?? "Administrador AlfaCode";
+
+  if (envEmail && envPassword) {
+    rl.close();
+    console.log(`Bootstrap no interactivo del primer administrador: ${envEmail}`);
+    await AppDataSource.initialize();
+
+    try {
+      const result = await bootstrapAdmin(
+        AppDataSource,
+        new PasswordService(),
+        { fullName: envFullName, email: envEmail, password: envPassword },
+        parseAllowedEmailDomains(process.env.ALLOWED_EMAIL_DOMAINS),
+      );
+      console.log(`Administrador creado con exito: ${result.email}`);
+    } catch (error) {
+      if (error instanceof BootstrapAdminError && error.message.includes("Ya existe un administrador")) {
+        console.log("Ya existe un administrador en la base de datos; omitiendo creacion.");
+        return;
+      }
+      throw error;
+    } finally {
+      await AppDataSource.destroy();
+    }
+    return;
+  }
+
   console.log("Creacion del primer administrador de AlfaCode HUB (solo puede hacerse una vez).");
 
   const fullName = await readLine("Nombre completo: ");

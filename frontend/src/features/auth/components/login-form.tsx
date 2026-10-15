@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export function LoginForm({ next }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
       {error && <Alert tone="error">{error}</Alert>}
       <FormField
         label="Correo institucional"
@@ -62,9 +62,9 @@ export function LoginForm({ next }: LoginFormProps) {
         autoComplete="email"
         inputMode="email"
         placeholder="nombre@uniguajira.edu.co"
+        icon={<Mail size={16} aria-hidden="true" />}
         required
         maxLength={254}
-        hint="Usa tu correo @uniguajira.edu.co."
         error={fieldErrors.email}
       />
       <FormField
@@ -72,11 +72,12 @@ export function LoginForm({ next }: LoginFormProps) {
         name="password"
         type="password"
         autoComplete="current-password"
+        icon={<Lock size={16} aria-hidden="true" />}
         required
         maxLength={256}
         error={fieldErrors.password}
       />
-      <p className="-mt-2 text-right text-sm">
+      <p className="-mt-1 text-right text-xs">
         <Link
           href="/recuperar-contrasena"
           className="text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline"
@@ -86,25 +87,20 @@ export function LoginForm({ next }: LoginFormProps) {
       </p>
       <Button
         type="submit"
-        className="w-full group relative overflow-hidden shadow-[0_0_25px_rgba(70,158,180,0.35)] hover:shadow-[0_0_35px_rgba(70,158,180,0.55)] transition-all"
+        className="w-full group relative overflow-hidden !text-[#ffffff] shadow-[0_0_25px_rgba(70,158,180,0.35)] hover:shadow-[0_0_35px_rgba(70,158,180,0.55)] transition-all font-semibold"
+        style={{ color: "#ffffff" }}
         pending={pending}
         pendingLabel="Ingresando…"
       >
-        <span className="flex items-center justify-center gap-2">
-          <span>Ingresar</span>
+        <span className="flex items-center justify-center gap-2 text-[#ffffff]">
+          <span className="text-[#ffffff]">Ingresar</span>
           <ArrowRight
             size={16}
-            className="transition-transform duration-200 group-hover:translate-x-1"
+            className="transition-transform duration-200 group-hover:translate-x-1 text-[#ffffff]"
             aria-hidden="true"
           />
         </span>
       </Button>
-
-      {/* Indicador de canal cifrado y seguridad */}
-      <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-slate-300">
-        <Shield size={12} className="text-cyan-400" aria-hidden="true" />
-        <span>Canal cifrado TLS 1.3 con RBAC institucional</span>
-      </div>
     </form>
   );
 }

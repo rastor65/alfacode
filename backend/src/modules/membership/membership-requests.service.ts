@@ -28,6 +28,7 @@ function toView(request: MembershipRequest, reviewer?: User | null) {
     id: request.id,
     status: request.status,
     message: request.message,
+    cvData: request.cvData ?? null,
     createdAt: request.createdAt,
     user: {
       id: request.user.id,

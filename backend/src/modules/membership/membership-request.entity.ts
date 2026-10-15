@@ -36,6 +36,9 @@ export class MembershipRequest {
   @Column({ type: "text", nullable: true })
   message!: string | null;
 
+  @Column({ name: "cv_data", type: "simple-json", nullable: true })
+  cvData!: Record<string, any> | null;
+
   @Column({ name: "approved_role_id", type: "varchar", length: 36, nullable: true })
   approvedRoleId!: string | null;
 

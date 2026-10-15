@@ -1,40 +1,61 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import * as THREE from "three";
+import { useTheme } from "@/components/theme/theme-provider";
+import { create3DAlfaCodeLogo } from "./alfacode-3d-logo";
+
+function subscribeSystemTheme(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getSystemThemeSnapshot() {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function getSystemThemeServerSnapshot() {
+  return true;
+}
 
 /**
- * Escena 3D WebGL de grado cinematográfico para el portal de acceso de AlfaCode HUB.
- * Renderiza un núcleo cuántico holográfico (geometría poliedral dual + anillos orbitales)
- * rodeado de una constelación neuronal de partículas y sinapsis dinámicas que reaccionan
- * suavemente al movimiento del cursor mediante interpolación física (damping).
- *
- * Optimizaciones:
- * - Detección de prefers-reduced-motion.
- * - Pausa del render loop en pestañas inactivas (Page Visibility API).
- * - Pixel ratio limitado a Math.min(devicePixelRatio, 2) para proteger GPUs móviles.
- * - Limpieza estricta de geometrías, materiales y texturas al desmontar.
+ * Escena 3D WebGL con el logotipo oficial tridimensional de AlfaCode:
+ * - Geometría extruida con biseles a partir de los trazos vectoriales originales.
+ * - Iluminación y materiales PBR adaptativos para modo claro y oscuro.
+ * - Anillo orbital holográfico y aura estelar sutil.
+ * - Reactivo al movimiento del cursor mediante interpolación suave (damping).
+ * - Compatible con prefers-reduced-motion y selector de tema en tiempo real.
  */
 export function Auth3DScene() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+  const systemIsDark = useSyncExternalStore(
+    subscribeSystemTheme,
+    getSystemThemeSnapshot,
+    getSystemThemeServerSnapshot,
+  );
+
+  const isLight = theme === "light" || (theme === "system" && !systemIsDark);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Respetar preferencias de accesibilidad del sistema
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Dimensiones
     let width = container.clientWidth;
     let height = container.clientHeight;
 
     // 1. Escena, Cámara y Renderer
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x050b14, 0.045);
 
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-    camera.position.set(0, 0, 11);
+    const initialAspect = width / (height || 1);
+    const camera = new THREE.PerspectiveCamera(45, initialAspect, 0.1, 100);
+    const initialZ = initialAspect < 1.15 ? 9.8 * (1.15 / Math.max(initialAspect, 0.65)) : 9.8;
+    camera.position.set(0, 0, initialZ);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -44,123 +65,163 @@ export function Auth3DScene() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = isLight ? 1.05 : 1.08;
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    renderer.domElement.style.maxWidth = "100%";
+    renderer.domElement.style.maxHeight = "100%";
+    renderer.domElement.style.display = "block";
+    renderer.domElement.style.touchAction = "pan-y";
     container.appendChild(renderer.domElement);
 
-    // 2. Luces
-    const ambientLight = new THREE.AmbientLight(0x061826, 3.5);
+    // 1.1 Entorno de iluminación física (Softbox Studio Reflection Map)
+    // Garantiza que los biseles PBR reflejen luz de estudio con tinte azul/cian suave, eliminando facetas grises
+    const envCanvas = document.createElement("canvas");
+    envCanvas.width = 128;
+    envCanvas.height = 64;
+    const envCtx = envCanvas.getContext("2d");
+    if (envCtx) {
+      const envGrad = envCtx.createLinearGradient(0, 0, 0, 64);
+      if (isLight) {
+        envGrad.addColorStop(0, "#0284c7");
+        envGrad.addColorStop(0.35, "#38bdf8");
+        envGrad.addColorStop(0.7, "#00b4d8");
+        envGrad.addColorStop(1, "#0369a1");
+      } else {
+        envGrad.addColorStop(0, "#083344");
+        envGrad.addColorStop(0.35, "#042f2e");
+        envGrad.addColorStop(0.7, "#02121e");
+        envGrad.addColorStop(1, "#01080e");
+      }
+      envCtx.fillStyle = envGrad;
+      envCtx.fillRect(0, 0, 128, 64);
+
+      // Softbox cenital celeste para reflejos lúcidos y saturados
+      const softbox = envCtx.createRadialGradient(64, 16, 0, 64, 16, 32);
+      softbox.addColorStop(0, isLight ? "rgba(56, 189, 248, 0.55)" : "rgba(34, 211, 238, 0.5)");
+      softbox.addColorStop(1, "rgba(255, 255, 255, 0)");
+      envCtx.fillStyle = softbox;
+      envCtx.fillRect(0, 0, 128, 64);
+    }
+    const envTexture = new THREE.CanvasTexture(envCanvas);
+    envTexture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = envTexture;
+
+    // 2. Luces de estudio cinematográficas calibradas para realzar el azul profundo y cian del isotipo
+    const ambientLight = new THREE.AmbientLight(isLight ? 0xbae6fd : 0x071e2e, isLight ? 1.1 : 2.2);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0x22d3ee, 8, 30);
-    pointLight.position.set(2, 3, 5);
-    scene.add(pointLight);
+    const keyLight = new THREE.DirectionalLight(0xffffff, isLight ? 1.6 : 3.0);
+    keyLight.position.set(4, 5, 6);
+    scene.add(keyLight);
 
-    const secondaryLight = new THREE.PointLight(0x0382a1, 5, 25);
-    secondaryLight.position.set(-3, -2, 4);
-    scene.add(secondaryLight);
+    const fillLight = new THREE.DirectionalLight(isLight ? 0x38bdf8 : 0x00e5ff, isLight ? 1.2 : 3.2);
+    fillLight.position.set(-5, 2, 4);
+    scene.add(fillLight);
 
-    // 3. Grupo Central (Núcleo Cuántico AlfaCode)
-    const coreGroup = new THREE.Group();
-    scene.add(coreGroup);
+    const cyanPointLight = new THREE.PointLight(isLight ? 0x00e5ff : 0x38bdf8, isLight ? 2.2 : 5.0, 30);
+    cyanPointLight.position.set(-3, 3, 5);
+    scene.add(cyanPointLight);
 
-    // 3.1. Núcleo Interno (Octaedro facetado con material estándar reflectivo)
-    const innerGeometry = new THREE.OctahedronGeometry(1.6, 0);
-    const innerMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0382a1,
-      emissive: 0x003d52,
+    const bottomGlowLight = new THREE.PointLight(0x0284c7, isLight ? 1.8 : 4.5, 20);
+    bottomGlowLight.position.set(0, -3.5, 2);
+    scene.add(bottomGlowLight);
+
+    // 3. Grupo Principal del Logotipo 3D Oficial
+    const logoGroup = new THREE.Group();
+    scene.add(logoGroup);
+
+    try {
+      const logoMeshGroup = create3DAlfaCodeLogo({ isLight });
+      logoGroup.add(logoMeshGroup);
+    } catch (err) {
+      console.error("Error al instanciar el logotipo 3D:", err);
+    }
+
+    // 4. Anillos Giroscópicos Holográficos PBR de Alta Definición y Balizas Satelitales Duales
+    const orbitRingGeometry = new THREE.TorusGeometry(3.0, isLight ? 0.02 : 0.022, 16, 120);
+    const orbitRingMaterial = new THREE.MeshStandardMaterial({
+      color: isLight ? 0x00b4d8 : 0x38bdf8,
       roughness: 0.15,
-      metalness: 0.9,
-      flatShading: true,
+      metalness: 0.7,
+      emissive: isLight ? 0x0284c7 : 0x0ea5e9,
+      emissiveIntensity: isLight ? 0.50 : 0.65,
       transparent: true,
-      opacity: 0.88,
+      opacity: isLight ? 0.85 : 0.75,
     });
-    const innerCore = new THREE.Mesh(innerGeometry, innerMaterial);
-    coreGroup.add(innerCore);
+    const orbitRing = new THREE.Mesh(orbitRingGeometry, orbitRingMaterial);
+    orbitRing.rotation.x = Math.PI / 3.2;
+    orbitRing.rotation.y = Math.PI / 6;
+    logoGroup.add(orbitRing);
 
-    // 3.2. Jaula Holográfica Externa (Icosaedro wireframe flotante)
-    const cageGeometry = new THREE.IcosahedronGeometry(2.4, 1);
-    const cageMaterial = new THREE.MeshBasicMaterial({
-      color: 0x67e8f9,
-      wireframe: true,
+    // Anillo exterior de contrapunto holográfico con radio optimizado para cero recorte lateral
+    const outerRingGeometry = new THREE.TorusGeometry(3.65, isLight ? 0.015 : 0.017, 16, 140);
+    const outerRingMaterial = new THREE.MeshStandardMaterial({
+      color: isLight ? 0x0284c7 : 0x06b6d4,
+      roughness: 0.2,
+      metalness: 0.7,
+      emissive: isLight ? 0x0369a1 : 0x0891b2,
+      emissiveIntensity: isLight ? 0.40 : 0.45,
       transparent: true,
-      opacity: 0.32,
+      opacity: isLight ? 0.75 : 0.6,
     });
-    const outerCage = new THREE.Mesh(cageGeometry, cageMaterial);
-    coreGroup.add(outerCage);
+    const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
+    outerRing.rotation.x = -Math.PI / 2.8;
+    outerRing.rotation.z = Math.PI / 4;
+    logoGroup.add(outerRing);
 
-    // 3.3. Anillos Giroscópicos Orbitales (Torus)
-    const ring1Geometry = new THREE.TorusGeometry(3.3, 0.025, 16, 120);
-    const ring1Material = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.55,
+    // Balizas satelitales orbitales duales
+    const beaconGeometry = new THREE.SphereGeometry(isLight ? 0.055 : 0.065, 16, 16);
+    const beaconMaterial = new THREE.MeshStandardMaterial({
+      color: isLight ? 0x38bdf8 : 0xe0f2fe,
+      emissive: isLight ? 0x00e5ff : 0x22d3ee,
+      emissiveIntensity: 0.95,
+      roughness: 0.1,
+      metalness: 0.8,
     });
-    const ring1 = new THREE.Mesh(ring1Geometry, ring1Material);
-    ring1.rotation.x = Math.PI / 3;
-    ring1.rotation.y = Math.PI / 6;
-    coreGroup.add(ring1);
+    const beacon1 = new THREE.Mesh(beaconGeometry, beaconMaterial);
+    const beacon2 = new THREE.Mesh(beaconGeometry, beaconMaterial);
+    logoGroup.add(beacon1);
+    logoGroup.add(beacon2);
 
-    const ring2Geometry = new THREE.TorusGeometry(2.9, 0.02, 16, 120);
-    const ring2Material = new THREE.MeshBasicMaterial({
-      color: 0x22d3ee,
-      transparent: true,
-      opacity: 0.45,
-    });
-    const ring2 = new THREE.Mesh(ring2Geometry, ring2Material);
-    ring2.rotation.x = -Math.PI / 4;
-    ring2.rotation.z = Math.PI / 5;
-    coreGroup.add(ring2);
-
-    // 4. Constelación Neuronal (Nodos + Conexiones Dinámicas)
-    const particleCount = width < 768 ? 90 : 160;
+    // 4.1. Campo estelar de partículas sutiles (limpio e invisible en modo claro para máxima pureza visual)
+    const particleCount = isLight ? 0 : 75;
     const particlePositions = new Float32Array(particleCount * 3);
-    const particleVelocities: THREE.Vector3[] = [];
-    const spread = 9;
+    const spread = 8;
 
     for (let i = 0; i < particleCount; i++) {
-      const x = (Math.random() - 0.5) * spread * 1.5;
-      const y = (Math.random() - 0.5) * spread;
-      const z = (Math.random() - 0.5) * spread * 0.8;
-
-      particlePositions[i * 3] = x;
-      particlePositions[i * 3 + 1] = y;
-      particlePositions[i * 3 + 2] = z;
-
-      particleVelocities.push(
-        new THREE.Vector3(
-          (Math.random() - 0.5) * 0.006,
-          (Math.random() - 0.5) * 0.006,
-          (Math.random() - 0.5) * 0.004,
-        ),
-      );
+      particlePositions[i * 3] = (Math.random() - 0.5) * spread;
+      particlePositions[i * 3 + 1] = (Math.random() - 0.5) * spread * 0.8;
+      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * spread * 0.6;
     }
 
     const particleGeometry = new THREE.BufferGeometry();
     particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
 
-    // Textura circular suave generada por Canvas
+    // Textura de partículas suave
     const canvas = document.createElement("canvas");
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 32;
+    canvas.height = 32;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
       gradient.addColorStop(0, "rgba(225, 254, 255, 1)");
-      gradient.addColorStop(0.3, "rgba(103, 232, 249, 0.8)");
-      gradient.addColorStop(0.7, "rgba(3, 130, 161, 0.2)");
+      gradient.addColorStop(0.4, "rgba(103, 232, 249, 0.7)");
       gradient.addColorStop(1, "rgba(3, 130, 161, 0)");
       ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.arc(32, 32, 32, 0, Math.PI * 2);
+      ctx.arc(16, 16, 16, 0, Math.PI * 2);
       ctx.fill();
     }
     const particleTexture = new THREE.CanvasTexture(canvas);
 
     const particleMaterial = new THREE.PointsMaterial({
-      color: 0xa5f3fc,
-      size: 0.28,
+      color: 0x94eefe,
+      size: 0.22,
       map: particleTexture,
       transparent: true,
-      opacity: 0.85,
+      opacity: isLight ? 0 : 0.65,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -168,31 +229,13 @@ export function Auth3DScene() {
     const particles = new THREE.Points(particleGeometry, particleMaterial);
     scene.add(particles);
 
-    // 4.1. Líneas de Conexión Neuronal (Synapses)
-    const maxConnections = particleCount * 4;
-    const linePositions = new Float32Array(maxConnections * 6);
-    const lineGeometry = new THREE.BufferGeometry();
-    lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0x0382a1,
-      transparent: true,
-      opacity: 0.22,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    scene.add(lines);
-
-    // 5. Interacción del Cursor (Parallax con Inercia)
+    // 5. Interacción del Cursor (Parallax con Amortiguación)
     let mouseX = 0;
     let mouseY = 0;
     let targetX = 0;
     let targetY = 0;
 
     const onPointerMove = (event: MouseEvent) => {
-      // Normalizar coordenadas (-1 a 1)
       const rect = container.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -207,7 +250,10 @@ export function Auth3DScene() {
       if (!container) return;
       width = container.clientWidth;
       height = container.clientHeight;
-      camera.aspect = width / height;
+      if (width === 0 || height === 0) return;
+      const currentAspect = width / height;
+      camera.aspect = currentAspect;
+      camera.position.z = currentAspect < 1.15 ? 9.8 * (1.15 / Math.max(currentAspect, 0.65)) : 9.8;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -218,135 +264,109 @@ export function Auth3DScene() {
 
     // 7. Loop de Animación
     let animationFrameId: number;
-    const clock = new THREE.Clock();
+    let lastTime = performance.now();
+    let elapsed = 0;
     let isTabVisible = !document.hidden;
 
     const onVisibilityChange = () => {
       isTabVisible = !document.hidden;
       if (isTabVisible) {
-        clock.getDelta(); // reset delta
+        lastTime = performance.now();
       }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
-
-    const connectionDistance = 2.4;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
       if (!isTabVisible) return;
 
-      const delta = clock.getDelta();
-      const elapsed = clock.getElapsedTime();
+      const now = performance.now();
+      const delta = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+      elapsed += delta;
 
-      // Suavizado del cursor (damping)
-      const motionScale = prefersReducedMotion ? 0.15 : 1;
-      targetX += (mouseX * 0.45 * motionScale - targetX) * 0.04;
-      targetY += (mouseY * 0.35 * motionScale - targetY) * 0.04;
+      // Suavizado del cursor (amortiguación progresiva)
+      const motionScale = prefersReducedMotion ? 0.1 : 1;
+      targetX += (mouseX * 0.5 * motionScale - targetX) * 0.05;
+      targetY += (mouseY * 0.4 * motionScale - targetY) * 0.05;
 
-      // Rotaciones de la estructura central
-      const rotSpeed = prefersReducedMotion ? 0.1 : 1;
-      innerCore.rotation.x += 0.25 * delta * rotSpeed;
-      innerCore.rotation.y += 0.4 * delta * rotSpeed;
+      // Oscilación armónica orgánica del logotipo (siempre de frente, sin invertirse)
+      const swayY = Math.sin(elapsed * 0.75) * 0.22;
+      const swayX = Math.cos(elapsed * 0.6) * 0.08;
 
-      outerCage.rotation.x -= 0.15 * delta * rotSpeed;
-      outerCage.rotation.y -= 0.2 * delta * rotSpeed;
+      logoGroup.position.y = Math.sin(elapsed * 1.4) * 0.16;
+      logoGroup.rotation.y = swayY + targetX * 0.45;
+      logoGroup.rotation.x = -0.04 + swayX - targetY * 0.35;
+      logoGroup.rotation.z = targetX * 0.12;
 
-      ring1.rotation.z += 0.35 * delta * rotSpeed;
-      ring2.rotation.z -= 0.4 * delta * rotSpeed;
+      // Rotación suave de los anillos orbitales
+      orbitRing.rotation.z += 0.22 * delta;
+      outerRing.rotation.z -= 0.16 * delta;
 
-      // Inclinación de la escena por cursor
-      coreGroup.rotation.y = targetX * 0.8 + Math.sin(elapsed * 0.5) * 0.1;
-      coreGroup.rotation.x = -targetY * 0.6 + Math.cos(elapsed * 0.4) * 0.08;
+      // Movimiento orbital de las balizas luminosas duales
+      const beaconAngle = elapsed * 1.1;
+      beacon1.position.x = Math.cos(beaconAngle) * 3.0;
+      beacon1.position.z = Math.sin(beaconAngle) * 3.0;
+      beacon1.position.y = Math.sin(beaconAngle * 2) * 0.4;
 
-      // Pulsación lumínica sutil
-      pointLight.intensity = 7 + Math.sin(elapsed * 2) * 2;
+      beacon2.position.x = Math.cos(beaconAngle + Math.PI) * 3.0;
+      beacon2.position.z = Math.sin(beaconAngle + Math.PI) * 3.0;
+      beacon2.position.y = -Math.sin(beaconAngle * 2) * 0.4;
 
-      // Movimiento de partículas
-      const positions = particleGeometry.attributes.position.array as Float32Array;
-      const lPositions = lineGeometry.attributes.position.array as Float32Array;
-      let lineIndex = 0;
+      // Luz puntual dinámica que hace deslizar brillos metálicos sobre los biseles
+      cyanPointLight.position.x = Math.sin(elapsed * 0.8) * 3.5 - 1.5;
+      cyanPointLight.position.y = Math.cos(elapsed * 0.6) * 2 + 2.5;
 
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        const v = particleVelocities[i];
-
-        if (!prefersReducedMotion) {
-          positions[i3] += v.x;
-          positions[i3 + 1] += v.y;
-          positions[i3 + 2] += v.z;
-
-          // Rebotar o envolver suavemente en los límites
-          if (Math.abs(positions[i3]) > spread * 0.75) v.x *= -1;
-          if (Math.abs(positions[i3 + 1]) > spread * 0.55) v.y *= -1;
-          if (Math.abs(positions[i3 + 2]) > spread * 0.45) v.z *= -1;
-        }
-
-        // Conectar con nodos cercanos para formar la red
-        for (let j = i + 1; j < particleCount; j++) {
-          const j3 = j * 3;
-          const dx = positions[i3] - positions[j3];
-          const dy = positions[i3 + 1] - positions[j3 + 1];
-          const dz = positions[i3 + 2] - positions[j3 + 2];
-          const distSq = dx * dx + dy * dy + dz * dz;
-
-          if (distSq < connectionDistance * connectionDistance && lineIndex < maxConnections * 6 - 6) {
-            lPositions[lineIndex++] = positions[i3];
-            lPositions[lineIndex++] = positions[i3 + 1];
-            lPositions[lineIndex++] = positions[i3 + 2];
-
-            lPositions[lineIndex++] = positions[j3];
-            lPositions[lineIndex++] = positions[j3 + 1];
-            lPositions[lineIndex++] = positions[j3 + 2];
-          }
-        }
-      }
-
-      particleGeometry.attributes.position.needsUpdate = true;
-
-      // Limpiar el resto del buffer de líneas
-      for (let k = lineIndex; k < linePositions.length; k++) {
-        lPositions[k] = 0;
-      }
-      lineGeometry.attributes.position.needsUpdate = true;
+      // Rotación sutil del campo estelar
+      particles.rotation.y = elapsed * 0.02;
 
       renderer.render(scene, camera);
     };
 
     animate();
 
-    // 8. Limpieza estricta
+    // 8. Limpieza estricta de recursos
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       resizeObserver.disconnect();
 
-      innerGeometry.dispose();
-      innerMaterial.dispose();
-      cageGeometry.dispose();
-      cageMaterial.dispose();
-      ring1Geometry.dispose();
-      ring1Material.dispose();
-      ring2Geometry.dispose();
-      ring2Material.dispose();
+      orbitRingGeometry.dispose();
+      orbitRingMaterial.dispose();
+      outerRingGeometry.dispose();
+      outerRingMaterial.dispose();
+      beaconGeometry.dispose();
+      beaconMaterial.dispose();
       particleGeometry.dispose();
       particleMaterial.dispose();
       particleTexture.dispose();
-      lineGeometry.dispose();
-      lineMaterial.dispose();
+      envTexture.dispose();
+
+      // Recorrer y liberar geometrías y materiales del logo
+      logoGroup.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry?.dispose();
+          if (Array.isArray(child.material)) {
+            child.material.forEach((m) => m.dispose());
+          } else {
+            child.material?.dispose();
+          }
+        }
+      });
 
       renderer.dispose();
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, []);
+  }, [isLight]);
 
   return (
     <div
       ref={containerRef}
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      className="relative size-full max-w-full flex items-center justify-center overflow-hidden"
       aria-hidden="true"
     />
   );
