@@ -1,6 +1,7 @@
-// Prueba E2E del cierre de la Fase 2 (pruebas de aceptacion F2 #9, #11 en SQLite y #12).
-// Usa una base SQLite y un outbox temporales y el puerto 4100; no toca la base local.
-// Requiere el backend compilado (`npm run backend:build`).
+// Prueba E2E del HUB: cierre de la Fase 2 (pruebas F2 #9, #11 en SQLite y #12) e investigacion
+// de la Fase 3 (I-14), por API y con las paginas renderizadas por Next.js.
+// Usa una base SQLite y un outbox temporales y los puertos 4100 (API) y 3100 (web); no toca la
+// base local. Requiere backend y frontend compilados (`npm run e2e` los compila).
 import { spawn, spawnSync } from "node:child_process";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -12,7 +13,8 @@ const backendDir = join(root, "backend");
 const isWindows = process.platform === "win32";
 const PORT = 4100;
 const API = `http://localhost:${PORT}/api/v1`;
-const ORIGIN = "http://localhost:3100";
+const WEB_PORT = 3100;
+const ORIGIN = `http://localhost:${WEB_PORT}`;
 
 const workDir = await mkdtemp(join(tmpdir(), "alfacode-e2e-"));
 const outboxDir = join(workDir, "outbox");
@@ -51,6 +53,45 @@ function runBackendScript(script, extraEnv = {}) {
 }
 
 let server;
+let web;
+
+/**
+ * Compilacion de produccion del frontend (`npm run frontend:build`) apuntando a la API temporal.
+ * No se usa `next dev`: Next.js no admite dos servidores de desarrollo en la misma carpeta y el
+ * de quien desarrolla puede estar abierto. Las paginas leen el destino de la API al ejecutarse.
+ */
+async function startWeb() {
+  web = spawn(process.execPath, ["server/index.mjs"], {
+    cwd: join(root, "frontend"),
+    env: { ...process.env, PORT: String(WEB_PORT), API_PROXY_TARGET: `http://localhost:${PORT}`, NODE_ENV: "production" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let logs = "";
+  web.stdout.on("data", (data) => (logs += data));
+  web.stderr.on("data", (data) => (logs += data));
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 120_000) {
+    try {
+      if ((await fetch(`${ORIGIN}/ingresar`)).ok) return;
+    } catch {
+      // aun no escucha
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`El frontend no arranco:\n${logs}`);
+}
+
+async function stopProcess(child) {
+  if (!child || child.exitCode !== null) return;
+  const exited = new Promise((r) => child.once("exit", r));
+  if (isWindows) {
+    spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+  } else {
+    child.kill("SIGTERM");
+  }
+  await exited;
+}
+
 async function startServer() {
   server = spawn(process.execPath, ["dist/main.js"], { cwd: backendDir, env, stdio: ["ignore", "pipe", "pipe"] });
   let logs = "";
@@ -69,14 +110,7 @@ async function startServer() {
 }
 
 async function stopServer() {
-  if (!server || server.exitCode !== null) return;
-  const exited = new Promise((r) => server.once("exit", r));
-  if (isWindows) {
-    spawnSync("taskkill", ["/pid", String(server.pid), "/T", "/F"], { stdio: "ignore" });
-  } else {
-    server.kill("SIGTERM");
-  }
-  await exited;
+  await stopProcess(server);
 }
 
 /** Cliente con cookies y CSRF propios; cada uno simula una IP distinta tras el proxy local. */
@@ -111,6 +145,14 @@ function client() {
         csrf = json.csrfToken;
       }
       return { status: response.status, json };
+    },
+    /** Pagina del frontend renderizada en el servidor con la sesion de este cliente. */
+    async page(path) {
+      const response = await fetch(`${ORIGIN}${path}`, {
+        headers: { Cookie: cookies.join("; "), "X-Forwarded-For": ip },
+        redirect: "manual",
+      });
+      return { status: response.status, html: await response.text() };
     },
   };
 }
@@ -273,16 +315,70 @@ async function main() {
   await outsider.login(outsiderEmail, "Ajena-E2E-clave-larga-1");
   const peek = await outsider.call("GET", `/projects/${projectId}/sprints/${sprintId}`);
   check("un ajeno recibe 404 al consultar el historial por ID (F2 #7)", peek.status === 404, peek);
+
+  // Fase 3, I-14: investigacion (F3-01 a F3-04).
+  const lineName = "Ingeniería de software educativo";
+  const line = await coord.call("POST", "/research-lines", { name: lineName, objectives: "Objetivos de la linea" });
+  check("la coordinacion crea una linea de investigacion (F3-01)", ok(line), line);
+  check(
+    "un estudiante no gestiona lineas",
+    (await student.call("POST", "/research-lines", { name: "Linea no autorizada" })).status === 403,
+  );
+  const linked = await coord.call("POST", `/projects/${projectId}/research-lines`, { researchLineId: line.json.id });
+  check("la linea se asocia al proyecto (F3-02)", ok(linked) && linked.json.items.length === 1, linked);
+  const profileBefore = await student.call("GET", `/projects/${projectId}/research-profile`);
+  check("el proyecto funciona sin ficha (F3-03)", profileBefore.status === 200 && profileBefore.json.profile === null, profileBefore);
+  const savedProfile = await coord.call("PUT", `/projects/${projectId}/research-profile`, {
+    problem: "Baja retencion en cursos de programacion",
+    question: "Que estrategias mejoran la retencion?",
+  });
+  check("el lider guarda la ficha investigativa", ok(savedProfile) && savedProfile.json.profile.problem.startsWith("Baja"), savedProfile);
+  const result = await coord.call("POST", `/projects/${projectId}/research-results`, {
+    title: "Prototipo de tutor adaptativo",
+    type: "prototype",
+    resultDate: "2026-10-10",
+    participantIds: [studentId],
+  });
+  check("el lider registra un resultado con participantes (F3-04)", ok(result) && result.json.participants.length === 1, result);
+  const studentResults = await student.call("GET", `/projects/${projectId}/research-results`);
+  check(
+    "el colaborador consulta los resultados pero no los gestiona",
+    studentResults.json.items.length === 1 && studentResults.json.permissions.canManageResults === false,
+    studentResults.json,
+  );
+  check(
+    "un ajeno no consulta la investigacion del proyecto",
+    (await outsider.call("GET", `/projects/${projectId}/research-results`)).status === 404,
+  );
+
+  // Paginas reales del frontend (SSR a traves del servidor de Next.js).
+  await startWeb();
+  const catalog = await student.page("/hub/investigacion");
+  check("la pagina de lineas muestra la linea", catalog.status === 200 && catalog.html.includes(lineName), catalog.status);
+  const researchPage = await student.page(`/hub/proyectos/${projectId}/investigacion`);
+  check(
+    "la pestana de investigacion muestra linea, ficha y resultado",
+    researchPage.status === 200 &&
+      researchPage.html.includes(lineName) &&
+      researchPage.html.includes("Baja retencion en cursos de programacion") &&
+      researchPage.html.includes("Prototipo de tutor adaptativo"),
+    researchPage.status,
+  );
+  const foreignPage = await outsider.page(`/hub/proyectos/${projectId}/investigacion`);
+  check("un ajeno ve la pagina de no encontrado", foreignPage.status === 404, foreignPage.status);
+  const anonymousPage = await anon.page("/hub/investigacion");
+  check("sin sesion se redirige al ingreso", [302, 303, 307].includes(anonymousPage.status), anonymousPage.status);
 }
 
 try {
   await main();
-  console.log(`\nE2E MVP: ${passed} comprobaciones OK`);
+  console.log(`\nE2E: ${passed} comprobaciones OK`);
 } catch (error) {
   console.error(`\n${error instanceof Error ? error.message : error}`);
   console.error(`(${passed} comprobaciones OK antes del fallo)`);
   process.exitCode = 1;
 } finally {
+  await stopProcess(web);
   await stopServer();
   await rm(workDir, { recursive: true, force: true });
 }

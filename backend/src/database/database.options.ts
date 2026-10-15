@@ -12,6 +12,12 @@ import { ProjectMember } from "../modules/projects/project-member.entity";
 import { Project } from "../modules/projects/project.entity";
 import { Role } from "../modules/roles/role.entity";
 import { Sprint, SprintClosureItem } from "../modules/sprints/sprint.entity";
+import {
+  ProjectResearchLine,
+  ProjectResearchProfile,
+  ResearchLine,
+  ResearchResult,
+} from "../modules/research/research.entities";
 import { Task } from "../modules/tasks/task.entity";
 import { User } from "../modules/users/user.entity";
 import { SchemaBootstrap1728690000000 } from "./migrations/1728690000000-schema-bootstrap";
@@ -23,6 +29,7 @@ import { ProjectsAndTeams1728740000000 } from "./migrations/1728740000000-projec
 import { MembershipRequestCv1728750000000 } from "./migrations/1728750000000-membership-request-cv";
 import { Tasks1728750000000 } from "./migrations/1728750000000-tasks";
 import { Sprints1728760000000 } from "./migrations/1728760000000-sprints";
+import { Research1728770000000 } from "./migrations/1728770000000-research";
 
 export const entities = [
   User,
@@ -37,6 +44,10 @@ export const entities = [
   Task,
   Sprint,
   SprintClosureItem,
+  ResearchLine,
+  ProjectResearchLine,
+  ProjectResearchProfile,
+  ResearchResult,
 ];
 
 export const migrations = [
@@ -49,6 +60,7 @@ export const migrations = [
   MembershipRequestCv1728750000000,
   Tasks1728750000000,
   Sprints1728760000000,
+  Research1728770000000,
 ];
 
 function loadEnvFile(filePath: string) {

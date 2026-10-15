@@ -63,6 +63,15 @@ const MESSAGES: Record<string, string> = {
   SPRINT_CLOSED: "El sprint ya finalizó; sus tareas forman parte del historial.",
   TASK_NOT_IN_BACKLOG: "Alguna tarea ya no está en el backlog. Actualiza la lista e intenta de nuevo.",
   INVALID_SPRINT_TRANSITION: "Ese cambio de estado del sprint no está permitido.",
+  RESEARCH_LINES_FORBIDDEN: "Solo la coordinación gestiona las líneas de investigación.",
+  RESEARCH_LINE_NOT_FOUND: "La línea de investigación ya no existe o no está asociada al proyecto.",
+  RESEARCH_LINE_NAME_TAKEN: "Ya existe una línea de investigación con ese nombre.",
+  RESEARCH_LINE_IN_USE: "La línea tiene proyectos asociados: desactívala en lugar de eliminarla.",
+  RESEARCH_LINE_INACTIVE: "La línea está inactiva y no se puede asociar a proyectos.",
+  RESEARCH_LINE_ALREADY_LINKED: "La línea ya está asociada al proyecto.",
+  RESPONSIBLE_NOT_ACTIVE: "La persona responsable debe ser un integrante activo.",
+  RESEARCH_RESULT_NOT_FOUND: "El resultado ya no existe en este proyecto.",
+  PARTICIPANT_NOT_PROJECT_MEMBER: "Los participantes deben ser integrantes del proyecto.",
   [NETWORK_ERROR_CODE]: "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.",
 };
 

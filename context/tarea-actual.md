@@ -1,11 +1,12 @@
-# Tarea actual - Fase 3, I-14 (investigacion) autorizada
+# Tarea actual - Fase 3, I-15 (documentos) autorizada
 
 ## Estado
 
 **Fase:** 3 - Investigacion y documentos. Fase 2 cerrada y aprobada (I-13, DEC-026), validada solo en SQLite (DEC-025).
-**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026).
+**Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026), I-14 y DEC-027 (DEC-028).
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
-**Trabajo actualmente autorizado:** I-14 (F3-01 a F3-04: lineas de investigacion, asociacion con proyectos, ficha investigativa, resultados). I-15 e I-16 tras la revision de I-14 (DEC-026).
+**I-14 (F3-01 a F3-04):** aprobada (DEC-028).
+**Trabajo actualmente autorizado:** I-15 (F3-05 a F3-09: documentos). I-16 (cierre de la Fase 3) tras la revision de I-15 (DEC-026).
 
 ## Fases de I-08
 
@@ -133,7 +134,7 @@
 
 ### Resultado tecnico verificado de I-13
 
-- Nuevo `scripts/e2e-mvp.mjs` y script raiz `npm run e2e:mvp`: base, outbox y puerto (4100) temporales; migraciones desde cero, reversion completa y reaplicacion; admin por bootstrap no interactivo; invitacion y aceptacion; registro con Hoja de Vida, aprobacion, contrasena temporal y cambio obligatorio; proyecto agil, equipo, tareas, sprint, tablero, reinicio del backend, cierre, historial, progreso y acceso ajeno. Ejecutado dos veces: 32/32 en ambas; temporales eliminados y puerto liberado.
+- Nuevo `scripts/e2e-mvp.mjs` y script raiz `npm run e2e:mvp` (renombrados en I-14 a `scripts/e2e.mjs` y `npm run e2e`): base, outbox y puerto (4100) temporales; migraciones desde cero, reversion completa y reaplicacion; admin por bootstrap no interactivo; invitacion y aceptacion; registro con Hoja de Vida, aprobacion, contrasena temporal y cambio obligatorio; proyecto agil, equipo, tareas, sprint, tablero, reinicio del backend, cierre, historial, progreso y acceso ajeno. Ejecutado dos veces: 32/32 en ambas; temporales eliminados y puerto liberado.
 - `npm audit`: backend 0 (todas y produccion); frontend 0 en produccion y 5 altas solo de desarrollo en la cadena de `eslint-config-next` (`braces`/`micromatch`/`fast-glob`), las mismas registradas en I-08.1; la correccion automatica degrada a `eslint-config-next@14` y no se aplico.
 - `register-form.tsx`: eliminadas las 3 advertencias de lint (import y setters sin uso), sin cambio de comportamiento.
 - `npm run verify` OK (55 + 182 pruebas, lint sin advertencias).
@@ -149,9 +150,30 @@
 - **Dependencias de desarrollo:** 5 vulnerabilidades en la cadena de ESLint, sin correccion compatible por ahora.
 - **Hoja de Vida:** la migracion de `cv_data` tampoco soporta PostgreSQL (como las demas).
 
+## I-14 (Fase 3: investigacion, F3-01 a F3-04)
+
+**Estado:** aprobada (DEC-028). Decisiones en DEC-027.
+
+| Parte | Contenido | Estado |
+|---|---|---|
+| Backend | Migracion `Research1728770000000` (`research_lines`, `project_research_lines`, `project_research_profiles`, `research_results`, `research_result_participants`); modulo `research`; `GET/POST /research-lines`, `GET/PATCH/DELETE /research-lines/:id`; `GET/POST /projects/:id/research-lines`, `DELETE /projects/:id/research-lines/:lineId`; `GET/PUT /projects/:id/research-profile`; `GET/POST /projects/:id/research-results`, `GET/PATCH/DELETE /projects/:id/research-results/:resultId`; auditoria | Verificada tecnicamente |
+| Frontend | `/hub/investigacion` (catalogo de lineas) y pestana «Investigacion» del proyecto (lineas, ficha, resultados); menu lateral; enlace desde el detalle del proyecto | Verificada tecnicamente |
+
+### Resultado tecnico verificado de I-14
+
+- `npm --prefix backend test`: 201 pruebas OK (19 nuevas: politica, gestion de lineas solo por autoridades, consulta por cualquier integrante, nombres duplicados con tildes y mayusculas, responsable activo, eliminar solo sin proyectos, asociacion multiple sin duplicados, lineas inactivas o inexistentes, colaborador sin gestion, ajeno 404 y lineas sin proyectos ajenos, proyecto sin ficha, ficha unica, resultados sin crear tareas, participantes del equipo y conservacion tras salir, resultado de otro proyecto 404, proyecto finalizado en solo lectura, auditoria).
+- Tres mutaciones de control detectadas y revertidas: asociar lineas inactivas, participantes ajenos al proyecto, resultado buscado sin su proyecto.
+- Una prueba fallo de forma intermitente en `npm run verify` por orden inestable (dos asociaciones en el mismo segundo); se corrigio ordenando las lineas del proyecto por nombre y la prueba de investigacion paso tres veces seguidas.
+- `npm --prefix frontend test`: 59 pruebas OK (4 nuevas); lint y typecheck OK.
+- `npm run verify` OK (59 + 201, sin migraciones pendientes).
+- `npm run e2e`: 44/44 (32 de la Fase 2 + 8 de investigacion por API + 4 de paginas reales: catalogo, pestana del proyecto con linea, ficha y resultado, 404 para ajenos y redireccion sin sesion). Temporales eliminados y puertos 3100/4100 liberados; el servidor `next dev` del responsable en el puerto 3000 no se toco.
+- Base local: respaldo `backend/data/alfacode-hub.backup-2026-10-15-i14.sqlite`; `migration:run`, `revert` y `run` de `Research1728770000000`; sin pendientes.
+- **No verificado por el agente:** la interaccion en un navegador real (modales, selectores, casillas de participantes).
+
 ## No realizar sin nueva autorizacion
 
-- No iniciar I-15 (documentos) ni publicar con usuarios reales sin autorizacion.
+- No iniciar I-16 ni publicar con usuarios reales sin autorizacion.
+- No elegir proveedor de almacenamiento de produccion ni crear credenciales sin autorizacion (F3-06).
 - No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.
 - No crear datos reales de personas.

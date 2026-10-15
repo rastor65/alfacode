@@ -262,6 +262,26 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Numeracion:** `docs/backlog-maestro.md` llama I-10, I-11 e I-12 a estas iteraciones; la numeracion real avanzo, por lo que se usan I-14, I-15 e I-16.
 - **Decisiones del responsable:** se piden con el selector de respuestas.
 
+### DEC-027 - Decisiones de implementacion de I-14 (investigacion)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aplicada en I-14; pendiente de revision del responsable.
+- **Lineas (F3-01):** las crean, editan, desactivan y eliminan solo `admin` y `coordinator`; cualquier integrante activo las consulta. El nombre es unico sin distinguir mayusculas, tildes ni espacios repetidos (columna `name_normalized`; `lower()` de SQLite no cubre tildes). Una linea con proyectos no se elimina (409 `RESEARCH_LINE_IN_USE`): se desactiva. Una linea inactiva sigue en los proyectos que ya la tenian, pero no se asocia a otros. El responsable es opcional y debe ser un integrante activo de cualquier rol.
+- **Detalle de una linea:** muestra solo los proyectos que la persona puede ver (autoridades: todos; demas: aquellos en los que participa) y el total de proyectos asociados.
+- **Informacion investigativa del proyecto (F3-02 a F3-04):** la gestiona quien gestiona el proyecto (autoridad o lider) mientras el proyecto no este finalizado; los colaboradores la consultan; un ajeno recibe 404. Es el mismo criterio que las tareas (DEC-021).
+- **Ficha (F3-03):** opcional para cualquier tipo de proyecto, una por proyecto (clave primaria `project_id`), con los campos del plan: problema, pregunta, justificacion, metodologia y notas. Se guarda con `PUT` (reemplazo completo). Los objetivos y las metodologias detalladas (enfoque, tecnicas, instrumentos) del documento de requisitos no se agregaron porque el plan no los incluye.
+- **Resultados (F3-04):** tipo segun el documento de requisitos (hallazgo, prototipo, aporte metodologico, otro), fecha opcional, referencias documentales en texto libre (los archivos se vinculan en I-15) y participantes. Los participantes deben ser integrantes del proyecto; quien ya figuraba en un resultado se conserva aunque haya salido del equipo, para no reescribir la autoria. Se pueden eliminar (auditado).
+- **Fuera de alcance:** el seguimiento investigativo (avances, dificultades) del documento de requisitos (seccion 4.5), que el plan no incluye en F3.
+- **Interfaz:** `/hub/investigacion` (catalogo con busqueda y filtro por estado; alta, detalle, edicion y eliminacion en modales) y la pestana «Investigacion» de cada proyecto (`/hub/proyectos/[id]/investigacion`) con lineas, ficha y resultados.
+- **Prueba E2E:** `scripts/e2e-mvp.mjs` pasa a `scripts/e2e.mjs` (`npm run e2e`), con la parte de investigacion y las paginas reales de Next.js en el puerto 3100 usando la compilacion de produccion (Next.js no admite un segundo `next dev` en la misma carpeta).
+- **Aprobacion del responsable:** confirmada en DEC-028.
+
+### DEC-028 - Aprobacion de I-14 y autorizacion de I-15 (documentos)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado (opcion "Aprobar, commit y seguir" del selector).
+- **Decision:** se aprueban I-14 y DEC-027; commit y push a `dev`; se autoriza I-15 (F3-05 a F3-09: documentos, almacenamiento, seguridad y permisos documentales). Las decisiones abiertas de documentos se piden al responsable antes de implementarlas.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

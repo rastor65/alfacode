@@ -9,14 +9,18 @@ import { METHODOLOGY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS, type Pr
 type ProjectHeaderProps = {
   project: ProjectDetail;
   eyebrow: string;
-  current: "tareas" | "sprints";
+  current: "tareas" | "sprints" | "investigacion";
 };
 
-/** Encabezado de las vistas de un proyecto; la pestana de sprints solo existe en modalidad agil (F2-20). */
+/**
+ * Encabezado de las vistas de un proyecto; la pestana de sprints solo existe en modalidad agil
+ * (F2-20). La de investigacion existe en todos: la ficha es opcional (F3-03).
+ */
 export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps) {
   const tabs = [
     { key: "tareas", label: project.methodology === "agile" ? "Tablero y backlog" : "Tareas", href: `/hub/proyectos/${project.id}/tareas` },
     ...(project.methodology === "agile" ? [{ key: "sprints", label: "Sprints", href: `/hub/proyectos/${project.id}/sprints` }] : []),
+    { key: "investigacion", label: "Investigación", href: `/hub/proyectos/${project.id}/investigacion` },
   ];
 
   return (

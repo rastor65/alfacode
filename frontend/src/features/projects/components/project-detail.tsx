@@ -1,6 +1,6 @@
 "use client";
 
-import { KanbanSquare, Pencil, Timer, Trash2, UserPlus } from "lucide-react";
+import { FlaskConical, KanbanSquare, Pencil, Timer, Trash2, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useId, useState } from "react";
 
@@ -176,6 +176,10 @@ export function ProjectDetailContent({ project, onChanged }: ProjectDetailConten
               Ver sprints
             </Link>
           )}
+          <Link href={`/hub/proyectos/${project.id}/investigacion`} className={buttonClassName("neutral", "min-h-10")}>
+            <FlaskConical size={15} className="mr-2" aria-hidden="true" />
+            Ver investigación
+          </Link>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { MembershipModule } from "./modules/membership/membership.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
+import { ResearchModule } from "./modules/research/research.module";
 import { RolesModule } from "./modules/roles/roles.module";
 import { SprintsModule } from "./modules/sprints/sprints.module";
 import { TasksModule } from "./modules/tasks/tasks.module";
@@ -32,6 +33,7 @@ import { UsersModule } from "./modules/users/users.module";
     ProjectsModule,
     TasksModule,
     SprintsModule,
+    ResearchModule,
   ],
 })
 export class AppModule {}
