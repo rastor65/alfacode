@@ -6,7 +6,8 @@
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022).
 **I-11:** aprobada (DEC-022).
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
-**I-12:** autorizada (DEC-022); implementada y verificada tecnicamente, sin commit.
+**I-12:** autorizada (DEC-022); implementada y verificada tecnicamente, registrada en el commit `e1b022a` en `dev`; pendiente de aprobacion.
+**Registro con Hoja de Vida (2026-10-14, trabajo hecho en `main` e integrado en `dev` con `04bb40d`):** implementado y verificado tecnicamente; pendiente de aprobacion.
 **Trabajo actualmente autorizado:** ninguno adicional tras cerrar I-12.
 
 ## Fases de I-08
