@@ -11,6 +11,7 @@ import {
   isProjectEditable,
   loadProjectWithAccess,
 } from "../projects/project-access";
+import { DocumentRecord } from "../documents/document.entity";
 import { ProjectMember } from "../projects/project-member.entity";
 import type { ProjectAccess } from "../projects/project-policy";
 import type { Project } from "../projects/project.entity";
@@ -261,6 +262,8 @@ export class ProjectResearchService {
       await this.loadManageable(manager, actor, projectId);
       const result = await this.findResult(manager, projectId, resultId);
 
+      // Los documentos vinculados siguen en el proyecto, sin el resultado (DEC-030).
+      await manager.update(DocumentRecord, { researchResultId: resultId }, { researchResultId: null });
       await manager.delete(ResearchResult, { id: resultId });
       await recordAudit(manager, {
         actorUserId: actor.id,

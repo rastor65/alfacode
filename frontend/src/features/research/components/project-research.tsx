@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useId, useState } from "react";
@@ -47,15 +47,17 @@ type ProjectResearchProps = {
   lines: ProjectLines;
   profile: ProjectProfile;
   results: ResultList;
+  /** Documentos del proyecto que la persona puede ver y que estan vinculados a un resultado. */
+  resultDocuments?: { id: string; title: string; resultId: string }[];
 };
 
 /** Informacion investigativa de un proyecto (F3-02 a F3-04, F3-09). */
-export function ProjectResearch({ projectId, researchProject, team, lines, profile, results }: ProjectResearchProps) {
+export function ProjectResearch({ projectId, researchProject, team, lines, profile, results, resultDocuments = [] }: ProjectResearchProps) {
   return (
     <div className="space-y-8">
       <LinesSection projectId={projectId} lines={lines} />
       <ProfileSection projectId={projectId} profile={profile} researchProject={researchProject} />
-      <ResultsSection projectId={projectId} team={team} results={results} />
+      <ResultsSection projectId={projectId} team={team} results={results} documents={resultDocuments} />
     </div>
   );
 }
@@ -284,7 +286,17 @@ function ProfileSection({ projectId, profile, researchProject }: { projectId: st
 
 // ------------------------------------------------------------------ resultados (F3-04)
 
-function ResultsSection({ projectId, team, results }: { projectId: string; team: PersonRef[]; results: ResultList }) {
+function ResultsSection({
+  projectId,
+  team,
+  results,
+  documents,
+}: {
+  projectId: string;
+  team: PersonRef[];
+  results: ResultList;
+  documents: { id: string; title: string; resultId: string }[];
+}) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ResearchResult | null>(null);
@@ -366,6 +378,20 @@ function ResultsSection({ projectId, team, results }: { projectId: string; team:
                   <span className="font-medium text-hub-soft">Referencias: </span>
                   {result.references}
                 </p>
+              )}
+              {documents.some((document) => document.resultId === result.id) && (
+                <ul className="mt-2 space-y-1">
+                  {documents
+                    .filter((document) => document.resultId === result.id)
+                    .map((document) => (
+                      <li key={document.id} className="flex items-center gap-1.5 text-sm">
+                        <FileText size={14} className="shrink-0 text-hub-muted" aria-hidden="true" />
+                        <a href={`/api/v1/documents/${document.id}/download`} className="truncate text-hub-accent underline-offset-4 hover:underline">
+                          {document.title}
+                        </a>
+                      </li>
+                    ))}
+                </ul>
               )}
               {result.participants.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-1.5">

@@ -114,7 +114,7 @@ export function ResultForm({ projectId, team, result, onSaved, onCancel }: Resul
         name="references"
         maxLength={5000}
         rows={2}
-        hint="Informes, enlaces o documentos de respaldo. Los archivos se podrán adjuntar con el módulo de documentos."
+        hint="Informes o enlaces de respaldo. Los archivos se suben en la pestaña «Documentos» y se vinculan al resultado."
         defaultValue={result?.references ?? ""}
         error={fieldErrors.references}
       />

@@ -282,6 +282,31 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Estado:** aprobado (opcion "Aprobar, commit y seguir" del selector).
 - **Decision:** se aprueban I-14 y DEC-027; commit y push a `dev`; se autoriza I-15 (F3-05 a F3-09: documentos, almacenamiento, seguridad y permisos documentales). Las decisiones abiertas de documentos se piden al responsable antes de implementarlas.
 
+### DEC-029 - Decisiones del responsable para documentos (I-15)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado (respuestas del selector).
+- **Formatos:** PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PNG, JPEG y WebP; se validan extension y contenido real. Limite inicial de 20 MiB configurable (F3-07).
+- **Documentos privados:** los ven quien los subio, las personas autorizadas expresamente y tambien `admin` y `coordinator`. Es la regla justificada que pide la seccion 7.5 del documento de requisitos ("los permisos de administrador no deberan implicar automaticamente acceso irrestricto a documentos sensibles sin una regla justificada"); la razon es poder administrar documentos de personas que salgan del semillero.
+- **Ambito:** documentos de un proyecto (opcionalmente de uno de sus resultados) y un repositorio institucional sin proyecto (actas, certificados, formatos) gestionado por la coordinacion. Las actividades se agregaran en la Fase 4.
+- **Almacenamiento de produccion:** se decide despues. Se implementa `StorageService` con adaptador de disco local para desarrollo; en produccion el modulo documental queda deshabilitado (503) hasta elegir proveedor y credenciales con autorizacion. No se usa el disco efimero del servidor.
+
+### DEC-030 - Decisiones de implementacion de I-15 (documentos)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aplicada en I-15; pendiente de revision del responsable.
+- **Permisos (ademas de DEC-029):** suben documentos a un proyecto todos sus integrantes (lider y colaboradores) y las autoridades; al repositorio institucional, solo `admin` y `coordinator`. Editan metadatos y permisos o eliminan: quien lo subio, el lider del proyecto y las autoridades, siempre que puedan verlo (el lider no gestiona el documento privado de otra persona). Las personas autorizadas a un privado lo ven y descargan, pero no lo gestionan ni ven a quien mas se autorizo. Un documento restringido institucional lo ven solo las autoridades (el "proceso asociado" es la coordinacion). Sin acceso se responde 404 en metadatos y descarga.
+- **Valores por defecto:** acceso `restricted` en proyectos y `general` en el repositorio institucional; categoria `other`; titulo tomado del nombre del archivo.
+- **Validacion (F3-07):** extension permitida y firma del contenido sin dependencias nuevas (PDF, PNG, JPEG, WebP; DOCX/XLSX/PPTX leyendo el directorio central del ZIP y exigiendo su parte principal); se rechazan documentos de Office con macros (`vbaProject.bin`). El nombre original se sanea y solo se usa para mostrar y para `Content-Disposition`; el archivo se guarda con un UUID aleatorio. Se guarda el SHA-256.
+- **Descarga:** solo por `GET /documents/:id/download`, como adjunto, con `nosniff`, `Content-Security-Policy: sandbox` y `no-store`. Se responde con Express directamente porque `StreamableFile` no se reconoce entre las copias ESM y CommonJS de Nest 12 (se serializaba como JSON; detectado por las pruebas).
+- **Nombres con tildes:** multer interpreta el nombre como latin1 por defecto; se configura `defParamCharset: "utf8"` (detectado por las pruebas).
+- **Proxy de Next.js:** el `rewrite` de `/api/v1` corta los cuerpos a 10 MB; se fija `experimental.proxyClientMaxBodySize: "21mb"` (20 MiB mas la envoltura multipart). Detectado por la prueba E2E a traves del proxy.
+- **Resultados:** un documento de proyecto puede vincularse a un resultado del mismo proyecto (clave compuesta en la base de datos). Al eliminar el resultado, sus documentos siguen en el proyecto sin el vinculo. La pestana de investigacion enlaza los documentos de cada resultado.
+- **Eliminacion:** borra metadatos y archivo (el archivo despues de confirmar la transaccion; si fallara, queda un archivo inaccesible y se registra). Proyectos finalizados: documentos en solo lectura, descarga permitida.
+- **No incluido:** auditoria de cada descarga, versiones de un mismo documento, vista previa en el navegador y documentos de actividades (Fase 4).
+- **Prueba E2E:** el frontend se compila en `frontend/.next/e2e` (`NEXT_DIST_DIR`) con el proxy hacia la API temporal; `tsconfig.json` incluye de forma permanente esa ruta de tipos para que Next.js no lo reescriba. Antes de este cambio, una peticion de la prueba (la carga de 19 MiB) llego al backend de desarrollo del responsable en el puerto 4000, que la rechazo con 403 por el origen sin procesar el archivo.
+- **Aprobacion del responsable:** pendiente.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

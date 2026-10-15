@@ -72,6 +72,15 @@ const MESSAGES: Record<string, string> = {
   RESPONSIBLE_NOT_ACTIVE: "La persona responsable debe ser un integrante activo.",
   RESEARCH_RESULT_NOT_FOUND: "El resultado ya no existe en este proyecto.",
   PARTICIPANT_NOT_PROJECT_MEMBER: "Los participantes deben ser integrantes del proyecto.",
+  DOCUMENT_NOT_FOUND: "El documento no existe o no tienes acceso a él.",
+  DOCUMENT_FORBIDDEN: "No tienes permiso para gestionar este documento.",
+  FILE_REQUIRED: "Adjunta un archivo.",
+  FILE_TOO_LARGE: "El archivo supera el tamaño máximo permitido.",
+  PAYLOAD_TOO_LARGE: "El archivo supera el tamaño máximo permitido.",
+  UNSUPPORTED_FILE_TYPE: "Formato no permitido. Usa PDF, Word, Excel, PowerPoint, PNG, JPEG o WebP.",
+  FILE_CONTENT_MISMATCH: "El contenido del archivo no corresponde a su extensión. Revisa que no esté dañado o renombrado.",
+  GRANTEE_NOT_ACTIVE: "Las personas autorizadas deben ser integrantes activos.",
+  STORAGE_NOT_CONFIGURED: "El almacenamiento de documentos no está disponible en este entorno.",
   [NETWORK_ERROR_CODE]: "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.",
 };
 

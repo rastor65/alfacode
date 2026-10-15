@@ -1,4 +1,4 @@
-# Tarea actual - Fase 3, I-15 (documentos) autorizada
+# Tarea actual - Fase 3, I-15 (documentos) en revision
 
 ## Estado
 
@@ -6,7 +6,8 @@
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026), I-14 y DEC-027 (DEC-028).
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
 **I-14 (F3-01 a F3-04):** aprobada (DEC-028).
-**Trabajo actualmente autorizado:** I-15 (F3-05 a F3-09: documentos). I-16 (cierre de la Fase 3) tras la revision de I-15 (DEC-026).
+**I-15 (F3-05 a F3-09):** autorizada (DEC-028); implementada y verificada tecnicamente; pendiente de aprobacion.
+**Trabajo actualmente autorizado:** ninguno adicional. I-16 (cierre de la Fase 3) tras la revision de I-15 (DEC-026).
 
 ## Fases de I-08
 
@@ -169,6 +170,28 @@
 - `npm run e2e`: 44/44 (32 de la Fase 2 + 8 de investigacion por API + 4 de paginas reales: catalogo, pestana del proyecto con linea, ficha y resultado, 404 para ajenos y redireccion sin sesion). Temporales eliminados y puertos 3100/4100 liberados; el servidor `next dev` del responsable en el puerto 3000 no se toco.
 - Base local: respaldo `backend/data/alfacode-hub.backup-2026-10-15-i14.sqlite`; `migration:run`, `revert` y `run` de `Research1728770000000`; sin pendientes.
 - **No verificado por el agente:** la interaccion en un navegador real (modales, selectores, casillas de participantes).
+
+## I-15 (Fase 3: documentos, F3-05 a F3-09)
+
+**Estado:** autorizada (DEC-028); implementada y verificada tecnicamente; pendiente de aprobacion. Decisiones del responsable en DEC-029 y de implementacion en DEC-030.
+
+| Parte | Contenido | Estado |
+|---|---|---|
+| Backend | Migracion `Documents1728780000000` (`documents`, `document_grants`, indice unico `research_results (id, project_id)`); modulo `documents` con `StorageService` (disco local o deshabilitado), validacion por firma, politica `general`/`restricted`/`private`; `GET/POST /documents`, `GET/POST /projects/:id/documents`, `GET/PATCH/DELETE /documents/:id`, `GET /documents/:id/download`; auditoria | Verificada tecnicamente |
+| Frontend | `/hub/documentos` (repositorio con busqueda y filtros; carga institucional para la coordinacion), pestana «Documentos» del proyecto, formulario de carga y edicion con personas autorizadas, documentos de cada resultado en la pestana de investigacion; `apiUpload` | Verificada tecnicamente |
+
+### Resultado tecnico verificado de I-15
+
+- `npm --prefix backend test`: 227 pruebas OK (26 nuevas: firmas de los siete formatos, contenido incoherente, macros, directorio ZIP, saneo de nombres, `Content-Disposition`, almacenamiento local y path traversal, configuracion de produccion, politica; carga y descarga byte a byte, Word y PNG, 413, 415, archivo ausente, campos extra, sesion y CSRF, restringido, general, privado con autorizacion y su retiro, autorizaciones solo en privados y activos, gestion, eliminacion con archivo, proyecto finalizado, repositorio institucional, vinculo a resultado propio y no ajeno tambien en la base de datos, modulo deshabilitado con 503).
+- Las pruebas detectaron y se corrigieron: nombres con tildes corrompidos (latin1) y descarga serializada como JSON (`StreamableFile`).
+- Cuatro mutaciones de control detectadas y revertidas: restringido abierto, PDF sin firma, privado abierto, resultado de otro proyecto.
+- `npm --prefix frontend test`: 67 pruebas OK (8 nuevas); lint y typecheck OK.
+- `npm run verify` OK (67 + 227, sin migraciones pendientes).
+- `npm run e2e`: 58/58 (14 nuevas de documentos: carga vinculada a un resultado, descarga identica como adjunto, ajeno 404, contenido falso 415, privado visible para la coordinacion y no para ajenos, institucional general; 19 MiB subidos y descargados integros a traves del proxy de Next.js, mas de 20 MiB con 413; paginas de documentos del proyecto, repositorio y enlace desde el resultado). La prueba a traves del proxy revelo el corte a 10 MB de Next.js (corregido).
+- Incidencia: en una ejecucion intermedia, una carga de la prueba llego al backend de desarrollo del responsable (puerto 4000) porque la compilacion de produccion del frontend fija el destino del proxy; ese backend la rechazo con 403 por el origen antes de leer el archivo. Corregido compilando la prueba en `.next/e2e` con su propio destino.
+- Base local: respaldo `backend/data/alfacode-hub.backup-2026-10-15-i15.sqlite`; `migration:run`, `revert` y `run` de `Documents1728780000000`; sin pendientes.
+- **No verificado por el agente:** la interaccion en un navegador real (selector de archivos, modales, casillas de autorizacion, descarga desde el navegador).
+- **Pendiente antes de produccion:** elegir proveedor de almacenamiento privado y credenciales (DEC-029); hasta entonces el modulo responde 503 con `NODE_ENV=production`.
 
 ## No realizar sin nueva autorizacion
 

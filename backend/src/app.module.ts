@@ -5,6 +5,7 @@ import { CommonModule } from "./common/common.module";
 import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { DocumentsModule } from "./modules/documents/documents.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { MembershipModule } from "./modules/membership/membership.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
@@ -34,6 +35,7 @@ import { UsersModule } from "./modules/users/users.module";
     TasksModule,
     SprintsModule,
     ResearchModule,
+    DocumentsModule,
   ],
 })
 export class AppModule {}

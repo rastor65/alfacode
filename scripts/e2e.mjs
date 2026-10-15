@@ -1,8 +1,11 @@
-// Prueba E2E del HUB: cierre de la Fase 2 (pruebas F2 #9, #11 en SQLite y #12) e investigacion
-// de la Fase 3 (I-14), por API y con las paginas renderizadas por Next.js.
-// Usa una base SQLite y un outbox temporales y los puertos 4100 (API) y 3100 (web); no toca la
-// base local. Requiere backend y frontend compilados (`npm run e2e` los compila).
+// Prueba E2E del HUB: cierre de la Fase 2 (pruebas F2 #9, #11 en SQLite y #12), investigacion
+// (I-14) y documentos (I-15) de la Fase 3, por API y con las paginas renderizadas por Next.js.
+// Usa una base SQLite, un outbox y documentos temporales y los puertos 4100 (API) y 3100 (web); no
+// toca la base local. El frontend se compila en `frontend/.next/e2e` con el proxy hacia la API
+// temporal: nunca envia peticiones al backend de desarrollo (puerto 4000). Requiere el backend
+// compilado (`npm run e2e` lo compila).
 import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -26,6 +29,8 @@ const env = {
   SQLITE_PATH: join(workDir, "e2e.sqlite"),
   MAIL_TRANSPORT: "outbox",
   MAIL_OUTBOX_DIR: outboxDir,
+  STORAGE_DRIVER: "local",
+  DOCUMENTS_DIR: join(workDir, "documents"),
   APP_PUBLIC_URL: ORIGIN,
   CORS_ORIGINS: ORIGIN,
   TRUST_PROXY: "loopback",
@@ -56,19 +61,36 @@ let server;
 let web;
 
 /**
- * Compilacion de produccion del frontend (`npm run frontend:build`) apuntando a la API temporal.
- * No se usa `next dev`: Next.js no admite dos servidores de desarrollo en la misma carpeta y el
- * de quien desarrolla puede estar abierto. Las paginas leen el destino de la API al ejecutarse.
+ * Frontend de produccion propio de la prueba. No se usa `next dev` (Next.js no admite dos en la
+ * misma carpeta y el de quien desarrolla puede estar abierto) ni la compilacion normal: el
+ * destino del proxy `/api/v1` queda fijado al compilar y apuntaria al backend de desarrollo.
  */
+const webEnv = {
+  ...process.env,
+  NEXT_DIST_DIR: ".next/e2e",
+  API_PROXY_TARGET: `http://localhost:${PORT}`,
+  PORT: String(WEB_PORT),
+  NODE_ENV: "production",
+};
+
+function buildWeb() {
+  const [command, args] = isWindows ? ["cmd.exe", ["/d", "/s", "/c", "npx next build"]] : ["npx", ["next", "build"]];
+  const result = spawnSync(command, args, { cwd: join(root, "frontend"), env: webEnv, encoding: "utf8" });
+  if (result.status !== 0) {
+    throw new Error(`next build fallo:\n${result.stdout}\n${result.stderr}`);
+  }
+}
+
+let webLogs = "";
+
 async function startWeb() {
   web = spawn(process.execPath, ["server/index.mjs"], {
     cwd: join(root, "frontend"),
-    env: { ...process.env, PORT: String(WEB_PORT), API_PROXY_TARGET: `http://localhost:${PORT}`, NODE_ENV: "production" },
+    env: webEnv,
     stdio: ["ignore", "pipe", "pipe"],
   });
-  let logs = "";
-  web.stdout.on("data", (data) => (logs += data));
-  web.stderr.on("data", (data) => (logs += data));
+  web.stdout.on("data", (data) => (webLogs += data));
+  web.stderr.on("data", (data) => (webLogs += data));
   const startedAt = Date.now();
   while (Date.now() - startedAt < 120_000) {
     try {
@@ -78,7 +100,7 @@ async function startWeb() {
     }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error(`El frontend no arranco:\n${logs}`);
+  throw new Error(`El frontend no arranco:\n${webLogs}`);
 }
 
 async function stopProcess(child) {
@@ -146,6 +168,25 @@ function client() {
       }
       return { status: response.status, json };
     },
+    /** Carga multipart, directa a la API o a traves del proxy de Next.js (`viaWeb`). */
+    async upload(path, content, name, fields = {}, viaWeb = false) {
+      const form = new FormData();
+      for (const [key, value] of Object.entries(fields)) form.append(key, value);
+      form.append("file", new Blob([new Uint8Array(content)]), name);
+      const response = await fetch(`${viaWeb ? `${ORIGIN}/api/v1` : API}${path}`, {
+        method: "POST",
+        headers: { Origin: ORIGIN, "X-Forwarded-For": ip, Cookie: cookies.join("; "), "X-CSRF-Token": csrf },
+        body: form,
+      });
+      const text = await response.text();
+      return { status: response.status, json: text ? JSON.parse(text) : null };
+    },
+    async download(id, viaWeb = false) {
+      const response = await fetch(`${viaWeb ? `${ORIGIN}/api/v1` : API}/documents/${id}/download`, {
+        headers: { "X-Forwarded-For": ip, Cookie: cookies.join("; ") },
+      });
+      return { status: response.status, body: Buffer.from(await response.arrayBuffer()), headers: response.headers };
+    },
     /** Pagina del frontend renderizada en el servidor con la sesion de este cliente. */
     async page(path) {
       const response = await fetch(`${ORIGIN}${path}`, {
@@ -167,6 +208,14 @@ async function readOutbox(email) {
 }
 
 const ok = (response) => response.status >= 200 && response.status < 300;
+/** PDF minimo valido, con relleno hasta el tamano pedido. */
+function pdf(size = 0, marker = "") {
+  const head = Buffer.from(`%PDF-1.4\n% ${marker}\n`, "latin1");
+  return Buffer.concat([head, Buffer.alloc(Math.max(0, size - head.length - 6), 0x20), Buffer.from("\n%%EOF", "latin1")]);
+}
+
+const sha = (buffer) => createHash("sha256").update(buffer).digest("hex");
+
 const items = (json) => (Array.isArray(json) ? json : json.items);
 
 async function main() {
@@ -351,8 +400,49 @@ async function main() {
     (await outsider.call("GET", `/projects/${projectId}/research-results`)).status === 404,
   );
 
+  // Fase 3, I-15: documentos (F3-05 a F3-09, DEC-029).
+  const report = pdf(4096, "informe");
+  const restrictedDoc = await coord.upload(`/projects/${projectId}/documents`, report, "Informe de avance.pdf", {
+    category: "report",
+    researchResultId: result.json.id,
+  });
+  check("el lider sube un documento restringido vinculado al resultado (F3-05)", restrictedDoc.status === 201, restrictedDoc);
+  const studentCopy = await student.download(restrictedDoc.json.id);
+  check(
+    "el equipo descarga el mismo contenido como adjunto",
+    studentCopy.status === 200 && sha(studentCopy.body) === sha(report) &&
+      studentCopy.headers.get("content-disposition")?.startsWith("attachment"),
+    studentCopy.status,
+  );
+  check("un ajeno no descarga un documento restringido (F3-08)", (await outsider.download(restrictedDoc.json.id)).status === 404);
+  const forged = await student.upload(`/projects/${projectId}/documents`, Buffer.from("<script>alert(1)</script>"), "falso.pdf");
+  check("se rechaza un archivo cuyo contenido no es el de su extension (F3-07)", forged.status === 415, forged);
+  const privateDoc = await student.upload(`/projects/${projectId}/documents`, pdf(1024, "privado"), "Notas.pdf", { accessLevel: "private" });
+  check("un integrante sube un documento privado", privateDoc.status === 201, privateDoc);
+  check(
+    "la coordinacion ve los privados y el resto no (DEC-029)",
+    (await coord.download(privateDoc.json.id)).status === 200 && (await outsider.download(privateDoc.json.id)).status === 404,
+  );
+  const institutional = await coord.upload("/documents", pdf(2048, "formato"), "Formato de asistencia.pdf", { category: "administrative" });
+  check(
+    "la coordinacion publica un documento institucional que todos descargan",
+    institutional.status === 201 && (await outsider.download(institutional.json.id)).status === 200,
+    institutional,
+  );
+
   // Paginas reales del frontend (SSR a traves del servidor de Next.js).
+  buildWeb();
   await startWeb();
+
+  // Cargas grandes a traves del proxy de Next.js: el limite es el del backend (20 MiB).
+  const large = pdf(19 * 1024 * 1024, "grande");
+  const viaProxy = await coord.upload(`/projects/${projectId}/documents`, large, "Anexo grande.pdf", {}, true);
+  check("un archivo de 19 MiB se sube a traves del proxy de Next.js", viaProxy.status === 201 && viaProxy.json.sizeBytes === large.length, viaProxy.status);
+  const largeCopy = await coord.download(viaProxy.json.id, true);
+  check("y se descarga integro a traves del proxy", largeCopy.status === 200 && sha(largeCopy.body) === sha(large), largeCopy.status);
+  const tooLarge = await coord.upload(`/projects/${projectId}/documents`, pdf(20 * 1024 * 1024 + 1, "excesivo"), "Excesivo.pdf", {}, true);
+  check("un archivo de mas de 20 MiB se rechaza con 413", tooLarge.status === 413, tooLarge.status);
+
   const catalog = await student.page("/hub/investigacion");
   check("la pagina de lineas muestra la linea", catalog.status === 200 && catalog.html.includes(lineName), catalog.status);
   const researchPage = await student.page(`/hub/proyectos/${projectId}/investigacion`);
@@ -368,6 +458,23 @@ async function main() {
   check("un ajeno ve la pagina de no encontrado", foreignPage.status === 404, foreignPage.status);
   const anonymousPage = await anon.page("/hub/investigacion");
   check("sin sesion se redirige al ingreso", [302, 303, 307].includes(anonymousPage.status), anonymousPage.status);
+  check(
+    "la pestana de investigacion enlaza el documento del resultado",
+    (await student.page(`/hub/proyectos/${projectId}/investigacion`)).html.includes(`/api/v1/documents/${restrictedDoc.json.id}/download`),
+  );
+  const projectDocs = await student.page(`/hub/proyectos/${projectId}/documentos`);
+  check(
+    "la pestana de documentos muestra los del equipo pero no los privados ajenos",
+    projectDocs.status === 200 && projectDocs.html.includes("Informe de avance") && projectDocs.html.includes("Notas"),
+    projectDocs.status,
+  );
+  const repository = await outsider.page("/hub/documentos");
+  check(
+    "el repositorio de un ajeno muestra lo institucional y no lo restringido",
+    repository.status === 200 && repository.html.includes("Formato de asistencia") && !repository.html.includes("Informe de avance"),
+    repository.status,
+  );
+  check("un ajeno ve no encontrado en los documentos del proyecto", (await outsider.page(`/hub/proyectos/${projectId}/documentos`)).status === 404);
 }
 
 try {
@@ -376,6 +483,7 @@ try {
 } catch (error) {
   console.error(`\n${error instanceof Error ? error.message : error}`);
   console.error(`(${passed} comprobaciones OK antes del fallo)`);
+  if (webLogs) console.error(`\nRegistro del frontend:\n${webLogs.split("\n").slice(-40).join("\n")}`);
   process.exitCode = 1;
 } finally {
   await stopProcess(web);

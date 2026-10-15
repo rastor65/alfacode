@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import type { DocumentList } from "@/features/documents/types";
 import { ProjectHeader } from "@/features/projects/components/project-header";
 import { loadProjectData } from "@/features/projects/load-project";
 import type { ProjectDetail } from "@/features/projects/types";
@@ -17,9 +18,20 @@ export default async function ProjectResearchPage({ params }: { params: Promise<
   const projectPath = `/projects/${encodeURIComponent(id)}`;
   const currentPath = `/hub/proyectos/${encodeURIComponent(id)}/investigacion`;
   await requireSessionUser(currentPath);
-  const [project, lines, profile, results] = await loadProjectData<[ProjectDetail, ProjectLines, ProjectProfile, ResultList]>(
-    [projectPath, `${projectPath}/research-lines`, `${projectPath}/research-profile`, `${projectPath}/research-results`],
+  const [project, lines, profile, results, documents] = await loadProjectData<
+    [ProjectDetail, ProjectLines, ProjectProfile, ResultList, DocumentList]
+  >(
+    [
+      projectPath,
+      `${projectPath}/research-lines`,
+      `${projectPath}/research-profile`,
+      `${projectPath}/research-results`,
+      `${projectPath}/documents?pageSize=100`,
+    ],
     currentPath,
+  );
+  const resultDocuments = documents.items.flatMap((document) =>
+    document.researchResult ? [{ id: document.id, title: document.title, resultId: document.researchResult.id }] : [],
   );
 
   const team = project.members.map((member) => ({ userId: member.userId, fullName: member.fullName }));
@@ -41,6 +53,7 @@ export default async function ProjectResearchPage({ params }: { params: Promise<
           lines={lines}
           profile={profile}
           results={results}
+          resultDocuments={resultDocuments}
         />
       </div>
     </div>

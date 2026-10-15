@@ -18,6 +18,7 @@ import {
   ResearchLine,
   ResearchResult,
 } from "../modules/research/research.entities";
+import { DocumentGrant, DocumentRecord } from "../modules/documents/document.entity";
 import { Task } from "../modules/tasks/task.entity";
 import { User } from "../modules/users/user.entity";
 import { SchemaBootstrap1728690000000 } from "./migrations/1728690000000-schema-bootstrap";
@@ -30,6 +31,7 @@ import { MembershipRequestCv1728750000000 } from "./migrations/1728750000000-mem
 import { Tasks1728750000000 } from "./migrations/1728750000000-tasks";
 import { Sprints1728760000000 } from "./migrations/1728760000000-sprints";
 import { Research1728770000000 } from "./migrations/1728770000000-research";
+import { Documents1728780000000 } from "./migrations/1728780000000-documents";
 
 export const entities = [
   User,
@@ -48,6 +50,8 @@ export const entities = [
   ProjectResearchLine,
   ProjectResearchProfile,
   ResearchResult,
+  DocumentRecord,
+  DocumentGrant,
 ];
 
 export const migrations = [
@@ -61,6 +65,7 @@ export const migrations = [
   Tasks1728750000000,
   Sprints1728760000000,
   Research1728770000000,
+  Documents1728780000000,
 ];
 
 function loadEnvFile(filePath: string) {
