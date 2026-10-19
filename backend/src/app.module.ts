@@ -6,6 +6,8 @@ import { DatabaseModule } from "./database/database.module";
 import { HealthModule } from "./health/health.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { AcademicModule } from "./modules/academic/academic.module";
+import { EventsModule } from "./modules/events/events.module";
+import { AdministrationModule } from "./modules/administration/administration.module";
 import { DocumentsModule } from "./modules/documents/documents.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { MembershipModule } from "./modules/membership/membership.module";
@@ -38,6 +40,8 @@ import { UsersModule } from "./modules/users/users.module";
     ResearchModule,
     DocumentsModule,
     AcademicModule,
+    EventsModule,
+    AdministrationModule,
   ],
 })
 export class AppModule {}

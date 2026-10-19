@@ -33,9 +33,18 @@ import { Sprints1728760000000 } from "./migrations/1728760000000-sprints";
 import { Research1728770000000 } from "./migrations/1728770000000-research";
 import { Documents1728780000000 } from "./migrations/1728780000000-documents";
 import { Academic1728790000000 } from "./migrations/1728790000000-academic";
+import { Events1728800000000 } from "./migrations/1728800000000-events";
+import { AdministrativeRequests1728810000000 } from "./migrations/1728810000000-administrative-requests";
+import { RequestAttachments1728820000000 } from "./migrations/1728820000000-request-attachments";
+import { RequestAttachment } from "../modules/documents/request-attachment.entity";
+import { AdministrativeRequest } from "../modules/administration/administrative-request.entity";
+import { EventDocument, EventParticipant, EventRecord } from "../modules/events/event.entities";
 import { AcademicProduct, AcademicProductResult, ProductAuthor, Recognition } from "../modules/academic/academic.entities";
 
 export const entities = [
+  RequestAttachment,
+  AdministrativeRequest,
+  EventRecord, EventParticipant, EventDocument,
   AcademicProduct, AcademicProductResult, ProductAuthor, Recognition,
   User,
   Role,
@@ -70,6 +79,9 @@ export const migrations = [
   Research1728770000000,
   Documents1728780000000,
   Academic1728790000000,
+  Events1728800000000,
+  AdministrativeRequests1728810000000,
+  RequestAttachments1728820000000,
 ];
 
 function loadEnvFile(filePath: string) {

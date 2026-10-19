@@ -23,4 +23,4 @@ Esta carpeta contiene guias de trabajo y estado operativo. No redefine requisito
 
 ## Punto de partida
 
-Fase 4; `I-17` autorizada expresamente con los pendientes de `I-16` registrados (DEC-033). `I-14` e `I-15` aprobadas; `I-16` no aprobada y Fase 3 sin cierre integral. Consultar resultados y siguiente iteracion en `tarea-actual.md` y `estado-actual.md`. PostgreSQL sigue pausado; no iniciar I-18 sin autorizacion.
+Fase 5 autorizada por DEC-039, tras revision y aprobacion de I-17/I-18/I-19. Iteracion activa `I-21`: desvinculacion, adjuntos privados e interfaz (F5-05 a F5-07), por DEC-041. I-20 implementada/verificada, pendiente de aprobacion formal. I-22 corresponde despues a verificacion acumulada. Consultar `tarea-actual.md` y `estado-actual.md`. PostgreSQL, navegador, ESLint y almacenamiento productivo conservan sus pendientes.

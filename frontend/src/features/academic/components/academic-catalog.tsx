@@ -11,7 +11,8 @@ import type { ProjectSummary } from "@/features/projects/types";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
 import { PRODUCT_STATUSES, PRODUCT_TYPES, safeExternalUrl, type AcademicItem, type AcademicKind } from "../types";
-import { AcademicForm, allItems, formContext, type FormOptions } from "./academic-form";
+import { AcademicForm, formContext, type FormOptions } from "./academic-form";
+import { allItems } from "@/lib/api/all-items";
 
 export function AcademicCatalog({ kind, items, canCreate, canCreateInstitutional, projectId }: { kind: AcademicKind; items: AcademicItem[]; canCreate: boolean; canCreateInstitutional: boolean; projectId?: string }) {
   const router = useRouter();

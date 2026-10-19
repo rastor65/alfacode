@@ -8,6 +8,7 @@ import { OptionSelect } from "@/components/ui/option-select";
 import type { ProjectDetail, ProjectSummary } from "@/features/projects/types";
 import type { DocumentItem } from "@/features/documents/types";
 import { apiRequest } from "@/lib/api/client";
+import { allItems } from "@/lib/api/all-items";
 import { describeError, fieldErrorMessages } from "@/lib/api/errors";
 import { PRODUCT_STATUSES, PRODUCT_TYPES, type AcademicItem, type AcademicKind } from "../types";
 
@@ -15,15 +16,6 @@ export type Person = { id: string; fullName: string };
 export type Context = { people: Person[]; results: { id: string; title: string }[]; documents: { id: string; title: string }[] };
 export type FormOptions = { projects: ProjectSummary[]; context: Context; institutional: boolean };
 
-/** Los selectores no truncan silenciosamente los datos en los primeros cien registros. */
-export async function allItems<T>(path: string): Promise<T[]> {
-  const items: T[] = [];
-  for (let page = 1; ; page++) {
-    const data = await apiRequest<{ items: T[]; total: number }>(`${path}${path.includes("?") ? "&" : "?"}pageSize=100&page=${page}`);
-    items.push(...data.items);
-    if (!data.items.length || items.length >= data.total) return items;
-  }
-}
 export async function formContext(projectId: string | null): Promise<Context> {
   if (projectId) {
     const [project, results, documents] = await Promise.all([

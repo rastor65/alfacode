@@ -18,6 +18,8 @@ import { type AccessLevel, DocumentGrant, DocumentRecord, type DocumentScope } f
 import type { ListDocumentsQuery, UpdateDocumentDto, UploadDocumentDto } from "./dto/documents.dto";
 import { ALLOWED_EXTENSIONS, FILE_KINDS, contentMatches, extensionOf, kindForExtension, sanitizeFileName } from "./file-type";
 import { STORAGE_NOT_CONFIGURED, STORAGE_SERVICE, type StorageService } from "./storage";
+import { AdministrativeRequest } from "../administration/administrative-request.entity";
+import { RequestAttachment } from "./request-attachment.entity";
 
 export const DOCUMENTS_CONFIG = Symbol("DOCUMENTS_CONFIG");
 
@@ -100,6 +102,30 @@ export class DocumentsService {
 
   // ---------------------------------------------------------------- carga
 
+  async requestDocuments(actor: Actor, requestId: string, query: ListDocumentsQuery) {
+    await this.loadRequest(this.dataSource.manager, actor, requestId);
+    return this.page(actor, this.visibleQuery(actor).andWhere(
+      "EXISTS (SELECT 1 FROM administrative_request_documents rd WHERE rd.document_id = document.id AND rd.request_id = :requestId)", { requestId }), query);
+  }
+
+  async uploadForRequest(actor: Actor, requestId: string, file: UploadedFileData | undefined, dto: UploadDocumentDto) {
+    const request = await this.loadRequest(this.dataSource.manager, actor, requestId);
+    this.assertRequestUpload(actor, request);
+    if ((dto.accessLevel && dto.accessLevel !== "private") || dto.grantedUserIds?.length || dto.researchResultId)
+      throw new ApiError(400, "REQUEST_DOCUMENT_PRIVATE", "Los adjuntos de solicitudes son privados para el solicitante y las autoridades");
+    return this.upload(actor, "institutional", null, file, { ...dto, accessLevel: "private", grantedUserIds: [], researchResultId: undefined }, requestId);
+  }
+
+  private async loadRequest(m: EntityManager, actor: Actor, id: string) {
+    const request = await m.findOneBy(AdministrativeRequest, { id });
+    if (!request || (request.requesterId !== actor.id && !isAuthority(actorRoles(actor)))) throw DOCUMENT_NOT_FOUND();
+    return request;
+  }
+  private assertRequestUpload(actor: Actor, request: AdministrativeRequest) {
+    const allowed = request.requesterId === actor.id ? ["pending", "in_review"] : ["pending", "in_review", "approved"];
+    if (!allowed.includes(request.status)) throw new ApiError(409, "REQUEST_DOCUMENT_READ_ONLY", "La solicitud no admite cambios de adjuntos en este estado");
+  }
+
   async uploadToProject(actor: Actor, projectId: string, file: UploadedFileData | undefined, dto: UploadDocumentDto) {
     const { project, access } = await loadProjectWithAccess(this.dataSource.manager, actor, projectId);
 
@@ -134,6 +160,7 @@ export class DocumentsService {
     project: Project | null,
     file: UploadedFileData | undefined,
     dto: UploadDocumentDto,
+    requestId?: string,
   ) {
     if (this.storage.driver === "none") {
       throw STORAGE_NOT_CONFIGURED();
@@ -149,6 +176,7 @@ export class DocumentsService {
 
     try {
       return await this.dataSource.transaction(async (manager) => {
+        if (requestId) this.assertRequestUpload(actor, await this.loadRequest(manager, actor, requestId));
         if (dto.researchResultId) {
           await this.assertResultInProject(manager, project!.id, dto.researchResultId);
         }
@@ -175,6 +203,11 @@ export class DocumentsService {
         );
 
         await this.replaceGrants(manager, document.id, grantedUserIds, actor.id);
+        if (requestId) {
+          await manager.insert(RequestAttachment, { requestId, documentId: document.id });
+          await recordAudit(manager, { actorUserId: actor.id, action: "administrative_request.document_added",
+            targetType: "administrative_request", targetId: requestId, details: { documentId: document.id, title: document.title } });
+        }
         await recordAudit(manager, {
           actorUserId: actor.id,
           action: "document.uploaded",
@@ -231,6 +264,8 @@ export class DocumentsService {
   async update(actor: Actor, id: string, dto: UpdateDocumentDto) {
     return this.dataSource.transaction(async (manager) => {
       const { document, viewer } = await this.loadManageable(manager, actor, id);
+      if (await manager.existsBy(RequestAttachment, { documentId: id }))
+        throw new ApiError(409, "REQUEST_DOCUMENT_IMMUTABLE", "Los adjuntos de solicitudes conservan sus permisos; elimina y adjunta la correccion si procede");
       const changes: Partial<DocumentRecord> = {};
 
       if (dto.title !== undefined && dto.title !== document.title) changes.title = dto.title;
@@ -294,8 +329,11 @@ export class DocumentsService {
   async remove(actor: Actor, id: string) {
     const storageKey = await this.dataSource.transaction(async (manager) => {
       const { document } = await this.loadManageable(manager, actor, id);
+      const attachment = await manager.findOneBy(RequestAttachment, { documentId: id });
 
       await manager.delete(DocumentRecord, { id });
+      if (attachment) await recordAudit(manager, { actorUserId: actor.id, action: "administrative_request.document_removed",
+        targetType: "administrative_request", targetId: attachment.requestId, details: { documentId: id, title: document.title } });
       await recordAudit(manager, {
         actorUserId: actor.id,
         action: "document.deleted",
@@ -329,12 +367,14 @@ export class DocumentsService {
 
     if (!isAuthority(actorRoles(actor))) {
       builder.where(
-        `(document.uploaded_by = :me
+        `((NOT EXISTS (SELECT 1 FROM administrative_request_documents rd WHERE rd.document_id = document.id)) AND (document.uploaded_by = :me
           OR document.access_level = 'general'
           OR (document.access_level = 'restricted' AND document.scope = 'project' AND EXISTS (
             SELECT 1 FROM project_members member WHERE member.project_id = document.project_id AND member.user_id = :me))
           OR (document.access_level = 'private' AND EXISTS (
-            SELECT 1 FROM document_grants grant_row WHERE grant_row.document_id = document.id AND grant_row.user_id = :me)))`,
+            SELECT 1 FROM document_grants grant_row WHERE grant_row.document_id = document.id AND grant_row.user_id = :me)))
+          OR EXISTS (SELECT 1 FROM administrative_request_documents rd INNER JOIN administrative_requests ar ON ar.id = rd.request_id
+            WHERE rd.document_id = document.id AND ar.requester_id = :me))`,
         { me: actor.id },
       );
     }
@@ -441,6 +481,11 @@ export class DocumentsService {
   private async loadReadable(manager: EntityManager, actor: Actor, id: string) {
     const document = await this.findDocument(manager, id);
     const viewer = await this.viewerFor(manager, actor, document);
+    const attachment = await manager.findOneBy(RequestAttachment, { documentId: id });
+    if (attachment) {
+      await this.loadRequest(manager, actor, attachment.requestId);
+      return { document, viewer };
+    }
 
     if (!canReadDocument(viewer, document)) {
       throw DOCUMENT_NOT_FOUND();
@@ -451,6 +496,13 @@ export class DocumentsService {
 
   private async loadManageable(manager: EntityManager, actor: Actor, id: string) {
     const loaded = await this.loadReadable(manager, actor, id);
+    const attachment = await manager.findOneBy(RequestAttachment, { documentId: id });
+    if (attachment) {
+      const request = await this.loadRequest(manager, actor, attachment.requestId);
+      this.assertRequestUpload(actor, request);
+      if (loaded.document.uploadedBy !== actor.id && !isAuthority(actorRoles(actor))) throw DOCUMENT_FORBIDDEN();
+      return loaded;
+    }
 
     if (!canManageDocument(loaded.viewer, loaded.document)) {
       throw DOCUMENT_FORBIDDEN();
@@ -508,8 +560,12 @@ export class DocumentsService {
   }
 
   private async documentView(manager: EntityManager, document: DocumentRecord, viewer: DocumentViewer, withGrants: boolean) {
+    const attachment = await manager.findOneBy(RequestAttachment, { documentId: document.id });
+    const request = attachment ? await manager.findOneByOrFail(AdministrativeRequest, { id: attachment.requestId }) : null;
     const canManage =
       canManageDocument(viewer, document) && (!document.project || isProjectEditable(document.project));
+    const canRemoveAttachment = request && (document.uploadedBy === viewer.userId || isAuthority(viewer.roles)) &&
+      (request.requesterId === viewer.userId ? ["pending", "in_review"] : ["pending", "in_review", "approved"]).includes(request.status);
     const grants =
       withGrants && canManage && document.accessLevel === "private"
         ? await manager.find(DocumentGrant, { where: { documentId: document.id }, relations: { user: true } })
@@ -518,6 +574,7 @@ export class DocumentsService {
     return {
       id: document.id,
       scope: document.scope,
+      administrativeRequestId: attachment?.requestId ?? null,
       project: document.project ? { id: document.project.id, name: document.project.name } : null,
       researchResult: document.researchResult ? { id: document.researchResult.id, title: document.researchResult.title } : null,
       title: document.title,
@@ -533,7 +590,7 @@ export class DocumentsService {
       updatedAt: document.updatedAt,
       // Solo quien gestiona el documento ve a quienes se autorizo.
       ...(withGrants && canManage ? { grantedUsers: grants.map((grant) => ({ userId: grant.user.id, fullName: grant.user.fullName })) } : {}),
-      permissions: { canEdit: canManage, canDelete: canManage },
+      permissions: { canEdit: !attachment && canManage, canDelete: attachment ? Boolean(canRemoveAttachment) : canManage },
     };
   }
 }

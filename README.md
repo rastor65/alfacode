@@ -15,9 +15,9 @@ AGENTS.md   # Instrucciones para agentes
 ## Estado Actual
 
 - El frontend conserva el portafolio publico y ofrece las vistas privadas bajo `/hub`.
-- Fases 0 a 2 aprobadas en desarrollo local (PostgreSQL diferido); investigacion I-14 y documentos I-15 aprobados. I-17 implementa produccion academica con los pendientes de I-16 registrados (DEC-033): ver [tarea actual](context/tarea-actual.md). No se declara cerrada integralmente la Fase 3.
+- Fases 0 a 2 aprobadas en desarrollo local (PostgreSQL diferido); investigacion I-14 y documentos I-15 aprobados. Produccion, actividades y verificacion I-17/I-18/I-19 aprobadas (DEC-039). Fase 5 autorizada: I-20/I-21 implementan solicitudes administrativas, revision/historial, adjuntos privados y salida con reasignacion previa de responsabilidades. Pantallas `/hub/tramites` y detalle; ingreso conserva `/hub/solicitudes` (Vinculaciones). Verificacion SQLite: 345 pruebas y 119 comprobaciones E2E; resultados pendientes de revision y posterior cierre I-22. Se conservan los pendientes de I-16, sin declarar compatibilidad PostgreSQL ni disponibilidad productiva.
 - El contenido del portafolio vive en archivos TypeScript estaticos.
-- El backend expone API REST bajo `/api/v1` para identidad, integrantes, proyectos, tareas, sprints, investigacion, documentos, productos academicos y reconocimientos, con permisos en servidor.
+- El backend expone API REST bajo `/api/v1` para identidad, integrantes, proyectos, tareas, sprints, investigacion, documentos, productos academicos, reconocimientos, eventos/asistencia y solicitudes administrativas (`/administrative-requests`), con permisos en servidor.
 
 ## Stack
 
@@ -132,6 +132,6 @@ SQLITE_PATH=./data/alfacode-hub.sqlite
 
 ## Verificacion del HUB
 
-`npm run e2e` compila backend y frontend, usa SQLite, correo outbox y archivos temporales, y prueba la API y paginas renderizadas en puertos 4100/3100. Comprueba migraciones, permisos, investigacion, documentos, productos/autorías/reconocimientos, cargas por proxy, persistencia tras reinicio e integridad de datos y archivos; elimina sus temporales al terminar. Requiere esos puertos libres y no sustituye la prueba de interaccion en navegador.
+`npm run e2e` compila backend y frontend, usa SQLite, correo outbox y archivos temporales, y prueba la API y paginas renderizadas en puertos 4100/3100. Comprueba migraciones, permisos, investigacion, documentos, productos/autorias/reconocimientos, eventos/asistencia/calendario, cargas por proxy, persistencia tras reinicio e integridad de datos y archivos; elimina sus temporales al terminar. Requiere esos puertos libres y no sustituye la prueba de interaccion en navegador.
 
 Documentos: almacenamiento local solo para desarrollo; en produccion el modulo queda deshabilitado hasta elegir un proveedor privado. PostgreSQL y almacenamiento externo siguen pendientes de validacion antes de uso real. Consultar [estado actual](context/estado-actual.md) y [decisiones](docs/decisiones.md).

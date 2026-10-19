@@ -334,7 +334,7 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 ### DEC-034 - Implementacion de I-17 (produccion academica)
 
 - **Fecha:** 2026-10-18
-- **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de revision del responsable.
+- **Estado:** aprobada por el responsable en DEC-039, con pendientes tecnicos informados.
 - **Modelo:** `academic_products`, `product_authors`, `academic_product_results` y `recognitions`, por migracion `Academic1728790000000`. Producto institucional sin proyecto o con un proyecto y varios resultados de ese mismo proyecto; sin copiar datos del proyecto. La FK compuesta comprueba el vinculo tambien fuera de la API. No se implementa asociacion multiproyecto en esta iteracion.
 - **Estados:** `in_progress`, `submitted`, `accepted`, `published`, `rejected`, a partir de la seccion 5.4 de requisitos. `published` se presenta como "Publicado / presentado". No se inventa un flujo de aprobacion editorial. Fechas de calendario validas, DOI `10.<registrante>/<identificador>` y URLs solo HTTP/HTTPS; sin consultas a servicios externos.
 - **Permisos:** sin proyecto, administran `admin` y `coordinator`; los productos institucionales los consultan integrantes activos. En un proyecto, administran autoridades y lideres; consultan sus miembros y autoridades. Un rol institucional `teacher_leader` por si solo no concede acceso. Proyectos completados/cancelados conservan consulta, sin cambios. Los filtros de visibilidad se aplican antes de contar y paginar; ajenos reciben 404 en detalle y mutaciones de registros de proyecto.
@@ -344,6 +344,92 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **API:** `/academic-products` y `/recognitions`: GET paginado, POST, GET por UUID, PUT de reemplazo de campos editables y DELETE con auditoria transaccional. Autor de creacion, IDs y propiedades extra no se aceptan por asignacion masiva. CSRF, sesion y origen se mantienen en los controles existentes.
 - **Interfaz:** `/hub/produccion`, `/hub/proyectos/[id]/produccion`, menu privado y pestana del proyecto; listados con filtros/paginacion, detalle/alta/edicion/eliminacion en modales existentes, autorias ordenables con botones y selectores shadcn. Enlaces de historial desde perfil e integrantes. Eventos y calendario quedan para I-18.
 - **Limites:** SQLite; sin nuevas dependencias; PostgreSQL, navegador real y observacion ESLint mantienen sus pendientes. I-17 no queda aprobada por esta entrada.
+
+### DEC-035 - Autorizacion de I-18 (eventos y actividades)
+
+- **Fecha:** 2026-10-18
+- **Estado:** autorizada ("continuemos", tras presentar I-18 como siguiente iteracion).
+- **Decision:** ejecutar I-18, F4-05 a F4-08: eventos, participantes/asistencia, convocatorias informativas y vistas/calendario basico, reutilizando Gestion documental. Se registra autorizacion para continuar, sin atribuir aprobacion formal de I-17/DEC-034.
+- **Limites:** mantienen su estado los pendientes de I-16, PostgreSQL y almacenamiento productivo. Sin notificaciones, sincronizaciones externas, postulaciones completas, certificados automaticos, despliegue ni datos personales reales. No se autoriza I-19 ni Fase 5.
+
+### DEC-036 - Implementacion de I-18 (eventos, asistencia y calendario)
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobada por el responsable en DEC-039, con pendientes tecnicos informados.
+- **Modelo:** `events`, `event_participants` y `event_documents`, mediante `Events1728800000000`. Actividades institucionales o de un proyecto; el proyecto no cambia una vez creada la actividad, para no trasladar inscripciones ni evidencias a otro ambito. Sin datos ni cuentas externas de asistentes.
+- **Creacion y gestion:** solo `admin`/`coordinator` crean actividades institucionales; tambien crean actividades de proyecto los lideres que pueden gestionarlo. Organizador principal obligatorio, activo y del equipo si hay proyecto; queda inscrito una sola vez con rol `organizer`. Autoridades, organizador principal y lideres del proyecto gestionan metadatos, inscripciones y evidencias dentro de su acceso. Un rol institucional `teacher_leader` no concede acceso a un proyecto ajeno. Actividades institucionales consultables por integrantes activos; las de proyecto solo por equipo/autoridades. Visibilidad filtrada antes de contar/paginar; un ID ajeno devuelve 404.
+- **Estados:** se crea `scheduled`; cambios manuales por endpoint explicito: `scheduled -> in_progress/cancelled`, `in_progress -> completed/cancelled`. Cancelar exige motivo y conserva participantes/evidencias. Finalizadas/canceladas no se reabren ni editan sus metadatos. Borrado solo de actividad programada con el organizador como unica inscripcion y sin evidencias; para las demas se usa cancelacion.
+- **Participacion:** UUID de integrante activo, del equipo cuando hay proyecto; rol descriptivo `participant`, `speaker` u `organizer`, distinto de roles institucionales. Clave primaria evento+usuario evita duplicados. Se inscriben personas durante programacion/ejecucion; sin autoinscripcion libre ni gestion de invitados externos. Se retiran solo inscripciones sin asistencia confirmada, nunca al organizador principal sin cambiarlo antes. El historial ya registrado no se elimina por desactivar o retirar al integrante del proyecto.
+- **Asistencia:** opcional, inicia en `registered`; `attended` y `absent` solo los confirman `admin`/`coordinator` durante/despues de una actividad, con actor/fecha y evento de auditoria. Organizador o lider sin esos roles no confirma asistencia. Finalizar no transforma inscripciones en asistencia. Se permiten correcciones auditadas tras finalizar; una actividad cancelada no admite registros.
+- **Fechas y modalidades:** API exige ISO 8601 extendido con zona explicita, normaliza UTC con milisegundos y exige final posterior al inicio. Interfaz edita en Bogota, independientemente de la zona del equipo. Filtros calendario por fecha de Bogota y solapamiento de intervalos, incluyendo cruces de medianoche. Modalidad `onsite`, `online` o `hybrid`; ubicacion y/o enlace HTTP/HTTPS segun corresponda. No se crean temporizadores ni integraciones de calendario.
+- **Convocatorias:** tipo `call`, con responsable interno, organizador externo opcional, apertura/cierre, requisitos y enlace externo de inscripcion. Solo informacion; sin postulaciones, avisos ni seguimiento de candidatos.
+- **Documentos:** tabla de vinculos a documentos existentes del mismo ambito; no modifica permisos ni copia archivos. Se vuelve a comprobar acceso documental al vincular, listar y desvincular; titulos/IDs/totales de privados no autorizados no se revelan. Se permite agregar evidencia despues de finalizar; canceladas quedan en lectura. La UI reutiliza `DocumentForm` y los endpoints de Gestion documental para cargar y luego vincular. Un fallo del vinculo conserva el archivo en el repositorio y se informa. Desvincular no elimina el archivo; eliminar un documento elimina solo su relacion por FK.
+- **Interfaz/API:** `/hub/actividades` y `/hub/proyectos/[id]/actividades`, menu y pestana; filtros por tipo/estado/proyecto, calendario mensual y agenda desde hoy. El calendario recorre todas las paginas autorizadas del mes; los detalles y formularios usan modales, con inscripciones paginadas y confirmaciones accesibles. REST `/events` con listado/alta/detalle/PUT/DELETE y subrutas de estado, participantes, asistencia y documentos. Se extrae `allItems` a una ayuda compartida para no importar formularios academicos desde actividades.
+- **Limites:** sin nuevas dependencias; SQLite verificado, PostgreSQL pendiente. Navegador real, observacion ESLint y almacenamiento productivo conservan su estado. No se aprueba I-17, I-18 ni el cierre de ninguna fase mediante esta entrada.
+
+### DEC-037 - Autorizacion de I-19 (verificacion de Fase 4)
+
+- **Fecha:** 2026-10-18
+- **Estado:** autorizada ("continuemos con i 19").
+- **Decision:** ejecutar la verificacion acumulada de F4-01 a F4-08: relaciones, privacidad, fechas/filtros, migraciones, persistencia e integridad. Solo pruebas, revision y correcciones de defectos comprobados; sin funcionalidades nuevas.
+- **Numeracion:** se mantiene la secuencia real I-17/I-18/I-19 para produccion, actividades y cierre; corresponde a I-13/I-14/I-15 del mapa original de `backlog-maestro.md`, desfasado tras las subdivisiones previas (DEC-026). No corresponde al bloque de indicadores del mapa original.
+- **Limites:** no implica aprobacion formal de I-17/I-18 ni cierre integral de Fase 3 o 4. PostgreSQL sigue pausado; navegador, observacion ESLint y almacenamiento productivo mantienen sus pendientes. Sin Fase 5, despliegue, commit ni push.
+
+### DEC-038 - Resultado de verificacion I-19
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobada por el responsable en DEC-039, sobre la verificacion SQLite y conservando sus limitaciones.
+- **Evidencia:** `docs/revision-i19.md`, con matriz de criterios F4 y recorrido manual pendiente. `npm run check` salida 0 (72 pruebas frontend, 251 backend); `npm run e2e` salida 0 (98/98, trece migraciones ida/vuelta/ida, persistencia e integridad). Se agregaron 13 comprobaciones acumuladas, sin funcionalidades nuevas ni cambios de arquitectura/permisos.
+- **Resultado:** productos con dos autores internos y autora externa consultables segun permiso; al retirar integrante se revoca acceso sin borrar autoria/asistencia; evidencias compartidas sin copias ni borrado por desvincular; fechas Bogota, estados y asistencia auditada comprobados.
+- **Pendientes:** prueba de interaccion UI, PostgreSQL pausado, cinco alertas altas de desarrollo ESLint y almacenamiento/retencion productivos. Auditorias backend completa y frontend de produccion: cero vulnerabilidades. No se declara cierre integral de Fases 3/4 ni aprobacion de I-17/I-18/I-19. Fase 5 requiere nueva autorizacion.
+
+### DEC-039 - Aprobacion de I-17/I-18/I-19 y autorizacion de Fase 5
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobado ("revisados y aprobados, continua con la fase 5, pero antes, dime que conlleva la fase 5").
+- **Decision:** se aprueban I-17/DEC-034, I-18/DEC-036 e I-19/DEC-038 y se autoriza Fase 5. Se explico su alcance antes de comenzar: solicitudes, revisiones/estados, respuestas trazables, desvinculacion sin borrar historia, adjuntos reutilizados e interfaz; sin certificados automaticos.
+- **Secuencia operativa:** I-20 F5-01 a F5-04 (modelo, API, tipos, estados, permisos); I-21 F5-05 a F5-07 (desvinculacion, adjuntos y UI); I-22 verificacion acumulada. Se habilita una iteracion a la vez, comenzando I-20. El mapa original I-16/I-17/I-18 del backlog se corresponde con I-20/I-21/I-22 en la numeracion real.
+- **Limites:** aprobacion de los resultados SQLite con los pendientes ya informados; no se declara equivalencia PostgreSQL ni se resuelven por aprobacion las alertas ESLint, navegador o almacenamiento/retencion. Fase 3 conserva sus pendientes. Sin Fase 6, despliegue, commit ni push por esta instruccion.
+
+### DEC-040 - Implementacion de I-20 (solicitudes administrativas)
+
+- **Fecha:** 2026-10-18
+- **Estado:** implementada y verificada tecnicamente en SQLite; aprobacion del resultado pendiente.
+- **Modelo/API:** `administrative_requests` por migracion `AdministrativeRequests1728810000000`; REST `/administrative-requests`, detalle, historial paginado, responsable y cambio de estado. No duplica `membership_requests`. Cinco tipos: `certificate`, `data_change`, `withdrawal`, `responsibility_change`, `general`.
+- **Ambito:** tramites institucionales, sin introducir ambitos de proyectos ni cargos. `mine` limita siempre al solicitante; `review` solo admin/coordinator, que atienden solicitudes institucionales ajenas. Permisos SQL antes de contar/paginar; ajenos reciben 404. La respuesta no expone correo ni credenciales de las personas relacionadas.
+- **Revision:** responsable asignable solo si es autoridad activa y distinto del solicitante. Iniciar revision sin responsable asigna al actor; la asignacion organiza la bandeja y no concede exclusividad ni sustituye el permiso institucional. Otra autoridad puede tramitar una solicitud ajena. El solicitante, incluso admin/coordinator, no cambia estados ni asigna responsable en su propia solicitud. Restricciones SQL refuerzan la separacion de solicitante, revisor, decisor y ejecutor.
+- **Estados:** `pending -> in_review -> approved/rejected`; `approved -> completed`. Rechazo/completada finales. Respuesta obligatoria para decidir o completar, con actor y fecha separados; auditoria transaccional conserva las respuestas anteriores al completar. No se borran ni se reabren solicitudes y no se modifica su contenido despues de registrarlas en este bloque.
+- **Ejecucion:** aprobar no modifica cuentas, datos ni roles. Completar los tramites comunes registra su ejecucion manual mediante respuesta explicita, no genera documentos. La desvinculacion no se puede completar con el endpoint generico; I-21 implementara su procedimiento efectivo con responsabilidades pendientes y desactivacion segura. No se crea un simulacro de desactivacion.
+- **Historial:** reutiliza `audit_events` con proyeccion de acciones del tramite, actor/nombre y detalles propios; consulta bajo el mismo permiso de solicitud. Sin historial paralelo ni ampliacion de acceso a la auditoria general.
+- **Limites:** I-20 solo F5-01 a F5-04 y trazabilidad minima necesaria para verificar decisiones. F5-05 a F5-07 (salida, adjuntos e interfaz) siguen para I-21 dentro de Fase 5 autorizada; sin aprobacion ficticia de I-20 ni de toda Fase 5. Sin nuevas dependencias; PostgreSQL pausado.
+- **Evidencia:** 12 pruebas HTTP nuevas; `npm run check` salida 0 (72 frontend + 263 backend) con limpieza explicita del watcher adicional del smoke; `npm run e2e` salida 0, 107/107, catorce migraciones ida/vuelta/ida, persistencia tras reinicio e integridad SQLite/archivos. Base local respaldada y una migracion aplicada sin alterar conteos previos. Detalles e incidencia de smoke en `context/tarea-actual.md`.
+
+### DEC-041 - Continuacion de Fase 5: I-21
+
+- **Fecha:** 2026-10-18
+- **Estado:** ejecucion autorizada ("continua" y Fase 5 autorizada por DEC-039).
+- **Alcance:** F5-05 a F5-07, desvinculacion efectiva sin borrar historia, auditoria/adjuntos privados mediante Gestion documental y pantallas. No implica aprobacion formal del resultado I-20.
+- **Criterios de ejecucion:** completar salida solo con solicitud aprobada, autoridad distinta del solicitante y permiso vigente para administrar su cuenta; bloquear responsabilidades pendientes y exigir reasignarlas explicitamente con las funciones existentes. Conservar proyectos, tareas terminadas, autorias y asistencia; revocar sesiones al desactivar. Adjuntos visibles solo para solicitante y autoridades, incluidos metadatos/descarga; mismo almacenamiento/validacion documental, sin repositorio paralelo.
+- **Limites:** PostgreSQL pausado; sin servicios externos, notificaciones, generacion automatica de certificados ni Fase 6. Los pendientes tecnicos anteriores se conservan.
+
+### DEC-042 - Implementacion de I-21 (salida, adjuntos e interfaz)
+
+- **Fecha:** 2026-10-18
+- **Estado:** implementada y verificada tecnicamente en SQLite; aprobacion del resultado pendiente.
+- **Salida:** endpoint especifico `/administrative-requests/:id/withdrawal`, solo solicitud `withdrawal` aprobada, confirmacion del UUID de solicitante y motivo. Conserva la decision original y registra actor/fecha de ejecucion. Se reutiliza la regla de desactivacion de integrantes (`deactivateAccount`, extraida y compartida), sin permitir autoejecucion, administrar pares desde coordinator ni dejar al sistema sin admin activo. Cierra sesiones en la misma transaccion que completa y audita el tramite; cuenta ya inactiva puede registrar salida si cumple las demas condiciones, sin reactivarla.
+- **Responsabilidades:** vista previa paginada y nueva comprobacion dentro de la transaccion de ejecucion: liderazgos/tareas no terminadas de proyectos no finalizados, organizacion de actividades programadas/en curso y solicitudes pendientes/en revision asignadas. Se bloquea hasta reasignar explicitamente mediante las herramientas existentes o resolver/cancelar la responsabilidad cuando proceda; no se retiran tareas ni se trasladan cargos automaticamente. Proyectos, miembros, tareas terminadas, autorias, resultados y asistencia permanecen como historia. Los proyectos finalizados conservan sus responsables historicos.
+- **Adjuntos (F5-06):** `administrative_request_documents`, un vinculo exclusivo por documento a una solicitud, sin almacenar archivos aparte ni modificar esquemas previos de documentos. Carga por Gestion documental, mismas firmas/formatos/limites y adaptador; metadatos institucionales privados, sin autorizaciones a terceros ni resultado/proyecto. La solicitud determina acceso efectivo (solicitante/autoridades), tambien en repositorio, detalle y descarga genericos. Ser quien subio el archivo como autoridad no concede acceso si pierde ese rol y la solicitud es ajena.
+- **Cambios de adjuntos:** solicitante agrega durante pendiente/revision; autoridades ajenas tambien durante aprobada para aportar respuesta/certificado. Puede eliminar quien subio o una autoridad, dentro de esos estados. Completada/rechazada quedan en lectura. No se aceptan cambios genericos de metadatos/permisos ni compartir estos documentos: se elimina/adjunta correccion cuando el estado lo permita. La UI identifica el adjunto de tramite en el repositorio y enlaza a su solicitud. Eliminacion usa Gestion documental y deja auditoria de solicitud/documento, sin versiones paralelas. No se vinculan archivos preexistentes de otro ambito.
+- **Interfaz (F5-07):** `/hub/tramites` con mis solicitudes, bandeja de revision, filtros y paginacion; `/hub/tramites/[id]` con respuesta, responsable, historial/adjuntos paginados y acciones por permisos. Formularios/confirmaciones usan modales existentes, selectores shadcn, tokens y ancho del HUB. Vinculaciones conserva `/hub/solicitudes`, identificado con esa etiqueta en el menu para distinguirlo. Nuevas pantallas servidor y acciones cliente con sesion/CSRF existentes, sin cache privada compartida.
+- **Alcance:** implementa F5-05 a F5-07; historial reutiliza auditoria existente. Sin notificaciones ni generacion automatica de certificados, sin nuevas dependencias ni cambios de arquitectura de almacenamiento/autenticacion. Solo SQLite; I-22 corresponde a verificacion acumulada y no se aprueba mediante esta entrada.
+- **Verificacion:** pruebas especificas 10/10, regresion documentos/integrantes 39/39; `npm run verify` final salida 0 (72 frontend + 273 backend, lint/build/typecheck y migraciones sin pendientes); tres health directos sobre servidores locales 200. `npm run e2e` salida 0, 119/119, quince migraciones ida/vuelta/ida, API/SSR, salida bloqueada/reasignada/ejecutada, adjuntos privados, persistencia tras reinicio e integridad SQLite/cinco archivos. Respaldo online local antes de aplicar una migracion y conteos previos conservados; pendientes navegador/PostgreSQL/ESLint/almacenamiento productivo sin cambios.
+
+### DEC-043 - Continuacion con I-22: verificacion de Fase 5
+
+- **Fecha:** 2026-10-18
+- **Estado:** ejecucion autorizada ("continua con 9 22", entendido como I-22, el siguiente bloque presentado, dentro de Fase 5 autorizada por DEC-039).
+- **Alcance:** verificacion acumulada de F5-01 a F5-07, relaciones/permisos, decisiones, adjuntos, desvinculacion e historia, migraciones e integridad SQLite. Solo revision y pruebas, con correcciones de defectos comprobados si aparecen; sin funcionalidades nuevas.
+- **Limites:** no aprueba formalmente I-20/I-21 ni declara cierre integral de Fase 5. PostgreSQL sigue pausado; pendientes de UI real, ESLint y almacenamiento/retencion productivos conservados. No autoriza Fase 6, commit, push ni despliegue.
 
 ## Referencias vigentes
 

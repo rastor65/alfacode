@@ -1,5 +1,5 @@
 // Prueba E2E del HUB: cierre de la Fase 2 (pruebas F2 #9, #11 en SQLite y #12), investigacion
-// (I-14) y documentos (I-15) de la Fase 3, por API y con las paginas renderizadas por Next.js.
+// (I-14) y documentos (I-15) de la Fase 3, y cierre Fase 4 (I-19), por API y paginas SSR.
 // Usa una base SQLite, un outbox y documentos temporales y los puertos 4100 (API) y 3100 (web); no
 // toca la base local. El frontend se compila en `frontend/.next/e2e` con el proxy hacia la API
 // temporal: nunca envia peticiones al backend de desarrollo (puerto 4000). Requiere el backend
@@ -482,10 +482,11 @@ async function main() {
   check("un ajeno ve no encontrado en los documentos del proyecto", (await outsider.page(`/hub/proyectos/${projectId}/documentos`)).status === 404);
 
   // I-17: produccion academica, autoria externa y evidencia reutilizada de documentos.
+  const coordId = (await coord.call("GET", "/auth/me")).json.id;
   const academicPayload = { title: "Articulo E2E del tutor", type: "article", status: "submitted", projectId,
-    authors: [{ userId: studentId }, { externalName: "Colaboradora externa ficticia" }], resultIds: [result.json.id], productDate: "2026-10-18" };
+    authors: [{ userId: studentId }, { externalName: "Colaboradora externa ficticia" }, { userId: coordId }], resultIds: [result.json.id], productDate: "2026-10-18" };
   const academic = await coord.call("POST", "/academic-products", academicPayload);
-  check("I-17: producto con autoria interna, externa y resultado del proyecto", academic.status === 201 && academic.json.authors?.length === 2 && academic.json.results?.[0]?.id === result.json.id, academic);
+  check("I-17: producto con autoria interna, externa y resultado del proyecto", academic.status === 201 && academic.json.authors?.length === 3 && academic.json.results?.[0]?.id === result.json.id, academic);
   check("I-17: colaborador consulta pero no modifica el producto", (await student.call("GET", `/academic-products/${academic.json.id}`)).status === 200 &&
     (await student.call("PUT", `/academic-products/${academic.json.id}`, academicPayload)).status === 403);
   check("I-17: ajeno no ve producto ni totales del proyecto", (await outsider.call("GET", `/academic-products/${academic.json.id}`)).status === 404 &&
@@ -498,6 +499,123 @@ async function main() {
   check("I-17: historial del integrante respeta filtros y permisos", profileProducts.status === 200 && profileProducts.html.includes("Articulo E2E del tutor"), profileProducts.status);
   check("I-17: pagina de reconocimientos del proyecto", (await student.page(`/hub/proyectos/${projectId}/produccion?vista=recognitions`)).html.includes("Reconocimiento E2E"));
   check("I-17: pagina del proyecto ajeno devuelve 404", (await outsider.page(`/hub/proyectos/${projectId}/produccion`)).status === 404);
+
+  // I-18: actividad, asistencia y calendario con fechas explicitas de Bogota.
+  const activity = await coord.call("POST", "/events", { title: "Actividad E2E del proyecto", type: "training", mode: "onsite", location: "Sala ficticia", organizerId: (await coord.call("GET", "/auth/me")).json.id, projectId,
+    startsAt: "2026-10-18T09:00:00-05:00", endsAt: "2026-10-18T11:00:00-05:00" });
+  check("I-18: actividad programada con organizador y UTC normalizado", activity.status === 201 && activity.json.status === "scheduled" && activity.json.startsAt === "2026-10-18T14:00:00.000Z", activity);
+  check("I-18: registra participante sin duplicar", (await coord.call("POST", `/events/${activity.json.id}/participants`, { userId: studentId, role: "participant" })).status === 201 &&
+    (await coord.call("POST", `/events/${activity.json.id}/participants`, { userId: studentId, role: "participant" })).status === 409);
+  check("I-18: ajeno no ve evento ni altera asistencia", (await outsider.call("GET", `/events/${activity.json.id}`)).status === 404 &&
+    (await outsider.call("PATCH", `/events/${activity.json.id}/participants/${studentId}/attendance`, { attendance: "attended" })).status === 404);
+  check("I-18: inicia actividad y solo autoridad confirma asistencia", (await coord.call("POST", `/events/${activity.json.id}/status`, { status: "in_progress" })).status === 200 &&
+    (await student.call("PATCH", `/events/${activity.json.id}/participants/${studentId}/attendance`, { attendance: "attended" })).status === 403 &&
+    (await coord.call("PATCH", `/events/${activity.json.id}/participants/${studentId}/attendance`, { attendance: "attended" })).status === 200);
+  check("I-18: finaliza conservando la asistencia opcional", (await coord.call("POST", `/events/${activity.json.id}/status`, { status: "completed" })).status === 200 &&
+    (await student.call("GET", `/events/${activity.json.id}/participants`)).json.items.some(p => p.userId === studentId && p.attendance === "attended"));
+  check("I-18: vincula evidencia existente sin copiar archivos", (await coord.call("POST", `/events/${activity.json.id}/documents`, { documentId: restrictedDoc.json.id })).status === 201 &&
+    (await student.call("GET", `/events/${activity.json.id}/documents`)).json.items.some(d => d.id === restrictedDoc.json.id));
+  const callActivity = await coord.call("POST", "/events", { title: "Convocatoria E2E institucional", type: "call", mode: "online", url: "https://example.org/convocatoria", organizerId: activity.json.organizerId,
+    startsAt: "2026-10-19T09:00:00-05:00", endsAt: "2026-10-25T18:00:00-05:00", externalOrganizer: "Entidad ficticia", requirements: "Resumen y formulario externo", registrationUrl: "https://example.org/inscripcion" });
+  check("I-18: convocatoria institucional consultable sin postulacion interna", callActivity.status === 201 && (await outsider.call("GET", `/events/${callActivity.json.id}`)).json.requirements === "Resumen y formulario externo", callActivity);
+  const calendar = await student.page(`/hub/proyectos/${projectId}/actividades?mes=2026-10`);
+  check("I-18: calendario del proyecto incluye la actividad", calendar.status === 200 && calendar.html.includes("Actividad E2E del proyecto") && calendar.html.includes("2026-10-18"), calendar.status);
+  const publicCalendar = await outsider.page("/hub/actividades?mes=2026-10");
+  check("I-18: calendario respeta visibilidad y muestra convocatoria institucional", publicCalendar.status === 200 && publicCalendar.html.includes("Convocatoria E2E institucional") && !publicCalendar.html.includes("Actividad E2E del proyecto"), publicCalendar.status);
+  check("I-18: pagina de actividades ajenas devuelve 404", (await outsider.page(`/hub/proyectos/${projectId}/actividades?mes=2026-10`)).status === 404);
+
+  // I-19: relaciones y permisos acumulados; solo datos ficticios de este recorrido.
+  for (const authorId of [studentId, coordId]) {
+    const history = await student.call("GET", `/academic-products?authorId=${authorId}&pageSize=1`);
+    const page = await student.page(`/hub/produccion?integrante=${authorId}`);
+    check(`I-19: historial del autor ${authorId === studentId ? "estudiante" : "coordinador"} incluye el mismo producto una sola vez`,
+      history.status === 200 && history.json.total === 1 && history.json.items[0]?.id === academic.json.id &&
+      page.status === 200 && page.html.includes(academicPayload.title));
+  }
+  check("I-19: filtrar por autor no revela el producto a un ajeno",
+    (await outsider.call("GET", `/academic-products?authorId=${studentId}&pageSize=1`)).json.total === 0 &&
+    !(await outsider.page(`/hub/produccion?integrante=${studentId}`)).html.includes(academicPayload.title));
+  check("I-19: el filtro de fecha Bogota incluye la actividad completada solo en su dia",
+    (await student.call("GET", `/events?projectId=${projectId}&status=completed&from=2026-10-18&to=2026-10-18`)).json.total === 1 &&
+    (await student.call("GET", `/events?projectId=${projectId}&from=2026-10-19&to=2026-10-19`)).json.total === 0);
+  check("I-19: finalizar no confirma automaticamente asistencia del organizador",
+    (await coord.call("GET", `/events/${activity.json.id}/participants`)).json.items.find(p => p.userId === coordId)?.attendance === "registered");
+  check("I-19: no se reabre una actividad completada ni se borra con historial",
+    (await coord.call("POST", `/events/${activity.json.id}/status`, { status: "in_progress" })).status === 409 &&
+    (await coord.call("DELETE", `/events/${activity.json.id}`)).status === 409);
+  check("I-19: desvincular evidencia conserva el documento compartido con reconocimiento",
+    (await coord.call("DELETE", `/events/${activity.json.id}/documents/${restrictedDoc.json.id}`)).status === 204 &&
+    (await student.download(restrictedDoc.json.id)).status === 200 &&
+    (await student.call("GET", `/recognitions/${recognition.json.id}`)).json.evidence?.id === restrictedDoc.json.id);
+  check("I-19: se vuelve a vincular la misma evidencia sin duplicarla",
+    (await coord.call("POST", `/events/${activity.json.id}/documents`, { documentId: restrictedDoc.json.id })).status === 201 &&
+    (await coord.call("GET", `/events/${activity.json.id}/documents`)).json.total === 1);
+  check("I-19: retirar del proyecto revoca acceso aunque conserve autoria y asistencia",
+    (await coord.call("DELETE", `/projects/${projectId}/members/${studentId}`)).status === 200 &&
+    (await student.call("GET", `/academic-products/${academic.json.id}`)).status === 404 &&
+    (await student.call("GET", `/events/${activity.json.id}`)).status === 404 &&
+    (await student.call("PATCH", `/events/${activity.json.id}/participants/${studentId}/attendance`, { attendance: "absent" })).status === 404 &&
+    (await student.call("GET", `/academic-products?authorId=${studentId}`)).json.total === 0 &&
+    (await student.call("GET", `/events?projectId=${projectId}`)).json.total === 0);
+  check("I-19: las paginas del proyecto retirado tambien devuelven 404",
+    (await student.page(`/hub/proyectos/${projectId}/produccion`)).status === 404 &&
+    (await student.page(`/hub/proyectos/${projectId}/actividades?mes=2026-10`)).status === 404);
+  check("I-19: autoridades conservan autoria, asistencia y evidencia tras retirar al integrante",
+    (await coord.call("GET", `/academic-products/${academic.json.id}`)).json.authors.some(a => a.userId === studentId) &&
+    (await coord.call("GET", `/events/${activity.json.id}/participants`)).json.items.some(p => p.userId === studentId && p.attendance === "attended") &&
+    (await coord.call("GET", `/events/${activity.json.id}/documents`)).json.items.some(d => d.id === restrictedDoc.json.id));
+  // Restaurar pertenencia facilita la revision manual posterior, sin recrear las relaciones.
+  check("I-19: reincorporar recupera acceso sin duplicar autores ni participantes",
+    (await coord.call("POST", `/projects/${projectId}/members`, { userId: studentId, role: "collaborator" })).status === 201 &&
+    (await student.call("GET", `/academic-products/${academic.json.id}`)).json.authors.length === 3 &&
+    (await student.call("GET", `/events/${activity.json.id}/participants`)).json.total === 2);
+
+  // I-20: tramites institucionales; no reutiliza ni duplica solicitudes de vinculacion.
+  const administrative = await student.call("POST", "/administrative-requests", {
+    type: "certificate", subject: "Constancia E2E de participacion", description: "Solicito una constancia ficticia para el recorrido de pruebas",
+  });
+  check("I-20: integrante registra solicitud propia pendiente", administrative.status === 201 && administrative.json.status === "pending" && administrative.json.requesterId === studentId, administrative);
+  const requestDocument = await student.upload(`/administrative-requests/${administrative.json.id}/documents`, pdf(1536, "tramite"), "Soporte privado de tramite.pdf", { title: "Soporte privado E2E" }, true);
+  check("I-21: solicitante adjunta usando Gestion documental por el proxy", requestDocument.status === 201 && requestDocument.json.accessLevel === "private" && requestDocument.json.administrativeRequestId === administrative.json.id, requestDocument);
+  check("I-21: adjunto solo consultable por solicitante y autoridades",
+    (await coord.download(requestDocument.json.id)).status === 200 && (await outsider.download(requestDocument.json.id)).status === 404 &&
+    !(await outsider.call("GET", "/documents?pageSize=100")).json.items.some(d => d.id === requestDocument.json.id));
+  check("I-20: ajeno no consulta solicitud, historial ni totales",
+    (await outsider.call("GET", `/administrative-requests/${administrative.json.id}`)).status === 404 &&
+    (await outsider.call("GET", `/administrative-requests/${administrative.json.id}/history`)).status === 404 &&
+    (await outsider.call("GET", "/administrative-requests")).json.total === 0);
+  check("I-20: solicitante no aprueba y no puede saltarse la revision",
+    (await student.call("POST", `/administrative-requests/${administrative.json.id}/status`, { status: "approved", response: "Intento sin permiso" })).status === 403 &&
+    (await coord.call("POST", `/administrative-requests/${administrative.json.id}/status`, { status: "approved", response: "Intento de salto" })).status === 409);
+  check("I-20: autoridad inicia revision y queda asignada",
+    (await coord.call("POST", `/administrative-requests/${administrative.json.id}/status`, { status: "in_review" })).json.reviewerId === coordId);
+  check("I-20: autoridad aprueba con respuesta sin completar automaticamente",
+    (await coord.call("POST", `/administrative-requests/${administrative.json.id}/status`, { status: "approved", response: "Se aprueba la solicitud ficticia" })).json.status === "approved" &&
+    (await student.call("GET", `/administrative-requests/${administrative.json.id}`)).json.completedAt === null);
+  check("I-20: autoridad registra ejecucion manual del tramite",
+    (await coord.call("POST", `/administrative-requests/${administrative.json.id}/status`, { status: "completed", response: "Constancia preparada manualmente para la prueba" })).json.completedBy === coordId);
+  const requestHistory = await student.call("GET", `/administrative-requests/${administrative.json.id}/history`);
+  check("I-20: solicitante consulta historial de decisiones con autor y respuesta",
+    requestHistory.status === 200 && requestHistory.json.total === 5 && requestHistory.json.items.some(e => e.details?.to === "approved" && e.actor?.id === coordId));
+  const ownAuthorityRequest = await coord.call("POST", "/administrative-requests", { type: "general", subject: "Peticion propia E2E de autoridad", description: "Peticion ficticia que debe revisar otra autoridad institucional" });
+  check("I-20: autoridad tampoco puede revisar su propia peticion",
+    ownAuthorityRequest.status === 201 && (await coord.call("POST", `/administrative-requests/${ownAuthorityRequest.json.id}/status`, { status: "in_review" })).status === 403 &&
+    (await admin.call("POST", `/administrative-requests/${ownAuthorityRequest.json.id}/status`, { status: "in_review" })).status === 200);
+  check("I-22: autoridad solicitante no se autoaprueba ni suplanta al solicitante por HTTP",
+    (await coord.call("POST", `/administrative-requests/${ownAuthorityRequest.json.id}/status`, { status: "approved", response: "Intento de autoaprobacion" })).status === 403 &&
+    (await coord.call("POST", `/administrative-requests/${ownAuthorityRequest.json.id}/status`, { status: "approved", response: "Intento de asignacion masiva", requesterId: studentId })).status === 400 &&
+    (await admin.call("GET", `/administrative-requests/${ownAuthorityRequest.json.id}`)).json.status === "in_review");
+  const requestPage = await student.page(`/hub/tramites/${administrative.json.id}`);
+  check("I-21: detalle SSR muestra respuesta, adjunto e historial privados", requestPage.status === 200 && requestPage.html.includes("Constancia preparada manualmente") && requestPage.html.includes("Soporte privado E2E"), requestPage.status);
+  check("I-21: pantallas de solicitante y revision muestran las solicitudes autorizadas",
+    (await student.page("/hub/tramites")).html.includes("Constancia E2E de participacion") &&
+    (await coord.page("/hub/tramites?vista=review")).html.includes("Constancia E2E de participacion"));
+  check("I-21: ajeno recibe pagina 404 y su bandeja no muestra otras solicitudes",
+    (await outsider.page(`/hub/tramites/${administrative.json.id}`)).status === 404 &&
+    !(await outsider.page("/hub/tramites?vista=review")).html.includes("Constancia E2E de participacion"));
+  check("I-21: no se publica un adjunto ni se elimina despues de completar el tramite",
+    (await student.call("PATCH", `/documents/${requestDocument.json.id}`, { accessLevel: "general" })).status === 409 &&
+    (await coord.call("DELETE", `/documents/${requestDocument.json.id}`)).status === 409);
 
   // I-16: persistencia e integridad de la Fase 3 sobre la base aislada.
   await stopServer();
@@ -515,6 +633,70 @@ async function main() {
     (await coord.download(privateDoc.json.id)).status === 200 && (await outsider.download(privateDoc.json.id)).status === 404);
   check("I-17: producto, autoria y reconocimiento persisten tras reiniciar", (await student.call("GET", `/academic-products/${academic.json.id}`)).json.authors?.[1]?.externalName === "Colaboradora externa ficticia" &&
     (await student.call("GET", `/recognitions/${recognition.json.id}`)).json.evidence?.id === restrictedDoc.json.id);
+  check("I-18: evento, participantes y asistencia persisten tras reiniciar", (await coord.call("GET", `/events/${activity.json.id}`)).json.status === "completed" &&
+    (await student.call("GET", `/events/${activity.json.id}/participants`)).json.items.some(p => p.userId === studentId && p.attendance === "attended"));
+  check("I-20: solicitud y decisiones persisten tras reiniciar",
+    (await student.call("GET", `/administrative-requests/${administrative.json.id}`)).json.status === "completed" &&
+    (await student.call("GET", `/administrative-requests/${administrative.json.id}/history`)).json.total === 5 &&
+    (await outsider.call("GET", `/administrative-requests/${administrative.json.id}`)).status === 404);
+  check("I-21: adjunto del tramite persiste integro tras reiniciar", (await student.download(requestDocument.json.id)).status === 200 &&
+    (await outsider.download(requestDocument.json.id)).status === 404);
+
+  // Salida de una cuenta ficticia independiente, conservando las cuentas para revision manual.
+  const exitEmail = "salida.e2e@uniguajira.edu.co", exitPassword = "Salida-E2E-ficticia-123";
+  await admin.call("POST", "/invitations", { email: exitEmail, roleCode: "student" });
+  const exitToken = (await readOutbox(exitEmail)).match(/#token=([A-Za-z0-9_-]+)/)?.[1];
+  const exitAccepted = await anon.call("POST", "/invitations/accept", { token: exitToken, fullName: "Salida ficticia E2E", password: exitPassword });
+  const exiting = client(); check("I-21: cuenta ficticia preparada para salida", ok(exitAccepted) && (await exiting.login(exitEmail, exitPassword)).status === 200);
+  const exitId = (await exiting.call("GET", "/auth/me")).json.id;
+  const exitRequest = await exiting.call("POST", "/administrative-requests", { type: "withdrawal", subject: "Salida ficticia E2E", description: "Solicito mi desvinculacion en esta prueba aislada" });
+  const exitContent = pdf(1792, "soporte de salida I-22");
+  const exitDocument = await exiting.upload(`/administrative-requests/${exitRequest.json.id}/documents`, exitContent, "Soporte de salida.pdf");
+  check("I-22: salida tiene soporte privado antes de la decision", exitDocument.status === 201 && exitDocument.json.administrativeRequestId === exitRequest.json.id, exitDocument);
+  await coord.call("POST", `/administrative-requests/${exitRequest.json.id}/status`, { status: "in_review" });
+  await coord.call("POST", `/administrative-requests/${exitRequest.json.id}/status`, { status: "approved", response: "Salida aprobada en prueba aislada" });
+  await coord.call("POST", `/projects/${projectId}/members`, { userId: exitId, role: "collaborator" });
+  const exitTask = await createTask("Responsabilidad antes de salir E2E", exitId);
+  const exitProduct = await coord.call("POST", "/academic-products", { title: "Aporte historico de salida E2E", type: "software", status: "published", projectId, authors: [{ userId: exitId }] });
+  const exitResult = await coord.call("POST", `/projects/${projectId}/research-results`, { title: "Resultado historico de salida E2E", participantIds: [exitId] });
+  const exitDoneTask = await createTask("Tarea terminada antes de salida E2E", exitId);
+  await coord.call("PATCH", `/projects/${projectId}/tasks/${exitDoneTask.id}`, { status: "in_progress" });
+  const doneBeforeExit = await coord.call("PATCH", `/projects/${projectId}/tasks/${exitDoneTask.id}`, { status: "done" });
+  check("I-22: integrante tiene resultado investigativo y tarea terminada antes de salir", exitResult.status === 201 && doneBeforeExit.status === 200 && doneBeforeExit.json.status === "done");
+  const exitEvent = await coord.call("POST", "/events", { title: "Participacion historica de salida E2E", type: "training", mode: "online", url: "https://example.org/sesion", organizerId: coordId,
+    startsAt: "2026-10-20T10:00:00-05:00", endsAt: "2026-10-20T11:00:00-05:00" });
+  const exitRegistration = await coord.call("POST", `/events/${exitEvent.json.id}/participants`, { userId: exitId, role: "speaker" });
+  await coord.call("POST", `/events/${exitEvent.json.id}/status`, { status: "in_progress" });
+  const exitAttendance = await coord.call("PATCH", `/events/${exitEvent.json.id}/participants/${exitId}/attendance`, { attendance: "attended" });
+  const exitEventCompleted = await coord.call("POST", `/events/${exitEvent.json.id}/status`, { status: "completed" });
+  check("I-22: asistencia historica registrada antes de la salida", exitEvent.status === 201 && exitRegistration.status === 201 && exitAttendance.status === 200 && exitEventCompleted.status === 200);
+  const exitBody = { requesterId: exitId, response: "Responsabilidades revisadas y salida ejecutada en prueba aislada" };
+  check("I-21: salida aprobada bloqueada por responsabilidad pendiente", (await coord.call("POST", `/administrative-requests/${exitRequest.json.id}/withdrawal`, exitBody)).status === 409 &&
+    (await coord.call("GET", `/administrative-requests/${exitRequest.json.id}/withdrawal`)).json.total === 1 && (await exiting.call("GET", "/auth/me")).status === 200);
+  check("I-21: reasignacion explicita permite ejecutar salida", (await coord.call("PATCH", `/projects/${projectId}/tasks/${exitTask.id}`, { assigneeId: coordId })).status === 200 &&
+    (await coord.call("POST", `/administrative-requests/${exitRequest.json.id}/withdrawal`, exitBody)).status === 200);
+  check("I-21: salida revoca sesion y conserva autoria y participacion previa", (await exiting.call("GET", "/auth/me")).status === 401 &&
+    (await coord.call("GET", `/academic-products/${exitProduct.json.id}`)).json.authors.some(a => a.userId === exitId) &&
+    (await coord.call("GET", `/projects/${projectId}`)).json.members.some(m => m.userId === exitId));
+  const retainedResult = (await coord.call("GET", `/projects/${projectId}/research-results`)).json.items.find(r => r.id === exitResult.json.id);
+  const retainedTask = (await coord.call("GET", `/projects/${projectId}/tasks?pageSize=100`)).json.items.find(t => t.id === exitDoneTask.id);
+  check("I-22: salida conserva participante investigativo y responsable de tarea terminada", retainedResult?.participants.some(p => p.userId === exitId) && retainedTask?.assignee?.userId === exitId && retainedTask?.status === "done");
+  check("I-22: salida conserva asistencia y rol historico de actividad", (await coord.call("GET", `/events/${exitEvent.json.id}/participants`)).json.items.some(p => p.userId === exitId && p.role === "speaker" && p.attendance === "attended"));
+  const retainedExitFile = await coord.download(exitDocument.json.id);
+  check("I-22: autoridad conserva soporte integro y otro integrante no lo obtiene", retainedExitFile.status === 200 && sha(retainedExitFile.body) === sha(exitContent) && (await student.download(exitDocument.json.id)).status === 404);
+  const exitHistory = await coord.call("GET", `/administrative-requests/${exitRequest.json.id}/history`);
+  check("I-22: decision original y ejecucion permanecen separadas en el historial", exitHistory.json.total === 5 &&
+    exitHistory.json.items.some(e => e.details?.to === "approved" && e.details.response === "Salida aprobada en prueba aislada" && e.actor?.id === coordId) &&
+    exitHistory.json.items.filter(e => e.action === "administrative_request.withdrawal_executed" && e.actor?.id === coordId).length === 1);
+  check("I-22: una salida completada no se ejecuta otra vez ni pierde su adjunto", (await coord.call("POST", `/administrative-requests/${exitRequest.json.id}/withdrawal`, exitBody)).status === 409 &&
+    (await coord.call("DELETE", `/documents/${exitDocument.json.id}`)).status === 409);
+  await stopServer(); await startServer();
+  check("I-21: desvinculacion completada y revocacion persisten tras reiniciar", (await coord.call("GET", `/administrative-requests/${exitRequest.json.id}`)).json.status === "completed" &&
+    (await exiting.call("GET", "/auth/me")).status === 401);
+  check("I-22: historia investigativa, tarea y asistencia de persona inactiva persisten al reiniciar",
+    (await coord.call("GET", `/projects/${projectId}/research-results`)).json.items.some(r => r.id === exitResult.json.id && r.participants.some(p => p.userId === exitId)) &&
+    (await coord.call("GET", `/projects/${projectId}/tasks?pageSize=100`)).json.items.some(t => t.id === exitDoneTask.id && t.assignee?.userId === exitId && t.status === "done") &&
+    (await coord.call("GET", `/events/${exitEvent.json.id}/participants`)).json.items.some(p => p.userId === exitId && p.attendance === "attended"));
 
   await stopServer();
   const requireBackend = createRequire(join(backendDir, "package.json"));
@@ -523,9 +705,16 @@ async function main() {
   try {
     check("SQLite conserva su integridad fisica", database.pragma("integrity_check", { simple: true }) === "ok");
     check("no hay relaciones huerfanas en SQLite", database.pragma("foreign_key_check").length === 0);
+    const attendanceAudits = database.prepare("SELECT actor_user_id FROM audit_events WHERE target_id = ? AND action = 'event.attendance_changed'").all(activity.json.id);
+    check("I-19: el unico cambio de asistencia confirmado pertenece a la autoridad",
+      attendanceAudits.length === 1 && attendanceAudits[0].actor_user_id === coordId);
+    const requestAttachments = database.prepare("SELECT rd.document_id, d.access_level FROM administrative_request_documents rd JOIN documents d ON d.id = rd.document_id").all();
+    check("I-22: cada adjunto de tramite conserva metadatos privados y no tiene autorizaciones externas",
+      requestAttachments.length === 2 && requestAttachments.every(d => d.access_level === "private") &&
+      database.prepare("SELECT count(*) AS n FROM document_grants g JOIN administrative_request_documents rd ON rd.document_id = g.document_id").get().n === 0);
     const records = database.prepare("SELECT storage_key, size_bytes, sha256 FROM documents").all();
     const files = await readdir(env.DOCUMENTS_DIR);
-    check("cuatro cargas validas producen cuatro archivos, sin duplicados ni residuos de rechazos", records.length === 4 &&
+    check("seis cargas validas producen seis archivos, sin duplicados ni residuos de rechazos", records.length === 6 &&
       files.length === records.length && records.every((record) => files.includes(record.storage_key)));
     const contents = await Promise.all(records.map((record) => readFile(join(env.DOCUMENTS_DIR, record.storage_key))));
     check("cada archivo coincide con el tamano y SHA-256 de sus metadatos", records.every((record, index) =>
@@ -542,6 +731,12 @@ async function main() {
     console.log(`\nRevision manual: ${ORIGIN}/ingresar`);
     console.log(`Investigacion: ${ORIGIN}/hub/proyectos/${projectId}/investigacion`);
     console.log(`Documentos: ${ORIGIN}/hub/proyectos/${projectId}/documentos`);
+    console.log(`Produccion: ${ORIGIN}/hub/proyectos/${projectId}/produccion`);
+    console.log(`Actividades: ${ORIGIN}/hub/proyectos/${projectId}/actividades?mes=2026-10`);
+    console.log(`Tramites propios: ${ORIGIN}/hub/tramites`);
+    console.log(`Bandeja de revision: ${ORIGIN}/hub/tramites?vista=review`);
+    console.log(`Detalle del tramite: ${ORIGIN}/hub/tramites/${administrative.json.id}`);
+    console.log(`Salida completada (solo autoridades): ${ORIGIN}/hub/tramites/${exitRequest.json.id}`);
     console.log(`Documento restringido: ${ORIGIN}/api/v1/documents/${restrictedDoc.json.id}/download`);
     console.log(`Documento privado: ${ORIGIN}/api/v1/documents/${privateDoc.json.id}/download`);
     console.log(`Archivo ficticio para probar el selector: ${reviewFile}`);
