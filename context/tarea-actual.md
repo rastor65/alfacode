@@ -1,13 +1,14 @@
-# Tarea actual - Fase 4, I-17 (produccion academica)
+# Tarea actual - Fase 5, I-22 (verificacion acumulada)
 
 ## Estado
 
-**Fase activa:** 4 - Produccion academica, I-17 (F4-01 a F4-04), autorizada con pendientes de I-16 por DEC-033. La Fase 3 no se declara cerrada. Fase 2 cerrada y aprobada en SQLite (I-13, DEC-025 y DEC-026).
+**Fase activa:** 5 - I-22, verificacion acumulada de F5-01 a F5-07 (DEC-043). I-20 e I-21 implementadas/verificadas, pendientes de aprobacion formal. I-17, I-18 e I-19 aprobadas. Pendientes de I-16 conservados y PostgreSQL pausado.
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026), I-14 y DEC-027 (DEC-028).
+**Aprobacion posterior:** I-17/DEC-034, I-18/DEC-036 e I-19/DEC-038 revisadas y aprobadas por el responsable (DEC-039); sus apartados historicos siguientes conservan la evidencia de ejecucion y los pendientes tecnicos comunicados.
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
 **I-14 (F3-01 a F3-04):** aprobada (DEC-028).
 **I-15 (F3-05 a F3-09):** aprobada por el responsable el 2026-10-18 (DEC-031), incluidas las decisiones de implementacion de DEC-030.
-**Trabajo actualmente autorizado:** I-17 (F4-01 a F4-04: productos, autorias, asociaciones y reconocimientos), autorizada expresamente el 2026-10-18 con los pendientes de I-16 registrados (DEC-033). I-16 no se declara aprobada ni Fase 3 cerrada. PostgreSQL sigue pausado.
+**Trabajo actualmente autorizado:** I-22: verificar solicitudes, decisiones, privacidad, desvinculacion, historia e integridad de la Fase 5, por "continua con 9 22" (I-22 segun la continuidad; DEC-043). Solo pruebas/revision/correcciones de defectos comprobados, sin funcionalidades nuevas. No implica aprobacion formal de I-20/I-21 ni autoriza Fase 6 o despliegue.
 
 ## Fases de I-08
 
@@ -252,11 +253,98 @@
 
 - Pendientes heredados de I-16: alertas ESLint, navegador local no disponible, PostgreSQL pausado y almacenamiento productivo por elegir. La UI nueva tampoco se declara probada en navegador; E2E verifica API y HTML renderizado.
 - No se implementan eventos, calendario ni asistencia (I-18), integraciones externas ni visibilidad publica. Producto: un proyecto por registro en esta iteracion (DEC-034).
-- Siguiente paso: revision y aprobacion del responsable de I-17/DEC-034; luego autorizar I-18. No iniciar esa iteracion automaticamente.
+- I-18 autorizada posteriormente en DEC-035 por "continuemos"; no se atribuye aprobacion formal a I-17/DEC-034. Se conserva la revision pendiente.
+
+## I-18 (eventos y actividades, F4-05 a F4-08)
+
+**Autorizacion:** DEC-035. **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de aprobacion del responsable. Reglas de implementacion: DEC-036, pendientes de revision.
+
+| Tarea | Resultado | Verificacion |
+|---|---|---|
+| F4-05 | Actividades institucionales/de proyecto, fechas/horas, modalidad, ubicacion/enlace, organizador y estados explicitos | API `/events`; fecha UTC normalizada, permisos de equipo/organizador, finalizacion y cancelacion con motivo |
+| F4-06 | Participantes con roles y asistencia opcional, sin duplicados | PK evento+usuario; solo admin/coordinator confirma asistencia; auditoria de cambios y conservacion tras finalizar |
+| F4-07 | Convocatorias con apertura/cierre, organizador externo, requisitos y enlace | Tipo `call` sin crear postulaciones, cuentas externas ni integraciones |
+| F4-08 | Agenda y calendario mensual con filtros y detalle en modal, registro de participantes/asistencia, evidencias reutilizadas | `/hub/actividades`, `/hub/proyectos/[id]/actividades`, menu y pestana; productos ya incluidos desde I-17 |
+
+### Archivos y comandos ejecutados
+
+- Backend nuevo: `backend/src/database/migrations/1728800000000-events.ts`; `backend/src/modules/events/{event.entities,event.dto,events.service,events.controller,events.module,events.http.spec}.ts`. Integracion en `app.module.ts` y `database.options.ts`; se conserva `synchronize: false`.
+- Frontend nuevo: `frontend/src/features/events/{types.ts,types.test.ts,events-page.tsx,components/{event-form,event-detail,events-catalog}.tsx}`, paginas de actividades general/de proyecto y `frontend/src/lib/api/all-items.ts`. Modificados menu/pestanas y formularios/catalogo academicos para reutilizar la ayuda paginada, sin arrastrar un formulario de otro modulo al nuevo bundle.
+- `npm --prefix backend run typecheck`: OK; prueba especifica `tsx --test src/modules/events/events.http.spec.ts`: 11/11. `npm --prefix frontend test`: 72/72 (3 nuevas de calendario/fechas); lint y build OK tras corregir dos llaves JSX omitidas en etiquetas de fechas.
+- `npm run check`: OK: 72 pruebas frontend y 251 backend; lint sin advertencias, ambos builds/typecheck, sin migraciones pendientes y health directo/proxy/pagina tecnica.
+- `npm run e2e`: 85/85; trece migraciones aplicadas desde cero, revertidas completamente y reaplicadas en SQLite temporal; evento/inscripcion/duplicado/asistencia/finalizacion/convocatoria, paginas SSR con calendario y permisos, y persistencia tras reiniciar. Evidencia enlazada al archivo existente, sin duplicacion fisica. Un fallo intermedio del script leia `/auth/me` con la envoltura de login; se corrigio para usar su contrato real (`id` directo).
+- Base local: respaldo SQLite online `backend/data/alfacode-hub.backup-2026-10-18-i18.sqlite`; `npm --prefix backend run migration:run` aplico `Events1728800000000`; `migration:show` sin pendientes. Comparacion con respaldo de conteos en `users`, `projects`, `tasks`, `research_results`, `documents`, `academic_products` y `recognitions`: conservados; `PRAGMA foreign_key_check` sin errores.
+- Sin instalaciones ni dependencias nuevas; bases/respaldo ignorados en Git. Sin commit, push, publicacion, notificaciones ni usuarios reales.
+
+### Criterios y pendientes
+
+- Satisfechos en SQLite: evento programado/iniciado/finalizado, participantes sin duplicados, asistencia autorizada y auditada; ajenos sin acceso por ID; convocatorias informativas; filtros de fecha en Bogota y calendario completo del mes (recorre todas las paginas autorizadas); evidencia/certificados desde Gestion documental sin ampliar permisos.
+- Se conservan los pendientes de I-16: PostgreSQL, navegador local no disponible, observacion ESLint y almacenamiento productivo. No se afirma compatibilidad PostgreSQL ni interaccion real de UI; las pruebas E2E usan API y paginas SSR.
+- I-17/DEC-034 e I-18/DEC-036 pendientes de revision. I-19 fue autorizada posteriormente por DEC-037; no se atribuye aprobacion formal a los resultados anteriores.
+
+## I-19 (verificacion de cierre de Fase 4)
+
+**Autorizacion:** DEC-037, "continuemos con i 19". **Estado:** verificacion automatizada satisfactoria en SQLite, pendiente de revision. No se aprueban I-17/I-18 ni el cierre integral de la fase por esta ejecucion.
+
+- Alcance: revision de F4-01 a F4-08, sin funcionalidades nuevas. Matriz de los seis criterios del plan, resultados y recorrido manual pendiente en `docs/revision-i19.md`.
+- Modificados en esta iteracion: `scripts/e2e.mjs` (13 comprobaciones adicionales; historial de dos autores internos y externa, permisos y conteos, filtros de fecha, ciclo de actividad, evidencia compartida, revocacion de acceso con conservacion de historia, reincorporacion sin duplicados y actor de asistencia auditado); `AGENTS.md`, `README.md`, `context/{README,estado-actual,tarea-actual}.md`, `docs/decisiones.md`. Creado `docs/revision-i19.md`. Cambios previos de I-18 conservados sin commit.
+- `node --check scripts/e2e.mjs`: OK. `npm run check`: salida 0, lint, 72 pruebas frontend y 251 backend, ambos builds/typecheck, sin migraciones pendientes y tres health. El smoke utilizo endpoints locales existentes; Next.js rechazo un segundo dev, sin detener el servidor del responsable.
+- `npm run e2e`: salida 0, 98/98 comprobaciones; trece migraciones desde cero, reversion y reaplicacion en base temporal, API/SSR, persistencia tras reinicio, integridad fisica/FK y cuatro documentos con sus cuatro archivos integros. Sin fallos intermedios en esta ejecucion.
+- Auditorias ejecutadas: backend completa 0 vulnerabilidades (salida 0); frontend completa cinco altas de desarrollo (salida 1, cadena ESLint ya documentada); frontend `--omit=dev` 0 (salida 0). No se modificaron dependencias ni lockfiles; observacion de seguridad abierta.
+- `git diff --check`: OK con advertencias LF/CRLF. Sin instalaciones, nuevas migraciones ni cambios a la base local, commit, push o despliegue. Las reversiones se limitaron a SQLite temporal.
+- Criterios funcionales comprobados por API/SSR sobre SQLite. Pendientes: interaccion real en navegador y equivalencia PostgreSQL (pausado); observacion ESLint y almacenamiento/retencion productivos conservados. Siguiente paso: revisar I-17/I-18/I-19 y decidir cierre/continuidad con esos pendientes antes de autorizar Fase 5.
+
+## I-20 (solicitudes administrativas, F5-01 a F5-04)
+
+**Autorizacion:** Fase 5 en DEC-039. **Estado:** implementada y verificada tecnicamente en SQLite; sin atribuir aprobacion humana del incremento.
+
+| Tarea | Implementacion | Evidencia |
+|---|---|---|
+| F5-01 | `administrative_requests`: solicitante, tipo, asunto, descripcion, estado, responsable, respuesta y timestamps; sin duplicar vinculacion | Migracion `AdministrativeRequests1728810000000`, modulo `backend/src/modules/administration/*` |
+| F5-02 | Certificado, cambio de datos, desvinculacion, responsabilidades y general | DTO/API y prueba de los cinco tipos; `membership` rechazado |
+| F5-03 | Pendiente -> en revision -> aprobada/rechazada; aprobada -> completada en tramites comunes, respuestas obligatorias para decidir/completar | Transiciones explicitas y auditadas; salida no se completa generica hasta implementar procedimiento I-21 |
+| F5-04 | Bandeja propia y de revision; solo autoridades tramitan peticiones ajenas, sin autoaprobacion ni asignacion propia | Permisos backend y restricciones SQL; totales/paginacion filtrados antes de devolver resultados |
+
+- Archivos nuevos: `backend/src/database/migrations/1728810000000-administrative-requests.ts`, `backend/src/modules/administration/{administrative-request.entity,administrative-request.dto,administration.service,administration.controller,administration.module,administration.http.spec}.ts`.
+- Integracion en `backend/src/app.module.ts` y `backend/src/database/database.options.ts`; ampliado `scripts/e2e.mjs` con flujo de solicitudes, autoaprobacion y persistencia. Actualizados AGENTS/README/context/decisiones; `docs/revision-i19.md` registra aprobacion posterior sin borrar pendientes.
+- Reglas de implementacion en DEC-040: todos los tramites de este bloque son institucionales; asignacion de responsable organiza la bandeja sin exclusividad. Aprobar no ejecuta cambios de datos/roles/cuentas. Completar un tramite comun registra ejecucion manual, sin generar constancias; la salida requiere el procedimiento seguro de I-21.
+- Pruebas especificas `tsx --test src/modules/administration/administration.http.spec.ts`: 12/12. Primer intento 11/12 por expectativa del test que trataba roles de `/auth/me` como objetos; su contrato son cadenas. Se corrigio el test y se repitio satisfactoriamente.
+- `npm --prefix backend run typecheck` y `npm --prefix backend run build`: OK. `node --check scripts/e2e.mjs`: OK.
+- Respaldo online `backend/data/alfacode-hub.backup-2026-10-18-i20.sqlite`; `npm --prefix backend run migration:run`: una aplicada; `migration:show`: sin pendientes. Conteos de usuarios/proyectos/tareas/resultados/documentos/productos/reconocimientos/eventos/participantes conservados frente al respaldo; integridad SQLite y FK correctas. Base y respaldo ignorados en Git.
+- `npm run check`: salida 0; lint, 72 pruebas frontend y 263 backend, compilaciones/typecheck y migraciones. Smoke alcanzo endpoints locales existentes; sus intentos duplicados chocaron con Next.js y el puerto 4000. Quedo un watcher adicional huerfano de esa prueba (PID 17844), identificado por arbol de procesos y detenido explicitamente; entonces finalizo el comando. Se conservaron los servidores del responsable y no se presenta el smoke como arranque aislado de la nueva funcionalidad.
+- `npm run e2e`: salida 0, 107/107 (9 adicionales I-20); catorce migraciones aplicadas/revertidas/reaplicadas en SQLite temporal; solicitudes, autoaprobacion impedida, responsable y decision trazables, historial privado y persistencia tras reinicio; integridad fisica/FK y archivos correcta. Limpieza del entorno temporal completada y puertos 3100/4100 liberados.
+- Pendientes de este bloque: F5-05 a F5-07 (salida efectiva, adjuntos y UI) en I-21; verificacion integral Fase 5 en I-22, dentro de la autorizacion ya vigente. PostgreSQL/navegador/ESLint/almacenamiento productivo conservan su estado. Sin dependencias nuevas, commit, push ni despliegue.
+
+## I-21 (desvinculacion, adjuntos e interfaz, F5-05 a F5-07)
+
+**Autorizacion:** DEC-039/041; "continua". **Estado:** implementada y verificada tecnicamente en SQLite; sin aprobacion formal atribuida a I-20/I-21.
+
+| Tarea | Resultado | Evidencia |
+|---|---|---|
+| F5-05 | Salida aprobada con confirmacion, autoridad vigente, bloqueo de responsabilidades y desactivacion/revocacion transaccional sin borrar aportes | `withdrawal.service.ts`, regla compartida `users/deactivate-account.ts`, pruebas de permisos, reasignacion, historia y doble envio |
+| F5-06 | Adjuntos exclusivos de tramite, almacenamiento/validacion/descarga de Gestion documental, permisos del solicitante/autoridad e historial auditado | `RequestAttachments1728820000000`, `request-attachment.entity.ts`, endpoints en `DocumentsController`; pruebas de fuga, compartir, carga invalida y solo lectura |
+| F5-07 | Mis solicitudes, nueva solicitud, detalle/historial, revision por autoridades y flujo de salida | `/hub/tramites`, `/hub/tramites/[id]`, formularios y confirmaciones en modales, filtros/paginacion, shadcn Select y menu diferenciado de Vinculaciones |
+
+### Archivos y verificaciones
+
+- Backend nuevos: `backend/src/database/migrations/1728820000000-request-attachments.ts`, `backend/src/modules/documents/request-attachment.entity.ts`, `backend/src/modules/users/deactivate-account.ts`, `backend/src/modules/administration/{withdrawal.service,administration-flows.http.spec}.ts`. Modificados administracion (DTO/controlador/modulo/servicio), documentos (controlador/servicio), `members.service.ts` y `database.options.ts`. Sin dependencias nuevas ni cambio de proveedor de archivos.
+- Frontend nuevos: `frontend/src/features/administration/{types,requests-page}.ts(x)`, `components/{request-form,requests-catalog,request-detail}.tsx`, rutas de listado/detalle de tramites. Modificados menu y tipos/lista documental (vinculo al tramite, sin ofrecer edicion generica de sus permisos). Paginas servidor con lecturas privadas paralelas; acciones cliente reutilizan API/CSRF.
+- Reglas de implementacion en DEC-042. Reasignar responsabilidades usa pantallas existentes y no altera silenciosamente proyectos/tareas. Retiene pertenencias, autorias y asistencia como historia; la cuenta inactiva no accede al HUB. Vista previa paginada y recomprobacion transaccional antes de ejecutar. Envios simultaneos de la misma solicitud no producen doble ejecucion.
+- `tsx --test src/modules/administration/administration-flows.http.spec.ts`: 10/10. Regresion documentos+integrantes: 39/39. Lint frontend y typecheck backend OK. `npm run verify` final salida 0: 72 pruebas frontend + 273 backend (345), lint/build/typecheck y migraciones sin pendientes. Una primera verificacion acumulada tambien paso antes de agregar los casos de doble envio y listado de responsables (271 backend).
+- `npm run e2e`: salida 0, 119/119 (12 adicionales de I-21); quince migraciones desde cero/reversion completa/reaplicacion en SQLite temporal; paginas SSR autorizadas/404, carga a traves de proxy, privacidad y solo lectura, salida aprobada bloqueada por tarea abierta y ejecutada tras reasignacion explicita, cuenta sin sesion con aportes conservados, persistencia tras reinicio. Integridad SQLite/FK y cinco archivos concordantes con metadatos/tamano/SHA-256. Entorno temporal limpiado; 3100/4100 liberados.
+- Tres comprobaciones HTTP directas con timeout: API 4000, proxy 3000 y pagina tecnica 3000, todas 200 y contenido esperado. No se lanzo el smoke que intenta duplicar los servidores abiertos; se preservaron sus procesos. `node --check scripts/e2e.mjs` y `git diff --check`: OK. Base y respaldo ignorados en Git.
+- Incidencias intermedias corregidas: primer comando tsx desde la raiz no aplico tsconfig backend (decoradores); reejecutado desde backend. Un parentesis SQL de visibilidad documental provoco fallos de listado; corregido y regresion 39/39. Una prueba intento leer PDF con ayudante JSON; usa ahora lectura binaria. Lint detecto JSX dentro de try/catch en pagina; se separo captura de errores HTTP de renderizado. Typecheck detecto union de objetos del test con propiedades opcionales; se tiparon los casos como `Record<string,string>[]`. No se ocultaron fallos.
+- Respaldo online `backend/data/alfacode-hub.backup-2026-10-18-i21.sqlite`; `npm --prefix backend run migration:run`: una aplicada, `migration:show`: sin pendientes. Conteos previos de diez tablas conservados; integridad fisica y FK SQLite correctas. No se ejecutaron reversiones sobre la base local.
+
+### Pendientes y continuidad
+
+- Interaccion real en navegador (crear, seleccionar, foco de modales, confirmar y descargar desde UI) sigue pendiente; las pruebas SSR no la sustituyen. PostgreSQL pausado, alertas ESLint y almacenamiento/retencion productivos conservan su estado.
+- I-22 corresponde a revision acumulada de Fase 5, dentro de la autorizacion vigente; no se marca cierre integral ni aprobacion humana de I-21 por implementarla.
+- Sin instalaciones, commit, push, despliegue ni datos personales reales. Cambios anteriores conservados.
 
 ## No realizar sin nueva autorizacion
 
-- No iniciar I-18 (eventos) ni publicar con usuarios reales sin nueva autorizacion. I-17 esta autorizada por DEC-033.
+- No iniciar Fase 6 ni publicar con usuarios reales sin nueva autorizacion. Iteracion activa I-22 (DEC-043), solo verificacion de Fase 5.
 - No elegir proveedor de almacenamiento de produccion ni crear credenciales sin autorizacion (F3-06).
 - No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.

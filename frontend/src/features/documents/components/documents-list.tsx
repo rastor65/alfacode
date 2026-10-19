@@ -119,7 +119,7 @@ export function DocumentsList({ documents, scope, projectId, results, limits, ca
                             {document.project.name}
                           </Link>
                         )}
-                        {showProject && !document.project && <Badge>Institucional</Badge>}
+                        {document.administrativeRequestId ? <Link href={`/hub/tramites/${document.administrativeRequestId}`} className="inline-flex min-h-6 items-center rounded-full border border-hub-badge-border px-2.5 py-1 text-xs text-hub-accent underline">Adjunto de trámite</Link> : showProject && !document.project && <Badge>Institucional</Badge>}
                         {document.researchResult && <Badge>Resultado: {document.researchResult.title}</Badge>}
                       </div>
                       {document.description && <p className="mt-2 whitespace-pre-line text-sm text-hub-soft">{document.description}</p>}

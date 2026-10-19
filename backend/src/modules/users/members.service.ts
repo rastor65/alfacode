@@ -1,19 +1,19 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectDataSource } from "@nestjs/typeorm";
-import { DataSource, type EntityManager, IsNull } from "typeorm";
+import { DataSource, type EntityManager } from "typeorm";
 
 import { ApiError } from "../../common/api-error";
 import { SECURITY_CONFIG, type SecurityConfig } from "../../common/security.config";
 import { generateTemporaryPassword } from "../../common/temporary-password";
 import { recordAudit } from "../audit/audit";
 import { PasswordService } from "../auth/password.service";
-import { Session } from "../auth/session.entity";
 import { MAILER, type Mailer } from "../mail/mailer";
 import { canAssignRole, canManageUser, isAuthority } from "../roles/role-policy";
 import { Role, type RoleCode } from "../roles/role.entity";
 import type { ListUsersQuery, UpdateUserStatusDto } from "./dto/users.dto";
 import { applyTemporaryPassword, deliverTemporaryPassword } from "./temporary-credentials";
 import { type AccountStatus, User } from "./user.entity";
+import { deactivateAccount } from "./deactivate-account";
 
 function roleCodes(user: User): RoleCode[] {
   return (user.roles ?? []).map((role) => role.code).sort();
@@ -149,8 +149,9 @@ export class MembersService {
         assignedRole = role.code;
       }
 
-      if (to === "inactive" && roleCodes(target).includes("admin")) {
-        await this.assertNotLastActiveAdmin(manager, target.id);
+      if (to === "inactive") {
+        await deactivateAccount(manager, actor, target, dto.reason || null, now);
+        return { view: toAdminView(await this.findUser(manager, target.id)), issued: null };
       }
 
       await manager.update(User, { id: target.id }, { accountStatus: to });
@@ -160,11 +161,6 @@ export class MembersService {
 
       if (to === "active" && (from === "rejected" || target.emailVerifiedAt === null)) {
         issued = await applyTemporaryPassword(manager, target.id, temporaryHash!, now);
-      }
-
-      // La desactivacion surte efecto de inmediato: se revocan todas sus sesiones.
-      if (to === "inactive") {
-        await manager.update(Session, { userId: target.id, revokedAt: IsNull() }, { revokedAt: now });
       }
 
       await recordAudit(manager, {

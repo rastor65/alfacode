@@ -37,6 +37,19 @@ export class DocumentsController {
     return this.documents.list(auth.user, query);
   }
 
+  @Get("administrative-requests/:requestId/documents")
+  requestDocuments(@CurrentAuth() auth: AuthContext, @Param("requestId", uuid) id: string,
+    @Query(new DtoValidationPipe(ListDocumentsQuery)) query: ListDocumentsQuery) {
+    return this.documents.requestDocuments(auth.user, id, query);
+  }
+
+  @Post("administrative-requests/:requestId/documents")
+  @UseInterceptors(FileInterceptor("file"))
+  uploadForRequest(@CurrentAuth() auth: AuthContext, @Param("requestId", uuid) id: string,
+    @UploadedFile() file: UploadedFileData | undefined, @Body(new DtoValidationPipe(UploadDocumentDto)) dto: UploadDocumentDto) {
+    return this.documents.uploadForRequest(auth.user, id, file, dto);
+  }
+
   /** Repositorio institucional (sin proyecto); solo la coordinacion. */
   @Post("documents")
   @UseInterceptors(FileInterceptor("file"))

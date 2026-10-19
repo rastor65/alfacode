@@ -37,6 +37,7 @@ export function accessHint(level: AccessLevel, scope: DocumentScope) {
 export type DocumentItem = {
   id: string;
   scope: DocumentScope;
+  administrativeRequestId?: string | null;
   project: { id: string; name: string } | null;
   researchResult: { id: string; title: string } | null;
   title: string;
