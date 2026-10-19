@@ -1,13 +1,13 @@
-# Tarea actual - Fase 3, I-15 (documentos) en revision
+# Tarea actual - Fase 4, I-17 (produccion academica)
 
 ## Estado
 
-**Fase:** 3 - Investigacion y documentos. Fase 2 cerrada y aprobada (I-13, DEC-026), validada solo en SQLite (DEC-025).
+**Fase activa:** 4 - Produccion academica, I-17 (F4-01 a F4-04), autorizada con pendientes de I-16 por DEC-033. La Fase 3 no se declara cerrada. Fase 2 cerrada y aprobada en SQLite (I-13, DEC-025 y DEC-026).
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026), I-14 y DEC-027 (DEC-028).
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
 **I-14 (F3-01 a F3-04):** aprobada (DEC-028).
-**I-15 (F3-05 a F3-09):** autorizada (DEC-028); implementada y verificada tecnicamente; pendiente de aprobacion.
-**Trabajo actualmente autorizado:** ninguno adicional. I-16 (cierre de la Fase 3) tras la revision de I-15 (DEC-026).
+**I-15 (F3-05 a F3-09):** aprobada por el responsable el 2026-10-18 (DEC-031), incluidas las decisiones de implementacion de DEC-030.
+**Trabajo actualmente autorizado:** I-17 (F4-01 a F4-04: productos, autorias, asociaciones y reconocimientos), autorizada expresamente el 2026-10-18 con los pendientes de I-16 registrados (DEC-033). I-16 no se declara aprobada ni Fase 3 cerrada. PostgreSQL sigue pausado.
 
 ## Fases de I-08
 
@@ -173,7 +173,7 @@
 
 ## I-15 (Fase 3: documentos, F3-05 a F3-09)
 
-**Estado:** autorizada (DEC-028); implementada y verificada tecnicamente; pendiente de aprobacion. Decisiones del responsable en DEC-029 y de implementacion en DEC-030.
+**Estado:** aprobada (DEC-031). Decisiones del responsable en DEC-029 y de implementacion en DEC-030.
 
 | Parte | Contenido | Estado |
 |---|---|---|
@@ -193,9 +193,70 @@
 - **No verificado por el agente:** la interaccion en un navegador real (selector de archivos, modales, casillas de autorizacion, descarga desde el navegador).
 - **Pendiente antes de produccion:** elegir proveedor de almacenamiento privado y credenciales (DEC-029); hasta entonces el modulo responde 503 con `NODE_ENV=production`.
 
+## I-16 (verificacion de cierre de la Fase 3)
+
+**Fecha:** 2026-10-18. **Estado:** verificacion SQLite satisfactoria; pendiente de revision del responsable. No se declara cierre integral mientras queden los criterios y observaciones siguientes.
+
+### Matriz de aceptacion F3
+
+| # | Criterio del plan | Evidencia ejecutada | Resultado |
+|---|---|---|---|
+| 1 | Proyecto no investigativo sin ficha | E2E: proyecto `software`, consulta inicial con `profile: null` | Cumplido en SQLite |
+| 2 | Persona autorizada asocia linea y registra resultado | E2E: coordinador asocia linea y crea resultado con participante; estudiante consulta sin gestion | Cumplido en SQLite |
+| 3 | Documento consultable desde el proyecto sin duplicacion fisica | E2E: vinculo al resultado, pagina de documentos, descarga identica; cuatro cargas validas, cuatro metadatos y cuatro archivos tras consultas y reinicio | Cumplido en SQLite/local |
+| 4 | Ajeno no descarga cambiando ID/URL | E2E: 404 en restringido y privado, tambien tras reinicio; pruebas backend de autorizaciones y retiro de permisos | Cumplido en SQLite |
+| 5 | Rechazo de exceso de tamano y tipos no permitidos | Backend: 413/415; E2E: falso PDF 415, 19 MiB integro por proxy, mas de 20 MiB 413, sin residuos en disco | Cumplido |
+| 6 | Metadatos/relaciones en ambos motores y almacenamiento externo antes de produccion | SQLite: 11 migraciones ida/vuelta/ida, integridad fisica y claves foraneas sin errores; almacenamiento local con tamanos y SHA-256 correctos | Parcial: PostgreSQL pausado; proveedor externo pendiente (DEC-029) |
+
+### Comandos ejecutados
+
+- `npm run check`: OK; 67 pruebas frontend + 227 backend, lint, builds, typecheck, `migration:show` sin pendientes y health directo/proxy/pagina tecnica.
+- `npm run e2e`: 65/65 (58 existentes + 7 nuevas comprobaciones de persistencia, permisos, integridad y archivos). Ejecuta `migration:run`, once `migration:revert`, `migration:show` y reaplicacion solo en SQLite temporal. Sin nuevas migraciones ni instalaciones.
+- `npm --prefix backend audit --json`: 0 vulnerabilidades (salida 0).
+- `npm --prefix frontend audit --omit=dev --json`: 0 vulnerabilidades de produccion (salida 0).
+- `npm --prefix frontend audit --json`: 5 altas en `braces`, `micromatch`, `fast-glob`, `@next/eslint-plugin-next` y `eslint-config-next` (salida 1), las mismas ya registradas. La solucion automatica propone degradar a `eslint-config-next@14.2.35`; no se aplico.
+
+### Pendientes de cierre y produccion
+
+- Continuacion autorizada en DEC-032: ver [revision de seguridad y recorrido de navegador](../docs/revision-i16.md). `node scripts/review-eslint-security.mjs`: 138 archivos, 0 errores/advertencias, 0 llamadas a la ruta `globSync` observada. Las alertas siguen abiertas; el controlador local del navegador esta bloqueado por infraestructura. Modo de revision aislada: `npm run e2e -- --review`.
+- PostgreSQL: completar y validar metadatos/relaciones F3 cuando se levante la pausa; no se extiende automaticamente a Fase 3 la excepcion de Fase 2.
+- Seguridad: revisar/resolver las cinco altas de herramientas de desarrollo; no se reclasifican como no criticas ni se omiten del cierre.
+- Interaccion real en navegador: modales, selectores, selector de archivos, autorizaciones y descarga. Las paginas se verificaron por HTTP/SSR; no se ejecutaron acciones de UI en navegador.
+- Antes de produccion: proveedor privado, politica de conservacion y prueba del almacenamiento externo. Produccion documental sigue deshabilitada hasta configuracion autorizada (DEC-029).
+- Pendientes de I-16 conservados. Posteriormente DEC-033 autorizo I-17 sin declarar cerrada la Fase 3. Sin commit, push ni despliegue.
+
+## I-17 (produccion academica, F4-01 a F4-04)
+
+**Autorizacion:** DEC-033. **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de aprobacion del responsable. Decisiones de implementacion: DEC-034, pendientes de revision.
+
+| Tarea | Entregable implementado | Evidencia |
+|---|---|---|
+| F4-01 | Productos por tipo/estado, fecha, fuente, DOI y enlace; CRUD, filtros y paginacion | API `/academic-products`, modales y vistas `/hub/produccion` y `/hub/proyectos/[id]/produccion` |
+| F4-02 | Autores internos/externos, orden estable con botones, sin cuentas falsas | Validaciones de exclusividad/duplicados; historial filtrado desde perfil e integrantes; conserva autores que salieron del equipo |
+| F4-03 | Un proyecto opcional y multiples resultados del mismo proyecto, sin copiar sus datos | `academic_product_results`, FK compuesta; filtros de acceso en SQL antes de contar |
+| F4-04 | Reconocimientos personales/de proyecto con fecha y evidencia existente opcional | API `/recognitions`, enlace a Gestion documental; prueba de permisos y borrado sin eliminar archivos |
+
+### Cambios y comprobaciones
+
+- Migracion nueva: `backend/src/database/migrations/1728790000000-academic.ts`. Tablas `academic_products`, `product_authors`, `academic_product_results`, `recognitions`. Se integra en `database.options.ts` con sus entidades; `synchronize: false` conservado.
+- Backend nuevo: `backend/src/modules/academic/{academic.entities,academic.dto,academic.service,academic.controller,academic.module,academic.http.spec}.ts`; integrado en `app.module.ts`. `DocumentsModule` exporta `DocumentsService` para reutilizar permisos de evidencia.
+- Frontend nuevo: `frontend/src/features/academic/*`, pagina general y pagina de produccion de proyecto. Modificados menu, pestanas de proyecto, perfil e integrantes para consultar historial autorizado. Sin cambiar tokens de tema ni instalar bibliotecas.
+- Pruebas: 13 nuevas HTTP backend y 2 frontend. Cubren tipos, DOI/URL/fechas, autorias ordenadas/externas, duplicados, campos protegidos, permisos por proyecto, totales sin fugas, referencias cruzadas, historial, proyecto finalizado y evidencia privada/compartida/borrada.
+- `npm run check`: OK (69 pruebas frontend, 240 backend, lint, builds/typecheck, migraciones y tres comprobaciones health). Tras ajustar la busqueda literal con comodines escapados, se repitieron las 13 pruebas HTTP de I-17: 13/13.
+- `npm run e2e`: 74/74; doce migraciones ida/vuelta/ida en SQLite temporal, API y paginas SSR, persistencia despues de reiniciar, integridad de SQLite y archivos. Un fallo intermedio revelo que la pagina del proyecto ajeno devolvia error de servidor; se corrigio reutilizando `loadProjectData` para mostrar 404.
+- Base local: respaldo SQLite online `backend/data/alfacode-hub.backup-2026-10-18-i17.sqlite`; `npm --prefix backend run migration:run` aplico una migracion y `migration:show` sin pendientes. Comparacion de conteos de `users`, `projects`, `tasks`, `research_results` y `documents` con el respaldo: conservados; `PRAGMA foreign_key_check` sin errores.
+- Primer intento E2E: el build detecto una conversion de tipos en el borrado generico, corregida separando la carga de producto y reconocimiento. No se ocultaron fallos.
+- Sin instalaciones, commit, push ni despliegue. El respaldo y la base local estan ignorados en Git.
+
+### Limites y siguiente paso
+
+- Pendientes heredados de I-16: alertas ESLint, navegador local no disponible, PostgreSQL pausado y almacenamiento productivo por elegir. La UI nueva tampoco se declara probada en navegador; E2E verifica API y HTML renderizado.
+- No se implementan eventos, calendario ni asistencia (I-18), integraciones externas ni visibilidad publica. Producto: un proyecto por registro en esta iteracion (DEC-034).
+- Siguiente paso: revision y aprobacion del responsable de I-17/DEC-034; luego autorizar I-18. No iniciar esa iteracion automaticamente.
+
 ## No realizar sin nueva autorizacion
 
-- No iniciar I-16 ni publicar con usuarios reales sin autorizacion.
+- No iniciar I-18 (eventos) ni publicar con usuarios reales sin nueva autorizacion. I-17 esta autorizada por DEC-033.
 - No elegir proveedor de almacenamiento de produccion ni crear credenciales sin autorizacion (F3-06).
 - No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.

@@ -23,6 +23,7 @@ import { type DocumentsConfig, STORAGE_SERVICE, createStorage, loadDocumentsConf
     }),
   ],
   controllers: [DocumentsController],
+  exports: [DocumentsService],
   providers: [
     {
       provide: DOCUMENTS_CONFIG,

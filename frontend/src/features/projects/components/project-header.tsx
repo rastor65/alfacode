@@ -9,7 +9,7 @@ import { METHODOLOGY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS, type Pr
 type ProjectHeaderProps = {
   project: ProjectDetail;
   eyebrow: string;
-  current: "tareas" | "sprints" | "investigacion" | "documentos";
+  current: "tareas" | "sprints" | "investigacion" | "documentos" | "produccion";
 };
 
 /**
@@ -22,6 +22,7 @@ export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps)
     ...(project.methodology === "agile" ? [{ key: "sprints", label: "Sprints", href: `/hub/proyectos/${project.id}/sprints` }] : []),
     { key: "investigacion", label: "Investigación", href: `/hub/proyectos/${project.id}/investigacion` },
     { key: "documentos", label: "Documentos", href: `/hub/proyectos/${project.id}/documentos` },
+    { key: "produccion", label: "Producción", href: `/hub/proyectos/${project.id}/produccion` },
   ];
 
   return (
@@ -38,7 +39,7 @@ export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps)
         {project.myRole && <Badge>Tu rol: {PROJECT_ROLE_LABELS[project.myRole]}</Badge>}
       </div>
       {tabs.length > 1 && (
-        <nav aria-label="Secciones del proyecto" className="mt-5 flex gap-1 border-b border-hub-border">
+        <nav aria-label="Secciones del proyecto" className="mt-5 flex flex-wrap gap-1 border-b border-hub-border">
           {tabs.map((tab) => (
             <Link
               key={tab.key}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { ProfileActions } from "@/features/profile/components/profile-actions";
@@ -70,6 +71,9 @@ export default async function ProfilePage() {
 
         <Section id="acciones" title="Tu cuenta" description="Puedes cambiar tu nombre y tu contraseña.">
           <ProfileActions fullName={profile.fullName} />
+        </Section>
+        <Section id="produccion" title="Participación académica" description="Productos y reconocimientos que puedes consultar según tus permisos.">
+          <Link href={`/hub/produccion?integrante=${profile.id}`} className="inline-flex min-h-11 items-center text-sm text-hub-accent underline">Ver mis productos y reconocimientos</Link>
         </Section>
       </div>
     </div>

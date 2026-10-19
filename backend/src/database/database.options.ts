@@ -32,8 +32,11 @@ import { Tasks1728750000000 } from "./migrations/1728750000000-tasks";
 import { Sprints1728760000000 } from "./migrations/1728760000000-sprints";
 import { Research1728770000000 } from "./migrations/1728770000000-research";
 import { Documents1728780000000 } from "./migrations/1728780000000-documents";
+import { Academic1728790000000 } from "./migrations/1728790000000-academic";
+import { AcademicProduct, AcademicProductResult, ProductAuthor, Recognition } from "../modules/academic/academic.entities";
 
 export const entities = [
+  AcademicProduct, AcademicProductResult, ProductAuthor, Recognition,
   User,
   Role,
   Session,
@@ -66,6 +69,7 @@ export const migrations = [
   Sprints1728760000000,
   Research1728770000000,
   Documents1728780000000,
+  Academic1728790000000,
 ];
 
 function loadEnvFile(filePath: string) {

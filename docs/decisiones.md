@@ -294,7 +294,7 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 ### DEC-030 - Decisiones de implementacion de I-15 (documentos)
 
 - **Fecha:** 2026-10-15
-- **Estado:** aplicada en I-15; pendiente de revision del responsable.
+- **Estado:** aprobada con I-15 (DEC-031, 2026-10-18).
 - **Permisos (ademas de DEC-029):** suben documentos a un proyecto todos sus integrantes (lider y colaboradores) y las autoridades; al repositorio institucional, solo `admin` y `coordinator`. Editan metadatos y permisos o eliminan: quien lo subio, el lider del proyecto y las autoridades, siempre que puedan verlo (el lider no gestiona el documento privado de otra persona). Las personas autorizadas a un privado lo ven y descargan, pero no lo gestionan ni ven a quien mas se autorizo. Un documento restringido institucional lo ven solo las autoridades (el "proceso asociado" es la coordinacion). Sin acceso se responde 404 en metadatos y descarga.
 - **Valores por defecto:** acceso `restricted` en proyectos y `general` en el repositorio institucional; categoria `other`; titulo tomado del nombre del archivo.
 - **Validacion (F3-07):** extension permitida y firma del contenido sin dependencias nuevas (PDF, PNG, JPEG, WebP; DOCX/XLSX/PPTX leyendo el directorio central del ZIP y exigiendo su parte principal); se rechazan documentos de Office con macros (`vbaProject.bin`). El nombre original se sanea y solo se usa para mostrar y para `Content-Disposition`; el archivo se guarda con un UUID aleatorio. Se guarda el SHA-256.
@@ -305,7 +305,45 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Eliminacion:** borra metadatos y archivo (el archivo despues de confirmar la transaccion; si fallara, queda un archivo inaccesible y se registra). Proyectos finalizados: documentos en solo lectura, descarga permitida.
 - **No incluido:** auditoria de cada descarga, versiones de un mismo documento, vista previa en el navegador y documentos de actividades (Fase 4).
 - **Prueba E2E:** el frontend se compila en `frontend/.next/e2e` (`NEXT_DIST_DIR`) con el proxy hacia la API temporal; `tsconfig.json` incluye de forma permanente esa ruta de tipos para que Next.js no lo reescriba. Antes de este cambio, una peticion de la prueba (la carga de 19 MiB) llego al backend de desarrollo del responsable en el puerto 4000, que la rechazo con 403 por el origen sin procesar el archivo.
-- **Aprobacion del responsable:** pendiente.
+- **Aprobacion del responsable:** confirmada en DEC-031.
+
+### DEC-031 - Aprobacion de I-15 y autorizacion de I-16
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobado ("apruebo i 15, continuemos con i 16").
+- **Decision:** el responsable aprueba I-15 (documentos) y sus decisiones de implementacion (DEC-030), y autoriza I-16: ejecutar las verificaciones acumuladas de cierre de la Fase 3 y registrar evidencia y pendientes. No se autoriza la Fase 4 ni un despliegue.
+- **Limites vigentes:** PostgreSQL sigue pausado. La comprobacion del criterio F3 de metadatos y relaciones en ambos motores queda pendiente mientras dure esa pausa; no se declara compatibilidad PostgreSQL ni cierre integral de la fase por esta autorizacion. Proveedor de almacenamiento privado y politica de conservacion deben resolverse antes de uso real.
+- **Aprobacion de I-16:** pendiente del resultado tecnico y de revision del responsable.
+
+### DEC-032 - Continuacion de I-16: seguridad y navegador
+
+- **Fecha:** 2026-10-18
+- **Estado:** ejecucion autorizada ("hazlo", tras recomendar revisar ESLint y probar interacciones en navegador manteniendo PostgreSQL pausado).
+- **Alcance:** investigar las cinco alertas de desarrollo, preparar y ejecutar las pruebas de UI que permita el entorno local, y documentar resultados. No implica aceptar vulnerabilidades, aprobar I-16, levantar la pausa de PostgreSQL ni iniciar Fase 4.
+- **Evidencia:** `docs/revision-i16.md`; no hay version corregida de `braces` en el registro consultado; el plugin estable mas reciente conserva la cadena. Control del navegador local no disponible; el navegador remoto no accede al localhost del equipo. Se prepara `npm run e2e -- --review` para revision aislada.
+- **Pendiente:** prueba real de UI con controlador funcional y resolucion o decision explicita sobre la observacion de seguridad. No se declara cerrada la fase.
+
+### DEC-033 - Autorizacion de I-17 con pendientes de I-16
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobado ("Si, iniciar I-17 con esos pendientes", respuesta al selector).
+- **Decision:** se autoriza I-17, F4-01 a F4-04 (productos academicos, autorias internas/externas, asociaciones y reconocimientos), aun con los pendientes registrados de I-16. Prevalece esta instruccion sobre la puerta de entrada de Fase 4 del plan.
+- **Limites:** I-16 no queda aprobada y la Fase 3 no se declara cerrada. No se acepta ni reclasifica la vulnerabilidad ESLint; las pruebas de UI siguen pendientes del navegador. PostgreSQL sigue pausado. Sin eventos (I-18), despliegues ni usuarios reales.
+- **Estado de I-17:** implementada y verificada tecnicamente en SQLite; aprobacion del resultado pendiente (ver `context/tarea-actual.md`).
+
+### DEC-034 - Implementacion de I-17 (produccion academica)
+
+- **Fecha:** 2026-10-18
+- **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de revision del responsable.
+- **Modelo:** `academic_products`, `product_authors`, `academic_product_results` y `recognitions`, por migracion `Academic1728790000000`. Producto institucional sin proyecto o con un proyecto y varios resultados de ese mismo proyecto; sin copiar datos del proyecto. La FK compuesta comprueba el vinculo tambien fuera de la API. No se implementa asociacion multiproyecto en esta iteracion.
+- **Estados:** `in_progress`, `submitted`, `accepted`, `published`, `rejected`, a partir de la seccion 5.4 de requisitos. `published` se presenta como "Publicado / presentado". No se inventa un flujo de aprobacion editorial. Fechas de calendario validas, DOI `10.<registrante>/<identificador>` y URLs solo HTTP/HTTPS; sin consultas a servicios externos.
+- **Permisos:** sin proyecto, administran `admin` y `coordinator`; los productos institucionales los consultan integrantes activos. En un proyecto, administran autoridades y lideres; consultan sus miembros y autoridades. Un rol institucional `teacher_leader` por si solo no concede acceso. Proyectos completados/cancelados conservan consulta, sin cambios. Los filtros de visibilidad se aplican antes de contar y paginar; ajenos reciben 404 en detalle y mutaciones de registros de proyecto.
+- **Autorias:** al menos una y hasta 50, internas por UUID o externas por nombre, exclusivamente. El orden lo determina la lista; duplicados rechazados. Autores internos nuevos: activos y del equipo si hay proyecto. Se conservan los autores ya asociados al editar en el mismo proyecto, aunque hayan salido; no se crean cuentas externas ni se exponen correos. El historial por integrante muestra solo los productos que quien consulta puede ver; ser autor no concede acceso al proyecto si ya no pertenece a el.
+- **Reconocimientos:** una persona, un proyecto o ambos; persona nueva activa y del equipo si hay proyecto. Personales sin proyecto: autoridades y destinatario consultan; solo autoridades gestionan. Con proyecto: tambien consulta el equipo; autoridades/lider gestionan. Si el destinatario no tiene acceso al proyecto, la respuesta personal oculta la referencia al proyecto.
+- **Evidencia:** referencia opcional a un documento existente del mismo ambito. Se valida acceso con `DocumentsService`, que se exporta desde el modulo documental. La lectura vuelve a comprobar permisos: oculta referencia y titulo si no se puede ver. Eliminar un reconocimiento no elimina su archivo; eliminar el documento anula la referencia. Sin almacenamiento paralelo ni ampliacion de permisos documentales.
+- **API:** `/academic-products` y `/recognitions`: GET paginado, POST, GET por UUID, PUT de reemplazo de campos editables y DELETE con auditoria transaccional. Autor de creacion, IDs y propiedades extra no se aceptan por asignacion masiva. CSRF, sesion y origen se mantienen en los controles existentes.
+- **Interfaz:** `/hub/produccion`, `/hub/proyectos/[id]/produccion`, menu privado y pestana del proyecto; listados con filtros/paginacion, detalle/alta/edicion/eliminacion en modales existentes, autorias ordenables con botones y selectores shadcn. Enlaces de historial desde perfil e integrantes. Eventos y calendario quedan para I-18.
+- **Limites:** SQLite; sin nuevas dependencias; PostgreSQL, navegador real y observacion ESLint mantienen sus pendientes. I-17 no queda aprobada por esta entrada.
 
 ## Referencias vigentes
 

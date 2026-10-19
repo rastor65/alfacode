@@ -63,4 +63,4 @@ Si existe una contradiccion relevante, documentarla en `docs/decisiones.md` y pe
 - Criterios de aceptacion satisfechos, pendientes o bloqueados.
 - Decisiones/riesgos y siguiente paso recomendado.
 
-**Estado operativo actual:** Fase 0 e I-04 a I-12 aprobadas, junto con el registro con Hoja de Vida; I-13 (cierre de la Fase 2, solo SQLite por DEC-025) aprobada. Fase 3 autorizada por iteraciones (DEC-026): I-14 (investigacion) aprobada; I-15 (documentos) implementada y verificada tecnicamente, pendiente de aprobacion del responsable. Consultar `context/tarea-actual.md` antes de iniciar cualquier nueva iteracion.
+**Estado operativo actual:** Fase 0 e I-04 a I-12 aprobadas, junto con el registro con Hoja de Vida; I-13 (cierre de la Fase 2, SQLite por DEC-025) aprobada; I-14 e I-15 aprobadas. I-16 mantiene pendientes y la Fase 3 no se declara cerrada. I-17 (Fase 4: produccion academica, F4-01 a F4-04) autorizada expresamente con esos pendientes por DEC-033; consultar `context/tarea-actual.md` para resultados y revision. I-18 aun no autorizada; PostgreSQL sigue pausado.

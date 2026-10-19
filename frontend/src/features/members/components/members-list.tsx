@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { LoaderCircle, UserPlus } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -176,6 +178,7 @@ export function MembersList({ members, actor, authority }: MembersListProps) {
                 ) : (
                   <div className="flex items-center justify-between gap-4 px-4 py-3">{content}</div>
                 )}
+                <Link href={`/hub/produccion?integrante=${member.id}`} className="mx-4 mb-3 inline-flex min-h-11 items-center text-sm text-hub-accent underline">Producción académica de {member.fullName}</Link>
               </li>
             );
           })}

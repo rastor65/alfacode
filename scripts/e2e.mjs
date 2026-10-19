@@ -6,8 +6,9 @@
 // compilado (`npm run e2e` lo compila).
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +19,10 @@ const PORT = 4100;
 const API = `http://localhost:${PORT}/api/v1`;
 const WEB_PORT = 3100;
 const ORIGIN = `http://localhost:${WEB_PORT}`;
+
+if (process.argv.includes("--review") && !process.stdin.isTTY) {
+  throw new Error("El modo --review requiere una terminal interactiva (TTY) para cerrar con Enter.");
+}
 
 const workDir = await mkdtemp(join(tmpdir(), "alfacode-e2e-"));
 const outboxDir = join(workDir, "outbox");
@@ -475,6 +480,91 @@ async function main() {
     repository.status,
   );
   check("un ajeno ve no encontrado en los documentos del proyecto", (await outsider.page(`/hub/proyectos/${projectId}/documentos`)).status === 404);
+
+  // I-17: produccion academica, autoria externa y evidencia reutilizada de documentos.
+  const academicPayload = { title: "Articulo E2E del tutor", type: "article", status: "submitted", projectId,
+    authors: [{ userId: studentId }, { externalName: "Colaboradora externa ficticia" }], resultIds: [result.json.id], productDate: "2026-10-18" };
+  const academic = await coord.call("POST", "/academic-products", academicPayload);
+  check("I-17: producto con autoria interna, externa y resultado del proyecto", academic.status === 201 && academic.json.authors?.length === 2 && academic.json.results?.[0]?.id === result.json.id, academic);
+  check("I-17: colaborador consulta pero no modifica el producto", (await student.call("GET", `/academic-products/${academic.json.id}`)).status === 200 &&
+    (await student.call("PUT", `/academic-products/${academic.json.id}`, academicPayload)).status === 403);
+  check("I-17: ajeno no ve producto ni totales del proyecto", (await outsider.call("GET", `/academic-products/${academic.json.id}`)).status === 404 &&
+    (await outsider.call("GET", `/academic-products?projectId=${projectId}`)).json.total === 0);
+  const recognition = await coord.call("POST", "/recognitions", { title: "Reconocimiento E2E", userId: studentId, projectId, recognitionDate: "2026-10-18", evidenceDocumentId: restrictedDoc.json.id });
+  check("I-17: reconocimiento reutiliza la evidencia documental", recognition.status === 201 && recognition.json.evidence?.id === restrictedDoc.json.id, recognition);
+  const academicPage = await student.page(`/hub/proyectos/${projectId}/produccion`);
+  check("I-17: pagina del proyecto muestra el producto y autoria externa", academicPage.status === 200 && academicPage.html.includes("Articulo E2E del tutor") && academicPage.html.includes("Colaboradora externa ficticia"), academicPage.status);
+  const profileProducts = await student.page(`/hub/produccion?integrante=${studentId}`);
+  check("I-17: historial del integrante respeta filtros y permisos", profileProducts.status === 200 && profileProducts.html.includes("Articulo E2E del tutor"), profileProducts.status);
+  check("I-17: pagina de reconocimientos del proyecto", (await student.page(`/hub/proyectos/${projectId}/produccion?vista=recognitions`)).html.includes("Reconocimiento E2E"));
+  check("I-17: pagina del proyecto ajeno devuelve 404", (await outsider.page(`/hub/proyectos/${projectId}/produccion`)).status === 404);
+
+  // I-16: persistencia e integridad de la Fase 3 sobre la base aislada.
+  await stopServer();
+  await startServer();
+  const persistedProfile = await student.call("GET", `/projects/${projectId}/research-profile`);
+  const persistedResults = await student.call("GET", `/projects/${projectId}/research-results`);
+  const persistedLines = await student.call("GET", `/projects/${projectId}/research-lines`);
+  check("lineas, ficha y resultados persisten tras reiniciar", persistedProfile.status === 200 &&
+    persistedProfile.json.profile?.problem === savedProfile.json.profile.problem &&
+    persistedResults.json.items?.some((item) => item.id === result.json.id) &&
+    persistedLines.json.items?.some((item) => item.id === line.json.id));
+  const persistedDocument = await student.download(restrictedDoc.json.id);
+  check("el documento persiste integro tras reiniciar", persistedDocument.status === 200 && sha(persistedDocument.body) === sha(report));
+  check("los permisos documentales persisten tras reiniciar", (await outsider.download(restrictedDoc.json.id)).status === 404 &&
+    (await coord.download(privateDoc.json.id)).status === 200 && (await outsider.download(privateDoc.json.id)).status === 404);
+  check("I-17: producto, autoria y reconocimiento persisten tras reiniciar", (await student.call("GET", `/academic-products/${academic.json.id}`)).json.authors?.[1]?.externalName === "Colaboradora externa ficticia" &&
+    (await student.call("GET", `/recognitions/${recognition.json.id}`)).json.evidence?.id === restrictedDoc.json.id);
+
+  await stopServer();
+  const requireBackend = createRequire(join(backendDir, "package.json"));
+  const Database = requireBackend("better-sqlite3");
+  const database = new Database(env.SQLITE_PATH, { readonly: true });
+  try {
+    check("SQLite conserva su integridad fisica", database.pragma("integrity_check", { simple: true }) === "ok");
+    check("no hay relaciones huerfanas en SQLite", database.pragma("foreign_key_check").length === 0);
+    const records = database.prepare("SELECT storage_key, size_bytes, sha256 FROM documents").all();
+    const files = await readdir(env.DOCUMENTS_DIR);
+    check("cuatro cargas validas producen cuatro archivos, sin duplicados ni residuos de rechazos", records.length === 4 &&
+      files.length === records.length && records.every((record) => files.includes(record.storage_key)));
+    const contents = await Promise.all(records.map((record) => readFile(join(env.DOCUMENTS_DIR, record.storage_key))));
+    check("cada archivo coincide con el tamano y SHA-256 de sus metadatos", records.every((record, index) =>
+      contents[index].length === record.size_bytes && sha(contents[index]) === record.sha256));
+  } finally {
+    database.close();
+  }
+
+  if (process.argv.includes("--review")) {
+    // Misma base ficticia de E2E, sin acceso a datos ni correo reales.
+    const reviewFile = join(workDir, "i16-revision.pdf");
+    await writeFile(reviewFile, pdf(4096, "revision manual I-16"));
+    await startServer();
+    console.log(`\nRevision manual: ${ORIGIN}/ingresar`);
+    console.log(`Investigacion: ${ORIGIN}/hub/proyectos/${projectId}/investigacion`);
+    console.log(`Documentos: ${ORIGIN}/hub/proyectos/${projectId}/documentos`);
+    console.log(`Documento restringido: ${ORIGIN}/api/v1/documents/${restrictedDoc.json.id}/download`);
+    console.log(`Documento privado: ${ORIGIN}/api/v1/documents/${privateDoc.json.id}/download`);
+    console.log(`Archivo ficticio para probar el selector: ${reviewFile}`);
+    console.log("Usa solo las cuentas ficticias definidas en este script; no guardes sus claves en el navegador.");
+    console.log("Pulsa Enter al terminar. Cierre automatico en 15 minutos; se eliminaran base, outbox y archivos temporales.");
+    await new Promise((resolveReview) => {
+      const finish = () => {
+        clearTimeout(timer);
+        process.stdin.removeListener("data", finish);
+        process.stdin.removeListener("end", finish);
+        process.stdin.removeListener("close", finish);
+        process.removeListener("SIGINT", finish);
+        process.stdin.pause();
+        resolveReview();
+      };
+      const timer = setTimeout(finish, 15 * 60 * 1000);
+      process.stdin.once("data", finish);
+      process.stdin.once("end", finish);
+      process.stdin.once("close", finish);
+      process.once("SIGINT", finish);
+      process.stdin.resume();
+    });
+  }
 }
 
 try {
