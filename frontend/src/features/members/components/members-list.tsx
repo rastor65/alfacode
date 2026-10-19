@@ -17,6 +17,10 @@ import { formatDate } from "@/lib/format";
 import { ACCOUNT_STATUS_SINGULAR, type MemberDetail, type MemberListItem } from "../types";
 import { InviteForm } from "./invite-form";
 import { MemberAdminPanel } from "./member-admin-panel";
+import { MembersDirectoryClient } from "./members-directory-client";
+
+export { MembersDirectoryClient };
+
 
 type Actor = { id: string; roles: RoleCode[] };
 
@@ -106,6 +110,11 @@ type MembersListProps = {
   authority: boolean;
 };
 
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
+}
+
 export function MembersList({ members, actor, authority }: MembersListProps) {
   const [selected, setSelected] = useState<MemberListItem | null>(null);
   const [detail, setDetail] = useState<MemberDetail | null>(null);
@@ -144,20 +153,30 @@ export function MembersList({ members, actor, authority }: MembersListProps) {
   return (
     <>
       {members.length > 0 && (
-        <ul className="mt-3 divide-y divide-hub-border rounded-xl border border-hub-border">
+        <ul className="mt-3 divide-y divide-hub-border rounded-xl border border-hub-border bg-hub-panel shadow-sm">
           {members.map((member) => {
             const content = (
               <>
-                <div className="min-w-0 text-left">
-                  <p className="truncate font-medium text-hub-text">
-                    {member.fullName}
-                    {member.id === actor.id && <span className="ml-2 text-xs font-normal text-hub-muted">(tú)</span>}
-                  </p>
-                  {member.email && <p className="truncate text-sm text-hub-muted">{member.email}</p>}
+                <div className="flex items-center gap-3 min-w-0 text-left">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-hub-accent-soft text-xs font-bold text-hub-accent ring-1 ring-hub-border">
+                    {getInitials(member.fullName)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-hub-text">
+                      {member.fullName}
+                      {member.id === actor.id && <span className="ml-2 text-xs font-normal text-hub-muted">(tú)</span>}
+                    </p>
+                    {member.email && <p className="truncate text-xs font-mono text-hub-muted">{member.email}</p>}
+                  </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
                   {member.roles.map((role) => (
-                    <Badge key={role}>{roleLabel(role)}</Badge>
+                    <span
+                      key={role}
+                      className="inline-flex items-center rounded-md bg-hub-accent-soft px-2 py-0.5 text-[11px] font-medium text-hub-accent"
+                    >
+                      {roleLabel(role)}
+                    </span>
                   ))}
                   {member.mustChangePassword && <Badge>Contraseña temporal</Badge>}
                 </div>

@@ -5,6 +5,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { GlobalRateLimitGuard } from "../../common/global-rate-limit.guard";
 import { OriginGuard } from "../../common/origin.guard";
 import { UsersModule } from "../users/users.module";
+import { RolesModule } from "../roles/roles.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { PasswordResetService } from "./password-reset.service";
@@ -15,7 +16,7 @@ import { SessionGuard } from "./session.guard";
 import { SessionsService } from "./sessions.service";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Session]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Session]), UsersModule, RolesModule],
   controllers: [AuthController],
   providers: [
     SessionsService,

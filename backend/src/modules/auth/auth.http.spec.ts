@@ -170,7 +170,9 @@ describe("POST /auth/login", () => {
       "email",
       "fullName",
       "id",
+      "menu",
       "mustChangePassword",
+      "resources",
       "roles",
     ]);
     assert.equal(json.user.email, "ok@uniguajira.edu.co");

@@ -8,6 +8,8 @@ import { createTestDataSource } from "../database/test-data-source";
 import { Session } from "./auth/session.entity";
 import { SESSION_TTL_MS, SessionsService, hashSessionToken } from "./auth/sessions.service";
 import { INSTITUTIONAL_ROLES, Role } from "./roles/role.entity";
+import { Resource } from "./roles/resource.entity";
+import { RoleResource } from "./roles/role-resource.entity";
 import { RolesService } from "./roles/roles.service";
 import { type AccountStatus, User } from "./users/user.entity";
 import { UsersService, normalizeEmail } from "./users/users.service";
@@ -34,7 +36,12 @@ before(async () => {
   await seedRoles(dataSource);
   sessions = new SessionsService(dataSource.getRepository(Session));
   users = new UsersService(dataSource.getRepository(User));
-  roles = new RolesService(dataSource.getRepository(Role));
+  roles = new RolesService(
+    dataSource.getRepository(Role),
+    dataSource.getRepository(Resource),
+    dataSource.getRepository(RoleResource),
+    dataSource,
+  );
 });
 
 after(async () => {

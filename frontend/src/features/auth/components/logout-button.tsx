@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils";
 
 type LogoutButtonProps = {
   className?: string;
+  iconOnly?: boolean;
 };
 
-export function LogoutButton({ className }: LogoutButtonProps) {
+export function LogoutButton({ className, iconOnly = false }: LogoutButtonProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +42,17 @@ export function LogoutButton({ className }: LogoutButtonProps) {
   return (
     <div className={cn("space-y-3", className)}>
       {error && <Alert tone="error">{error}</Alert>}
-      <Button variant="ghost" className="w-full" onClick={logout} pending={pending} pendingLabel="Cerrando sesión…">
-        <LogOut size={17} className="mr-2.5" aria-hidden="true" />
-        Cerrar sesión
+      <Button
+        variant="ghost"
+        className={cn("w-full", iconOnly && "size-10 px-0 justify-center mx-auto")}
+        onClick={logout}
+        pending={pending}
+        pendingLabel={iconOnly ? "" : "Cerrando sesión…"}
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+      >
+        <LogOut size={17} className={cn(!iconOnly && "mr-2.5")} aria-hidden="true" />
+        {!iconOnly && <span>Cerrar sesión</span>}
       </Button>
     </div>
   );

@@ -17,7 +17,10 @@ import {
   parseMethodology,
   parseProjectStatus,
 } from "@/features/projects/types";
+import { redirect } from "next/navigation";
+
 import { serverApi } from "@/lib/api/server";
+import { canPerform, getRoutePermissions } from "@/lib/auth/permissions";
 import { isAuthority } from "@/lib/auth/roles";
 import { requireSessionUser } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
@@ -63,6 +66,13 @@ function href(filters: Filters, page = 1) {
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const user = await requireSessionUser("/hub/proyectos");
+
+  if (!canPerform(user, "/hub/proyectos", "view")) {
+    redirect("/hub");
+  }
+
+  const permissions = getRoutePermissions(user, "/hub/proyectos");
+  const canCreate = permissions.canCreate;
   const params = await searchParams;
   const authority = isAuthority(user.roles);
   const filters: Filters = {
@@ -89,7 +99,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
         {authority ? "Todos los proyectos del semillero." : "Los proyectos en los que participas."}
       </p>
 
-      {authority && (
+      {canCreate && (
         <div className="mt-6">
           <NewProjectButton />
         </div>

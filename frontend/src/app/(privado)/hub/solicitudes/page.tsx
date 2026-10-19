@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { RequestsBoard } from "@/features/membership/components/requests-board";
 import {
@@ -11,6 +12,7 @@ import {
   parseRequestStatus,
 } from "@/features/membership/types";
 import { serverApi } from "@/lib/api/server";
+import { canPerform } from "@/lib/auth/permissions";
 import { isAuthority } from "@/lib/auth/roles";
 import { requireSessionUser } from "@/lib/auth/session";
 import { formatDateTime } from "@/lib/format";
@@ -49,19 +51,14 @@ function href(status: MembershipRequestStatus, page = 1) {
 
 export default async function RequestsPage({ searchParams }: RequestsPageProps) {
   const user = await requireSessionUser("/hub/solicitudes");
+
+  if (!canPerform(user, "/hub/solicitudes", "view")) {
+    redirect("/hub");
+  }
+
   const params = await searchParams;
   const status = parseRequestStatus(params.estado);
   const page = parsePage(params.pagina);
-
-  // Solo presentacion: el backend responde 403 a cualquier otra persona.
-  if (!isAuthority(user.roles)) {
-    return (
-      <div className="mx-auto w-full max-w-3xl">
-        <h1 className="text-2xl font-bold tracking-tight text-hub-text">Solicitudes</h1>
-        <p className="mt-3 text-sm text-hub-muted">Solo la administración y la coordinación revisan las solicitudes de acceso.</p>
-      </div>
-    );
-  }
 
   const data = await serverApi<Paginated<MembershipRequestItem>>(
     `/membership-requests?status=${status}&page=${page}&pageSize=${PAGE_SIZE}`,

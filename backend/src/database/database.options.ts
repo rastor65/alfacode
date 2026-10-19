@@ -36,10 +36,13 @@ import { Academic1728790000000 } from "./migrations/1728790000000-academic";
 import { Events1728800000000 } from "./migrations/1728800000000-events";
 import { AdministrativeRequests1728810000000 } from "./migrations/1728810000000-administrative-requests";
 import { RequestAttachments1728820000000 } from "./migrations/1728820000000-request-attachments";
+import { RbacResources1728830000000 } from "./migrations/1728830000000-rbac-resources";
 import { RequestAttachment } from "../modules/documents/request-attachment.entity";
 import { AdministrativeRequest } from "../modules/administration/administrative-request.entity";
 import { EventDocument, EventParticipant, EventRecord } from "../modules/events/event.entities";
 import { AcademicProduct, AcademicProductResult, ProductAuthor, Recognition } from "../modules/academic/academic.entities";
+import { Resource } from "../modules/roles/resource.entity";
+import { RoleResource } from "../modules/roles/role-resource.entity";
 
 export const entities = [
   RequestAttachment,
@@ -48,6 +51,8 @@ export const entities = [
   AcademicProduct, AcademicProductResult, ProductAuthor, Recognition,
   User,
   Role,
+  Resource,
+  RoleResource,
   Session,
   MembershipRequest,
   Invitation,
@@ -82,6 +87,7 @@ export const migrations = [
   Events1728800000000,
   AdministrativeRequests1728810000000,
   RequestAttachments1728820000000,
+  RbacResources1728830000000,
 ];
 
 function loadEnvFile(filePath: string) {

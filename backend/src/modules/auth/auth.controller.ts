@@ -14,6 +14,7 @@ import { RegisterDto } from "./dto/registration.dto";
 import { RegistrationService } from "./registration.service";
 import { clearSessionCookies, readCookie, setSessionCookies } from "./session-cookies";
 import { SessionsService } from "./sessions.service";
+import { RolesService } from "../roles/roles.service";
 
 @Controller("auth")
 export class AuthController {
@@ -26,6 +27,8 @@ export class AuthController {
     private readonly registration: RegistrationService,
     @Inject(PasswordResetService)
     private readonly passwordReset: PasswordResetService,
+    @Inject(RolesService)
+    private readonly rolesService: RolesService,
     @Inject(SECURITY_CONFIG)
     private readonly config: SecurityConfig,
   ) {}
@@ -45,7 +48,16 @@ export class AuthController {
 
     setSessionCookies(response, this.config, result);
 
-    return { user: toAuthUser(result.user), csrfToken: result.csrfToken };
+    const rbac = await this.rolesService.getUserAuthorizedRbac(result.user.id);
+
+    return {
+      user: {
+        ...toAuthUser(result.user),
+        resources: rbac.resources,
+        menu: rbac.menu,
+      },
+      csrfToken: result.csrfToken,
+    };
   }
 
   @Public()
@@ -90,7 +102,12 @@ export class AuthController {
 
   @AllowPendingPasswordChange()
   @Get("me")
-  me(@CurrentAuth() auth: AuthContext) {
-    return toAuthUser(auth.user);
+  async me(@CurrentAuth() auth: AuthContext) {
+    const rbac = await this.rolesService.getUserAuthorizedRbac(auth.user.id);
+    return {
+      ...toAuthUser(auth.user),
+      resources: rbac.resources,
+      menu: rbac.menu,
+    };
   }
 }

@@ -40,9 +40,10 @@
  * `light`, `dark` o `system` (sigue `prefers-color-scheme`, sin JavaScript ni parpadeo).
  */
 :root {
-  --hub-bg: #05080d;
+  --hub-bg: #03070c;
+  --hub-chrome: #0b1a29;
   --hub-panel: rgba(14, 28, 40, 0.72);
-  --hub-panel-border: rgba(126, 212, 232, 0.16);
+  --hub-panel-border: rgba(126, 212, 232, 0.18);
   --hub-panel-shadow: inset 0 1px 0 rgba(225, 254, 255, 0.08), 0 24px 60px rgba(2, 8, 14, 0.45);
   --hub-text: #eefcff;
   --hub-text-soft: #cbd5e1;
@@ -77,19 +78,20 @@
 /* Claro. El bloque se repite para `system` porque CSS no permite compartirlo con la media query. */
 .hub-theme[data-theme="light"] {
   color-scheme: light;
-  --hub-bg: #eef3f6;
+  --hub-bg: #f3f6f9;
+  --hub-chrome: #d2dfe9;
   --hub-panel: #ffffff;
-  --hub-panel-border: #dbe4ea;
-  --hub-panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --hub-panel-border: #b8c9d9;
+  --hub-panel-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.06);
   --hub-text: #0b1a24;
   --hub-text-soft: #2b3d48;
-  --hub-muted: #5b6b75;
+  --hub-muted: #4b5d6b;
   --hub-accent: #0e7490;
   --hub-accent-soft: #e0f4f8;
-  --hub-hover: #f1f5f8;
-  --hub-subtle: #f6f9fb;
+  --hub-hover: rgba(255, 255, 255, 0.65);
+  --hub-subtle: #e6eef5;
   --hub-input: #ffffff;
-  --hub-input-border: #c4d2da;
+  --hub-input-border: #b8c9d9;
   --hub-danger-bg: #fff1f2;
   --hub-danger-border: #fecdd3;
   --hub-danger-text: #9f1239;
@@ -108,19 +110,20 @@
 @media (prefers-color-scheme: light) {
   .hub-theme[data-theme="system"] {
     color-scheme: light;
-    --hub-bg: #eef3f6;
+    --hub-bg: #f3f6f9;
+    --hub-chrome: #d2dfe9;
     --hub-panel: #ffffff;
-    --hub-panel-border: #dbe4ea;
-    --hub-panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+    --hub-panel-border: #b8c9d9;
+    --hub-panel-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 8px 24px rgba(15, 23, 42, 0.06);
     --hub-text: #0b1a24;
     --hub-text-soft: #2b3d48;
-    --hub-muted: #5b6b75;
+    --hub-muted: #4b5d6b;
     --hub-accent: #0e7490;
     --hub-accent-soft: #e0f4f8;
-    --hub-hover: #f1f5f8;
-    --hub-subtle: #f6f9fb;
+    --hub-hover: rgba(255, 255, 255, 0.65);
+    --hub-subtle: #e6eef5;
     --hub-input: #ffffff;
-    --hub-input-border: #c4d2da;
+    --hub-input-border: #b8c9d9;
     --hub-danger-bg: #fff1f2;
     --hub-danger-border: #fecdd3;
     --hub-danger-text: #9f1239;
@@ -224,6 +227,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-hub-bg: var(--hub-bg);
+  --color-hub-chrome: var(--hub-chrome);
   --color-hub-panel: var(--hub-panel);
   --color-hub-border: var(--hub-panel-border);
   --color-hub-text: var(--hub-text);
@@ -393,3 +397,33 @@ body::after {
 html:has(dialog[open]) {
   overflow: hidden;
 }
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+.status-dot-pulse {
+  position: relative;
+}
+
+.status-dot-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  animation: pulse-ring 2s infinite;
+}
+

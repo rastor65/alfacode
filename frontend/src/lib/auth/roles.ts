@@ -13,6 +13,23 @@ export function roleLabel(code: string) {
   return ROLE_LABELS[code as RoleCode] ?? code;
 }
 
+export interface AuthResource {
+  id: string;
+  name: string;
+  description: string | null;
+  urlBackend: string;
+  urlFrontend: string | null;
+  icon: string | null;
+  order: number;
+  visibleMenu: boolean;
+  canRead: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canExport: boolean;
+  parentId: string | null;
+}
+
 export type SessionUser = {
   id: string;
   fullName: string;
@@ -21,6 +38,8 @@ export type SessionUser = {
   /** Contrasena temporal: debe cambiarla antes de usar el HUB (DEC-016). */
   mustChangePassword: boolean;
   roles: RoleCode[];
+  resources?: AuthResource[];
+  menu?: AuthResource[];
 };
 
 /** Orden en que se ofrecen los roles al asignarlos. */
