@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderKanban, Inbox, LayoutDashboard, type LucideIcon, Menu, UserRound, Users, X } from "lucide-react";
+import { FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard, type LucideIcon, Menu, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -25,6 +25,9 @@ type NavigationItem = {
 const NAVIGATION: NavigationItem[] = [
   { href: "/hub", label: "Panel", icon: LayoutDashboard, exact: true },
   { href: "/hub/proyectos", label: "Proyectos", icon: FolderKanban },
+  { href: "/hub/investigacion", label: "Investigación", icon: FlaskConical },
+  { href: "/hub/documentos", label: "Documentos", icon: FileText },
+  { href: "/hub/produccion", label: "Producción académica", icon: FileText },
   { href: "/hub/integrantes", label: "Integrantes", icon: Users },
   { href: "/hub/solicitudes", label: "Solicitudes", icon: Inbox, roles: ["admin", "coordinator"] },
   { href: "/hub/perfil", label: "Mi perfil", icon: UserRound },

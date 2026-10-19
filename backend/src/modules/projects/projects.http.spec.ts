@@ -220,7 +220,13 @@ describe("estados (F2-02)", () => {
     assert.equal(withoutLeader.json.code, "PROJECT_LEADER_REQUIRED");
     assert.equal(active.json.status, "active");
     assert.equal(completed.json.status, "completed");
-    assert.deepEqual(completed.json.permissions, { canEdit: false, canManageMembers: false, allowedTransitions: [] });
+    assert.deepEqual(completed.json.permissions, {
+      canEdit: false,
+      canManageMembers: false,
+      canManageTasks: false,
+      canChangeMethodology: false,
+      allowedTransitions: [],
+    });
     assert.equal(reactivate.json.code, "INVALID_PROJECT_STATUS_TRANSITION");
     assert.equal(edit.json.code, "PROJECT_NOT_EDITABLE");
     assert.equal(addMember.json.code, "PROJECT_NOT_EDITABLE");

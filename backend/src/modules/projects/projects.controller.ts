@@ -4,9 +4,11 @@ import { DtoValidationPipe } from "../../common/dto-validation.pipe";
 import { type AuthContext, CurrentAuth } from "../auth/auth.decorators";
 import {
   AddProjectMemberDto,
+  ChangeProjectMethodologyDto,
   ChangeProjectStatusDto,
   CreateProjectDto,
   ListProjectsQuery,
+  RemoveProjectMemberQuery,
   UpdateProjectDto,
   UpdateProjectMemberDto,
 } from "./dto/projects.dto";
@@ -56,6 +58,16 @@ export class ProjectsController {
     return this.projects.changeStatus(auth.user, projectId, dto);
   }
 
+  @Post(":projectId/methodology")
+  @HttpCode(200)
+  changeMethodology(
+    @CurrentAuth() auth: AuthContext,
+    @Param("projectId", uuid) projectId: string,
+    @Body(new DtoValidationPipe(ChangeProjectMethodologyDto)) dto: ChangeProjectMethodologyDto,
+  ) {
+    return this.projects.changeMethodology(auth.user, projectId, dto);
+  }
+
   @Get(":projectId/members")
   members(@CurrentAuth() auth: AuthContext, @Param("projectId", uuid) projectId: string) {
     return this.projects.members(auth.user, projectId);
@@ -85,7 +97,8 @@ export class ProjectsController {
     @CurrentAuth() auth: AuthContext,
     @Param("projectId", uuid) projectId: string,
     @Param("userId", uuid) userId: string,
+    @Query(new DtoValidationPipe(RemoveProjectMemberQuery)) query: RemoveProjectMemberQuery,
   ) {
-    return this.projects.removeMember(auth.user, projectId, userId);
+    return this.projects.removeMember(auth.user, projectId, userId, query);
   }
 }

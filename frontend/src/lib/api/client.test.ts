@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 
-import { apiRequest, readCookie } from "./client";
+import { apiRequest, apiUpload, readCookie } from "./client";
 import { ApiRequestError, NETWORK_ERROR_CODE, describeError, invalidFields } from "./errors";
 
 type Captured = { url: string; init: RequestInit };
@@ -114,5 +114,34 @@ describe("errores", () => {
     assert.equal(readCookie("a=1; alfacode_csrf=abc", "alfacode_csrf"), "abc");
     assert.equal(readCookie("xalfacode_csrf=abc", "alfacode_csrf"), undefined);
     assert.equal(readCookie("alfacode_csrf=%E0%A4%A", "alfacode_csrf"), undefined);
+  });
+});
+
+describe("apiUpload", () => {
+  it("envia el formulario tal cual, sin Content-Type JSON y con el token CSRF", async () => {
+    mockFetch(() => json(201, { id: "1" }));
+    const form = new FormData();
+    form.append("title", "Acta");
+
+    const result = await apiUpload<{ id: string }>("/documents", form);
+    const { url, init } = captured[0];
+    const headers = init.headers as Record<string, string>;
+
+    assert.deepEqual(result, { id: "1" });
+    assert.equal(url, "/api/v1/documents");
+    assert.equal(init.method, "POST");
+    assert.equal(init.body, form);
+    assert.equal(headers["Content-Type"], undefined);
+    assert.equal(headers["X-CSRF-Token"], "token-csrf");
+  });
+
+  it("convierte los errores igual que apiRequest", async () => {
+    mockFetch(() => json(415, { code: "FILE_CONTENT_MISMATCH", message: "x" }));
+
+    await assert.rejects(apiUpload("/documents", new FormData()), (error: unknown) => {
+      assert.ok(error instanceof ApiRequestError);
+      assert.equal(error.code, "FILE_CONTENT_MISMATCH");
+      return true;
+    });
   });
 });

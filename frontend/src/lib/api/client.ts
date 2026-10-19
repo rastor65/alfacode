@@ -34,10 +34,27 @@ type RequestOptions = {
 };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const method = options.method ?? "GET";
+  return send<T>(path, options.method ?? "GET", options.body === undefined ? undefined : JSON.stringify(options.body), options.signal, true);
+}
+
+/**
+ * Carga `multipart/form-data` (documentos). El navegador fija el `Content-Type` con su limite;
+ * el CSRF y el manejo de errores son los mismos que en `apiRequest`.
+ */
+export async function apiUpload<T>(path: string, form: FormData, signal?: AbortSignal): Promise<T> {
+  return send<T>(path, "POST", form, signal, false);
+}
+
+async function send<T>(
+  path: string,
+  method: NonNullable<RequestOptions["method"]>,
+  body: string | FormData | undefined,
+  signal: AbortSignal | undefined,
+  json: boolean,
+): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
 
-  if (options.body !== undefined) {
+  if (body !== undefined && json) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -55,10 +72,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     response = await fetch(`${API_BASE_PATH}${path}`, {
       method,
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body,
       credentials: "same-origin",
       cache: "no-store",
-      signal: options.signal,
+      signal,
     });
   } catch (error) {
     if ((error as { name?: string } | null)?.name === "AbortError") {

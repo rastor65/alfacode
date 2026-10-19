@@ -23,4 +23,4 @@ Esta carpeta contiene guias de trabajo y estado operativo. No redefine requisito
 
 ## Punto de partida
 
-Fase 0; `I-03` esta implementada y verificada tecnicamente, pendiente de aprobacion explicita del responsable. No hay una nueva iteracion autorizada. PostgreSQL queda pausado temporalmente; el trabajo inmediato de datos debe verificarse solo con SQLite hasta nueva instruccion.
+Fase 4; `I-17` autorizada expresamente con los pendientes de `I-16` registrados (DEC-033). `I-14` e `I-15` aprobadas; `I-16` no aprobada y Fase 3 sin cierre integral. Consultar resultados y siguiente iteracion en `tarea-actual.md` y `estado-actual.md`. PostgreSQL sigue pausado; no iniciar I-18 sin autorizacion.

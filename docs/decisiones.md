@@ -199,6 +199,152 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Decision:** todas las vistas privadas pasan a `/hub` (`/hub`, `/hub/proyectos`, `/hub/integrantes`, `/hub/solicitudes`, `/hub/perfil`); el destino tras el login es `/hub`. Las rutas anteriores (`/panel`, `/perfil`, `/solicitudes`, `/integrantes`) redirigen con 307 desde `next.config.ts`, temporales para no fijarlas en caches mientras la estructura evoluciona. Las pantallas de acceso (`/ingresar`, `/registro`, `/cambiar-contrasena`, recuperacion) no cambian.
 - **Impacto:** el backend no cambia. Enlaces guardados a las rutas anteriores siguen funcionando.
 
+### DEC-020 - Aprobacion de I-08, I-09, I-10 y DEC-016; autorizacion de I-11
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobado ("aprobados I-08, I-09, I-10 y DEC-016. continua con i 11").
+- **Decision:** el responsable aprueba I-08 (pantallas de acceso), I-09 (gestion de perfil, solicitudes e integrantes), I-10 (proyectos y equipos) y DEC-016 (solicitud sin contrasena y contrasena temporal). Se autoriza I-11 (Fase 2B: tareas, backlog, Kanban y progreso, F2-07 a F2-12), incluida la regla pendiente de F2-04 sobre miembros con tareas asignadas.
+- **Pendiente:** la Fase 1 y la Fase 2 no pueden cerrarse formalmente mientras PostgreSQL siga pausado (pruebas F1-9 y F2-11).
+
+### DEC-021 - Decisiones de implementacion de I-11 (tareas, backlog y Kanban)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobada (DEC-022).
+- **`sprint_id` sin clave foranea:** la migracion `Tasks1728750000000` crea `tasks.sprint_id` nullable y sin FK, porque `sprints` llega en la Fase 2C. La API de I-11 no acepta `sprintId` (siempre `null`). En I-12 la migracion de sprints debera reconstruir `tasks` en SQLite para agregar la FK y la regla de mismo proyecto.
+- **F2-04, retiro con tareas:** `DELETE /projects/:id/members/:userId` responde 409 `MEMBER_HAS_ASSIGNED_TASKS` (con `details.openTasks`) si la persona tiene tareas abiertas (`status != done`). Con `?unassignTasks=true` las desasigna en la misma transaccion, con auditoria por tarea. Las tareas `done` conservan a su responsable como historial.
+- **Permisos (F2-09):** autoridad y lider gestionan todos los campos; el colaborador solo cambia `status` de las tareas que tiene asignadas (si envia cualquier otro campo, 403). Proyectos `completed`/`cancelled`: tareas en solo lectura (409). No hay borrado de tareas: el plan no define `DELETE` para tareas en la API minima F2.
+- **Kanban (F2-11):** sin bibliotecas; cada tarjeta se mueve con un selector de estado accesible por teclado o arrastrandola (HTML5 nativo). Ambos hacen el mismo `PATCH` de `status`.
+- **Progreso (F2-12):** `progress` (`total`, `done`, `byStatus`) en el listado, el detalle y la lista de tareas; con cero tareas la interfaz dice "Sin tareas" y nunca muestra un porcentaje.
+- **Ruta y ancho:** el tablero vive en `/hub/proyectos/[id]/tareas` (pagina de lectura, con alta y edicion en modales, segun la convencion de DEC-017). Usa `max-w-6xl` en lugar del ancho comun `max-w-3xl` porque cuatro columnas no caben; es la unica excepcion.
+- **Aprobacion del responsable:** confirmada (DEC-022).
+
+### DEC-022 - Aprobacion de I-11 y autorizacion de I-12
+
+- **Fecha:** 2026-10-13
+- **Estado:** aprobado ("apruebo y autorizo", en respuesta a la propuesta de aprobar I-11 y DEC-021, hacer commit y autorizar I-12).
+- **Decision:** se aprueban I-11 y DEC-021; se hace commit en `dev` y se autoriza I-12 (Fase 2C: sprints opcionales, F2-13 a F2-21).
+
+### DEC-023 - Decisiones de implementacion de I-12 (sprints opcionales)
+
+- **Fecha:** 2026-10-13
+- **Estado:** aplicada en I-12; pendiente de revision del responsable.
+- **Estados del sprint:** `planned`, `active`, `completed`, `cancelled`, segun F2-13 del plan; el diseno tecnico v0.2 menciona `closed`, pero prevalece el plan.
+- **Integridad en la base de datos:** la migracion `Sprints1728760000000` reconstruye `tasks` (SQLite no agrega claves foraneas con `ALTER TABLE`) con la clave compuesta `(sprint_id, project_id) -> sprints (id, project_id)`, que impide asociar una tarea a un sprint de otro proyecto aunque se salte la API. Un indice unico parcial (`project_id WHERE status = 'active'`) garantiza un solo sprint activo por proyecto; el servicio lo comprueba antes y traduce el conflicto del indice a 409. Revertir la migracion devuelve todas las tareas al backlog.
+- **Historial:** `sprint_closure_items` se escribe al cerrar y tambien al cancelar (F2-18 pide conservar historial); no hay API para modificarlo. El progreso de un sprint finalizado se calcula con ese registro, no con las tareas actuales.
+- **Reabrir una tarea:** si una tarea `done` de un sprint finalizado cambia a otro estado, vuelve al backlog (`sprint_id = null`, auditado como `task.sprint_changed` con `reason: reopened`) para poder planificarla de nuevo; el registro de cierre no cambia.
+- **Planificacion:** se agregan tareas del backlog y se devuelven al backlog mientras el sprint este planificado o activo. Solo se edita (nombre, objetivo, fechas) un sprint planificado. Cancelar exige motivo.
+- **F2-19, cambio de modalidad:** `POST /projects/:id/methodology` (ruta nueva, no listada en la API minima, porque la modalidad no forma parte de la edicion general). `agile -> traditional` responde 409 `PROJECT_HAS_SPRINTS` si existe cualquier sprint.
+- **Interfaz:** `/hub/proyectos/[id]/sprints` (solo agiles; 404 en tradicionales) con lista, alta, detalle, planificacion, inicio, cierre, cancelacion e historial en modales. El tablero de un proyecto agil tiene un selector (sprint activo o planificado, backlog, todas); por defecto muestra el sprint activo. Una tarea creada mientras se ve un sprint planificable se agrega a ese sprint. Los proyectos tradicionales no muestran pestana ni enlaces de sprints.
+- **Aprobacion del responsable:** confirmada en DEC-024.
+
+### DEC-024 - Aprobacion de I-12 y del registro con Hoja de Vida; autorizacion de I-13 (cierre de la Fase 2)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado ("cerremos la fase 2"; en la consulta posterior el responsable eligio aprobar I-12 y el registro con Hoja de Vida).
+- **Decision:** se aprueban I-12, DEC-023 y el registro con Hoja de Vida (trabajo de `main` del 2026-10-14, integrado en `dev` con `04bb40d`). Se autoriza I-13: cierre de la Fase 2 segun la puerta MVP del plan (pruebas de aceptacion F2, prueba E2E completa, revision de dependencias de seguridad y registro de pendientes).
+- **Fuera de alcance:** iniciar la Fase 3, publicar con usuarios reales, el despliegue en Koyeb.
+
+### DEC-025 - Cierre de la Fase 2 validado solo en SQLite
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado (opcion "Excepcion documentada" elegida por el responsable).
+- **Contexto/problema:** la prueba de aceptacion F2 #11 exige aplicar las migraciones desde cero y ejecutar los flujos criticos en SQLite y en PostgreSQL. PostgreSQL esta pausado por decision del responsable (DEC-003) y las migraciones lanzan un error explicito con `DB_TYPE=postgres`.
+- **Opciones analizadas:** reactivar PostgreSQL ahora; cerrar con excepcion documentada.
+- **Decision:** la Fase 2 se cierra validada solo en SQLite. La parte PostgreSQL de F2 #11 queda como requisito obligatorio, sin excepcion posible, antes de cualquier publicacion con usuarios reales o despliegue en produccion.
+- **Consecuencia:** no se declara el MVP listo para produccion; se declara funcionalmente cerrado en desarrollo local.
+- **Aprobacion del responsable:** confirmada.
+
+### DEC-026 - Aprobacion de I-13 y autorizacion de la Fase 3 por iteraciones
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado ("autorizo i 13, continua con la fase 3"; en la consulta posterior el responsable eligio ejecutar por iteraciones y hacer commit y push de I-13).
+- **Decision:** se aprueba I-13; la Fase 2 queda cerrada (validada en SQLite, DEC-025). Se autoriza la Fase 3 en tres iteraciones, con revision del responsable entre ellas: I-14 investigacion (F3-01 a F3-04), I-15 documentos (F3-05 a F3-09), I-16 cierre de la Fase 3 (solo verificacion). Queda autorizada ahora I-14; I-15 e I-16 se inician tras la revision de la anterior.
+- **Numeracion:** `docs/backlog-maestro.md` llama I-10, I-11 e I-12 a estas iteraciones; la numeracion real avanzo, por lo que se usan I-14, I-15 e I-16.
+- **Decisiones del responsable:** se piden con el selector de respuestas.
+
+### DEC-027 - Decisiones de implementacion de I-14 (investigacion)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aplicada en I-14; pendiente de revision del responsable.
+- **Lineas (F3-01):** las crean, editan, desactivan y eliminan solo `admin` y `coordinator`; cualquier integrante activo las consulta. El nombre es unico sin distinguir mayusculas, tildes ni espacios repetidos (columna `name_normalized`; `lower()` de SQLite no cubre tildes). Una linea con proyectos no se elimina (409 `RESEARCH_LINE_IN_USE`): se desactiva. Una linea inactiva sigue en los proyectos que ya la tenian, pero no se asocia a otros. El responsable es opcional y debe ser un integrante activo de cualquier rol.
+- **Detalle de una linea:** muestra solo los proyectos que la persona puede ver (autoridades: todos; demas: aquellos en los que participa) y el total de proyectos asociados.
+- **Informacion investigativa del proyecto (F3-02 a F3-04):** la gestiona quien gestiona el proyecto (autoridad o lider) mientras el proyecto no este finalizado; los colaboradores la consultan; un ajeno recibe 404. Es el mismo criterio que las tareas (DEC-021).
+- **Ficha (F3-03):** opcional para cualquier tipo de proyecto, una por proyecto (clave primaria `project_id`), con los campos del plan: problema, pregunta, justificacion, metodologia y notas. Se guarda con `PUT` (reemplazo completo). Los objetivos y las metodologias detalladas (enfoque, tecnicas, instrumentos) del documento de requisitos no se agregaron porque el plan no los incluye.
+- **Resultados (F3-04):** tipo segun el documento de requisitos (hallazgo, prototipo, aporte metodologico, otro), fecha opcional, referencias documentales en texto libre (los archivos se vinculan en I-15) y participantes. Los participantes deben ser integrantes del proyecto; quien ya figuraba en un resultado se conserva aunque haya salido del equipo, para no reescribir la autoria. Se pueden eliminar (auditado).
+- **Fuera de alcance:** el seguimiento investigativo (avances, dificultades) del documento de requisitos (seccion 4.5), que el plan no incluye en F3.
+- **Interfaz:** `/hub/investigacion` (catalogo con busqueda y filtro por estado; alta, detalle, edicion y eliminacion en modales) y la pestana «Investigacion» de cada proyecto (`/hub/proyectos/[id]/investigacion`) con lineas, ficha y resultados.
+- **Prueba E2E:** `scripts/e2e-mvp.mjs` pasa a `scripts/e2e.mjs` (`npm run e2e`), con la parte de investigacion y las paginas reales de Next.js en el puerto 3100 usando la compilacion de produccion (Next.js no admite un segundo `next dev` en la misma carpeta).
+- **Aprobacion del responsable:** confirmada en DEC-028.
+
+### DEC-028 - Aprobacion de I-14 y autorizacion de I-15 (documentos)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado (opcion "Aprobar, commit y seguir" del selector).
+- **Decision:** se aprueban I-14 y DEC-027; commit y push a `dev`; se autoriza I-15 (F3-05 a F3-09: documentos, almacenamiento, seguridad y permisos documentales). Las decisiones abiertas de documentos se piden al responsable antes de implementarlas.
+
+### DEC-029 - Decisiones del responsable para documentos (I-15)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobado (respuestas del selector).
+- **Formatos:** PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), PNG, JPEG y WebP; se validan extension y contenido real. Limite inicial de 20 MiB configurable (F3-07).
+- **Documentos privados:** los ven quien los subio, las personas autorizadas expresamente y tambien `admin` y `coordinator`. Es la regla justificada que pide la seccion 7.5 del documento de requisitos ("los permisos de administrador no deberan implicar automaticamente acceso irrestricto a documentos sensibles sin una regla justificada"); la razon es poder administrar documentos de personas que salgan del semillero.
+- **Ambito:** documentos de un proyecto (opcionalmente de uno de sus resultados) y un repositorio institucional sin proyecto (actas, certificados, formatos) gestionado por la coordinacion. Las actividades se agregaran en la Fase 4.
+- **Almacenamiento de produccion:** se decide despues. Se implementa `StorageService` con adaptador de disco local para desarrollo; en produccion el modulo documental queda deshabilitado (503) hasta elegir proveedor y credenciales con autorizacion. No se usa el disco efimero del servidor.
+
+### DEC-030 - Decisiones de implementacion de I-15 (documentos)
+
+- **Fecha:** 2026-10-15
+- **Estado:** aprobada con I-15 (DEC-031, 2026-10-18).
+- **Permisos (ademas de DEC-029):** suben documentos a un proyecto todos sus integrantes (lider y colaboradores) y las autoridades; al repositorio institucional, solo `admin` y `coordinator`. Editan metadatos y permisos o eliminan: quien lo subio, el lider del proyecto y las autoridades, siempre que puedan verlo (el lider no gestiona el documento privado de otra persona). Las personas autorizadas a un privado lo ven y descargan, pero no lo gestionan ni ven a quien mas se autorizo. Un documento restringido institucional lo ven solo las autoridades (el "proceso asociado" es la coordinacion). Sin acceso se responde 404 en metadatos y descarga.
+- **Valores por defecto:** acceso `restricted` en proyectos y `general` en el repositorio institucional; categoria `other`; titulo tomado del nombre del archivo.
+- **Validacion (F3-07):** extension permitida y firma del contenido sin dependencias nuevas (PDF, PNG, JPEG, WebP; DOCX/XLSX/PPTX leyendo el directorio central del ZIP y exigiendo su parte principal); se rechazan documentos de Office con macros (`vbaProject.bin`). El nombre original se sanea y solo se usa para mostrar y para `Content-Disposition`; el archivo se guarda con un UUID aleatorio. Se guarda el SHA-256.
+- **Descarga:** solo por `GET /documents/:id/download`, como adjunto, con `nosniff`, `Content-Security-Policy: sandbox` y `no-store`. Se responde con Express directamente porque `StreamableFile` no se reconoce entre las copias ESM y CommonJS de Nest 12 (se serializaba como JSON; detectado por las pruebas).
+- **Nombres con tildes:** multer interpreta el nombre como latin1 por defecto; se configura `defParamCharset: "utf8"` (detectado por las pruebas).
+- **Proxy de Next.js:** el `rewrite` de `/api/v1` corta los cuerpos a 10 MB; se fija `experimental.proxyClientMaxBodySize: "21mb"` (20 MiB mas la envoltura multipart). Detectado por la prueba E2E a traves del proxy.
+- **Resultados:** un documento de proyecto puede vincularse a un resultado del mismo proyecto (clave compuesta en la base de datos). Al eliminar el resultado, sus documentos siguen en el proyecto sin el vinculo. La pestana de investigacion enlaza los documentos de cada resultado.
+- **Eliminacion:** borra metadatos y archivo (el archivo despues de confirmar la transaccion; si fallara, queda un archivo inaccesible y se registra). Proyectos finalizados: documentos en solo lectura, descarga permitida.
+- **No incluido:** auditoria de cada descarga, versiones de un mismo documento, vista previa en el navegador y documentos de actividades (Fase 4).
+- **Prueba E2E:** el frontend se compila en `frontend/.next/e2e` (`NEXT_DIST_DIR`) con el proxy hacia la API temporal; `tsconfig.json` incluye de forma permanente esa ruta de tipos para que Next.js no lo reescriba. Antes de este cambio, una peticion de la prueba (la carga de 19 MiB) llego al backend de desarrollo del responsable en el puerto 4000, que la rechazo con 403 por el origen sin procesar el archivo.
+- **Aprobacion del responsable:** confirmada en DEC-031.
+
+### DEC-031 - Aprobacion de I-15 y autorizacion de I-16
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobado ("apruebo i 15, continuemos con i 16").
+- **Decision:** el responsable aprueba I-15 (documentos) y sus decisiones de implementacion (DEC-030), y autoriza I-16: ejecutar las verificaciones acumuladas de cierre de la Fase 3 y registrar evidencia y pendientes. No se autoriza la Fase 4 ni un despliegue.
+- **Limites vigentes:** PostgreSQL sigue pausado. La comprobacion del criterio F3 de metadatos y relaciones en ambos motores queda pendiente mientras dure esa pausa; no se declara compatibilidad PostgreSQL ni cierre integral de la fase por esta autorizacion. Proveedor de almacenamiento privado y politica de conservacion deben resolverse antes de uso real.
+- **Aprobacion de I-16:** pendiente del resultado tecnico y de revision del responsable.
+
+### DEC-032 - Continuacion de I-16: seguridad y navegador
+
+- **Fecha:** 2026-10-18
+- **Estado:** ejecucion autorizada ("hazlo", tras recomendar revisar ESLint y probar interacciones en navegador manteniendo PostgreSQL pausado).
+- **Alcance:** investigar las cinco alertas de desarrollo, preparar y ejecutar las pruebas de UI que permita el entorno local, y documentar resultados. No implica aceptar vulnerabilidades, aprobar I-16, levantar la pausa de PostgreSQL ni iniciar Fase 4.
+- **Evidencia:** `docs/revision-i16.md`; no hay version corregida de `braces` en el registro consultado; el plugin estable mas reciente conserva la cadena. Control del navegador local no disponible; el navegador remoto no accede al localhost del equipo. Se prepara `npm run e2e -- --review` para revision aislada.
+- **Pendiente:** prueba real de UI con controlador funcional y resolucion o decision explicita sobre la observacion de seguridad. No se declara cerrada la fase.
+
+### DEC-033 - Autorizacion de I-17 con pendientes de I-16
+
+- **Fecha:** 2026-10-18
+- **Estado:** aprobado ("Si, iniciar I-17 con esos pendientes", respuesta al selector).
+- **Decision:** se autoriza I-17, F4-01 a F4-04 (productos academicos, autorias internas/externas, asociaciones y reconocimientos), aun con los pendientes registrados de I-16. Prevalece esta instruccion sobre la puerta de entrada de Fase 4 del plan.
+- **Limites:** I-16 no queda aprobada y la Fase 3 no se declara cerrada. No se acepta ni reclasifica la vulnerabilidad ESLint; las pruebas de UI siguen pendientes del navegador. PostgreSQL sigue pausado. Sin eventos (I-18), despliegues ni usuarios reales.
+- **Estado de I-17:** implementada y verificada tecnicamente en SQLite; aprobacion del resultado pendiente (ver `context/tarea-actual.md`).
+
+### DEC-034 - Implementacion de I-17 (produccion academica)
+
+- **Fecha:** 2026-10-18
+- **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de revision del responsable.
+- **Modelo:** `academic_products`, `product_authors`, `academic_product_results` y `recognitions`, por migracion `Academic1728790000000`. Producto institucional sin proyecto o con un proyecto y varios resultados de ese mismo proyecto; sin copiar datos del proyecto. La FK compuesta comprueba el vinculo tambien fuera de la API. No se implementa asociacion multiproyecto en esta iteracion.
+- **Estados:** `in_progress`, `submitted`, `accepted`, `published`, `rejected`, a partir de la seccion 5.4 de requisitos. `published` se presenta como "Publicado / presentado". No se inventa un flujo de aprobacion editorial. Fechas de calendario validas, DOI `10.<registrante>/<identificador>` y URLs solo HTTP/HTTPS; sin consultas a servicios externos.
+- **Permisos:** sin proyecto, administran `admin` y `coordinator`; los productos institucionales los consultan integrantes activos. En un proyecto, administran autoridades y lideres; consultan sus miembros y autoridades. Un rol institucional `teacher_leader` por si solo no concede acceso. Proyectos completados/cancelados conservan consulta, sin cambios. Los filtros de visibilidad se aplican antes de contar y paginar; ajenos reciben 404 en detalle y mutaciones de registros de proyecto.
+- **Autorias:** al menos una y hasta 50, internas por UUID o externas por nombre, exclusivamente. El orden lo determina la lista; duplicados rechazados. Autores internos nuevos: activos y del equipo si hay proyecto. Se conservan los autores ya asociados al editar en el mismo proyecto, aunque hayan salido; no se crean cuentas externas ni se exponen correos. El historial por integrante muestra solo los productos que quien consulta puede ver; ser autor no concede acceso al proyecto si ya no pertenece a el.
+- **Reconocimientos:** una persona, un proyecto o ambos; persona nueva activa y del equipo si hay proyecto. Personales sin proyecto: autoridades y destinatario consultan; solo autoridades gestionan. Con proyecto: tambien consulta el equipo; autoridades/lider gestionan. Si el destinatario no tiene acceso al proyecto, la respuesta personal oculta la referencia al proyecto.
+- **Evidencia:** referencia opcional a un documento existente del mismo ambito. Se valida acceso con `DocumentsService`, que se exporta desde el modulo documental. La lectura vuelve a comprobar permisos: oculta referencia y titulo si no se puede ver. Eliminar un reconocimiento no elimina su archivo; eliminar el documento anula la referencia. Sin almacenamiento paralelo ni ampliacion de permisos documentales.
+- **API:** `/academic-products` y `/recognitions`: GET paginado, POST, GET por UUID, PUT de reemplazo de campos editables y DELETE con auditoria transaccional. Autor de creacion, IDs y propiedades extra no se aceptan por asignacion masiva. CSRF, sesion y origen se mantienen en los controles existentes.
+- **Interfaz:** `/hub/produccion`, `/hub/proyectos/[id]/produccion`, menu privado y pestana del proyecto; listados con filtros/paginacion, detalle/alta/edicion/eliminacion en modales existentes, autorias ordenables con botones y selectores shadcn. Enlaces de historial desde perfil e integrantes. Eventos y calendario quedan para I-18.
+- **Limites:** SQLite; sin nuevas dependencias; PostgreSQL, navegador real y observacion ESLint mantienen sus pendientes. I-17 no queda aprobada por esta entrada.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

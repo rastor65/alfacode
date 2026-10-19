@@ -4,16 +4,26 @@ import { DataSource, type EntityManager, In } from "typeorm";
 
 import { ApiError } from "../../common/api-error";
 import { recordAudit } from "../audit/audit";
-import type { RoleCode } from "../roles/role.entity";
+import { Sprint } from "../sprints/sprint.entity";
+import { TASK_STATUSES, Task, type TaskStatus } from "../tasks/task.entity";
 import { User } from "../users/user.entity";
 import type {
   AddProjectMemberDto,
+  ChangeProjectMethodologyDto,
   ChangeProjectStatusDto,
   CreateProjectDto,
   ListProjectsQuery,
   UpdateProjectDto,
   UpdateProjectMemberDto,
 } from "./dto/projects.dto";
+import {
+  type Actor,
+  PROJECT_FORBIDDEN,
+  actorRoles,
+  isProjectEditable,
+  loadManageableProject,
+  loadProjectWithAccess,
+} from "./project-access";
 import { ProjectMember } from "./project-member.entity";
 import {
   FINAL_PROJECT_STATUSES,
@@ -26,17 +36,8 @@ import {
 } from "./project-policy";
 import { Project, type ProjectStatus } from "./project.entity";
 
-type Actor = Pick<User, "id"> & { roles?: { code: RoleCode }[] };
-
 /** Estados en los que un proyecto debe conservar al menos un lider activo (F2-04). */
 const LEADER_REQUIRED_STATUSES: ProjectStatus[] = ["active", "paused"];
-
-const NOT_FOUND = () => new ApiError(404, "PROJECT_NOT_FOUND", "Proyecto no encontrado");
-const FORBIDDEN = () => new ApiError(403, "PROJECT_FORBIDDEN", "No tienes permiso para esta accion en el proyecto");
-
-function actorRoles(actor: Actor): RoleCode[] {
-  return (actor.roles ?? []).map((role) => role.code);
-}
 
 /** Fecha de calendario real (`2026-02-30` no lo es). */
 export function isCalendarDate(value: string) {
@@ -62,6 +63,43 @@ function validateDates(startDate: string | null, endDate: string | null) {
 
 function likePattern(value: string) {
   return `%${value.toLowerCase().replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
+}
+
+export type ProjectProgress = { total: number; done: number; byStatus: Record<TaskStatus, number> };
+
+/** F2-12: conteos por estado; con cero tareas la interfaz muestra "Sin tareas", nunca 100 %. */
+export async function projectProgress(manager: EntityManager, projectIds: string[]) {
+  const rows: { projectId: string; status: TaskStatus; count: string | number }[] = projectIds.length
+    ? await manager
+        .getRepository(Task)
+        .createQueryBuilder("task")
+        .select("task.projectId", "projectId")
+        .addSelect("task.status", "status")
+        .addSelect("COUNT(*)", "count")
+        .where("task.projectId IN (:...projectIds)", { projectIds })
+        .groupBy("task.projectId")
+        .addGroupBy("task.status")
+        .getRawMany()
+    : [];
+  const progress = new Map<string, ProjectProgress>();
+
+  for (const id of projectIds) {
+    progress.set(id, {
+      total: 0,
+      done: 0,
+      byStatus: Object.fromEntries(TASK_STATUSES.map((status) => [status, 0])) as Record<TaskStatus, number>,
+    });
+  }
+
+  for (const row of rows) {
+    const entry = progress.get(row.projectId)!;
+    const count = Number(row.count);
+    entry.byStatus[row.status] = count;
+    entry.total += count;
+    if (row.status === "done") entry.done = count;
+  }
+
+  return progress;
 }
 
 function memberView(member: ProjectMember, includeEmail: boolean) {
@@ -121,11 +159,14 @@ export class ProjectsService {
         })
       : [];
 
+    const progress = await projectProgress(this.dataSource.manager, projects.map((project) => project.id));
+
     return {
       items: projects.map((project) => {
         const team = members.filter((member) => member.projectId === project.id);
         return {
           ...this.projectView(project),
+          progress: progress.get(project.id)!,
           myRole: team.find((member) => member.userId === actor.id)?.role ?? null,
           memberCount: team.length,
           leaders: team
@@ -140,7 +181,7 @@ export class ProjectsService {
   }
 
   async detail(actor: Actor, id: string) {
-    const { project, access } = await this.loadWithAccess(this.dataSource.manager, actor, id);
+    const { project, access } = await loadProjectWithAccess(this.dataSource.manager, actor, id);
     return this.detailView(this.dataSource.manager, project, access, actor);
   }
 
@@ -187,7 +228,7 @@ export class ProjectsService {
 
   async update(actor: Actor, id: string, dto: UpdateProjectDto) {
     return this.dataSource.transaction(async (manager) => {
-      const { project, access } = await this.loadManageable(manager, actor, id);
+      const { project, access } = await loadManageableProject(manager, actor, id);
       const changes: Partial<Project> = {};
 
       if (dto.name !== undefined) changes.name = dto.name;
@@ -221,10 +262,10 @@ export class ProjectsService {
   /** F2-02: transiciones explicitas; activar exige un lider activo (F2-03). */
   async changeStatus(actor: Actor, id: string, dto: ChangeProjectStatusDto) {
     return this.dataSource.transaction(async (manager) => {
-      const { project, access } = await this.loadWithAccess(manager, actor, id);
+      const { project, access } = await loadProjectWithAccess(manager, actor, id);
 
       if (!canManageProject(access)) {
-        throw FORBIDDEN();
+        throw PROJECT_FORBIDDEN();
       }
 
       if (!canTransitionProject(project.status, dto.status)) {
@@ -254,8 +295,41 @@ export class ProjectsService {
     });
   }
 
+  /**
+   * F2-19: `traditional -> agile` deja todas las tareas en el backlog (ya tienen `sprint_id` nulo);
+   * `agile -> traditional` solo sin sprints, ni siquiera historicos, hasta definir una conversion.
+   */
+  async changeMethodology(actor: Actor, id: string, dto: ChangeProjectMethodologyDto) {
+    return this.dataSource.transaction(async (manager) => {
+      const { project, access } = await loadManageableProject(manager, actor, id);
+
+      if (project.methodology === dto.methodology) {
+        return this.detailView(manager, project, access, actor);
+      }
+
+      if (dto.methodology === "traditional" && (await manager.existsBy(Sprint, { projectId: id }))) {
+        throw new ApiError(
+          409,
+          "PROJECT_HAS_SPRINTS",
+          "El proyecto tiene sprints (aun historicos); no puede pasar a modalidad tradicional",
+        );
+      }
+
+      await manager.update(Project, { id }, { methodology: dto.methodology });
+      await recordAudit(manager, {
+        actorUserId: actor.id,
+        action: "project.methodology_changed",
+        targetType: "project",
+        targetId: id,
+        details: { from: project.methodology, to: dto.methodology },
+      });
+
+      return this.detailView(manager, await manager.findOneByOrFail(Project, { id }), access, actor);
+    });
+  }
+
   async members(actor: Actor, id: string) {
-    const { access } = await this.loadWithAccess(this.dataSource.manager, actor, id);
+    const { access } = await loadProjectWithAccess(this.dataSource.manager, actor, id);
     const members = await this.dataSource.getRepository(ProjectMember).find({
       where: { projectId: id },
       relations: { user: true },
@@ -267,7 +341,7 @@ export class ProjectsService {
 
   async addMember(actor: Actor, id: string, dto: AddProjectMemberDto) {
     return this.dataSource.transaction(async (manager) => {
-      const { access } = await this.loadManageable(manager, actor, id);
+      const { access } = await loadManageableProject(manager, actor, id);
       const user = await manager.findOneBy(User, { id: dto.userId });
 
       if (!user) {
@@ -298,7 +372,7 @@ export class ProjectsService {
 
   async updateMember(actor: Actor, id: string, userId: string, dto: UpdateProjectMemberDto) {
     return this.dataSource.transaction(async (manager) => {
-      const { project, access } = await this.loadManageable(manager, actor, id);
+      const { project, access } = await loadManageableProject(manager, actor, id);
       const member = await this.findMember(manager, id, userId);
 
       if (member.role === dto.role) {
@@ -322,59 +396,62 @@ export class ProjectsService {
     });
   }
 
-  async removeMember(actor: Actor, id: string, userId: string) {
+  /**
+   * F2-04: no se retira a quien tiene tareas abiertas (no `done`) salvo que se pida
+   * desasignarlas en la misma operacion; las tareas terminadas conservan a su responsable.
+   */
+  async removeMember(actor: Actor, id: string, userId: string, options: { unassignTasks?: boolean } = {}) {
     return this.dataSource.transaction(async (manager) => {
-      const { project, access } = await this.loadManageable(manager, actor, id);
+      const { project, access } = await loadManageableProject(manager, actor, id);
       const member = await this.findMember(manager, id, userId);
 
       if (member.role === "leader") {
         await this.assertKeepsLeader(manager, project, userId);
       }
 
-      // Cuando existan tareas (I-11) se exigira reasignarlas antes de retirar a la persona (F2-04).
+      const openTasks = await manager
+        .getRepository(Task)
+        .createQueryBuilder("task")
+        .select("task.id", "id")
+        .where("task.projectId = :id", { id })
+        .andWhere("task.assigneeId = :userId", { userId })
+        .andWhere("task.status != :done", { done: "done" })
+        .getRawMany<{ id: string }>();
+
+      if (openTasks.length > 0 && !options.unassignTasks) {
+        throw new ApiError(
+          409,
+          "MEMBER_HAS_ASSIGNED_TASKS",
+          "La persona tiene tareas abiertas en el proyecto; reasignalas o desasignalas antes de retirarla",
+          { openTasks: openTasks.length },
+        );
+      }
+
+      if (openTasks.length > 0) {
+        await manager.update(Task, { id: In(openTasks.map((task) => task.id)) }, { assigneeId: null });
+
+        for (const task of openTasks) {
+          await recordAudit(manager, {
+            actorUserId: actor.id,
+            action: "task.assignee_changed",
+            targetType: "task",
+            targetId: task.id,
+            details: { projectId: id, from: userId, to: null, reason: "member_removed" },
+          });
+        }
+      }
+
       await manager.delete(ProjectMember, { projectId: id, userId });
       await recordAudit(manager, {
         actorUserId: actor.id,
         action: "project.member_removed",
         targetType: "project",
         targetId: id,
-        details: { userId, role: member.role },
+        details: { userId, role: member.role, unassignedTasks: openTasks.length },
       });
 
       return this.membersWith(manager, id, access);
     });
-  }
-
-  /** Carga el proyecto y el nivel de acceso; sin acceso responde 404 para no revelar que existe. */
-  private async loadWithAccess(manager: EntityManager, actor: Actor, id: string) {
-    const project = await manager.findOneBy(Project, { id });
-
-    if (!project) {
-      throw NOT_FOUND();
-    }
-
-    const membership = await manager.findOneBy(ProjectMember, { projectId: id, userId: actor.id });
-    const access = projectAccess(actorRoles(actor), membership?.role ?? null);
-
-    if (access === "none") {
-      throw NOT_FOUND();
-    }
-
-    return { project, access };
-  }
-
-  private async loadManageable(manager: EntityManager, actor: Actor, id: string) {
-    const loaded = await this.loadWithAccess(manager, actor, id);
-
-    if (!canManageProject(loaded.access)) {
-      throw FORBIDDEN();
-    }
-
-    if (FINAL_PROJECT_STATUSES.includes(loaded.project.status)) {
-      throw new ApiError(409, "PROJECT_NOT_EDITABLE", "El proyecto esta finalizado o cancelado y no admite cambios");
-    }
-
-    return loaded;
   }
 
   private async findMember(manager: EntityManager, projectId: string, userId: string) {
@@ -441,16 +518,20 @@ export class ProjectsService {
   private async detailView(manager: EntityManager, project: Project, access: ProjectAccess, actor: Actor) {
     const members = await this.membersWith(manager, project.id, access);
     const manageable = canManageProject(access);
-    const editable = !FINAL_PROJECT_STATUSES.includes(project.status);
+    const editable = isProjectEditable(project);
+    const progress = await projectProgress(manager, [project.id]);
 
     return {
       ...this.projectView(project),
+      progress: progress.get(project.id)!,
       members,
       myRole: members.find((member) => member.userId === actor.id)?.role ?? null,
       // Ayuda a la interfaz a mostrar solo acciones validas; el backend vuelve a comprobarlas.
       permissions: {
         canEdit: manageable && editable,
         canManageMembers: manageable && editable,
+        canManageTasks: manageable && editable,
+        canChangeMethodology: manageable && editable,
         allowedTransitions: manageable ? allowedProjectTransitions(project.status) : [],
       },
     };

@@ -139,3 +139,17 @@ export class UpdateProjectMemberDto {
   @IsIn(PROJECT_ROLES)
   role!: ProjectRole;
 }
+
+/** F2-04: retirar a una persona con tareas abiertas exige pedir su desasignacion de forma explicita. */
+export class RemoveProjectMemberQuery {
+  @Transform(({ value }) => (value === "true" ? true : value === "false" ? false : value))
+  @IsOptional()
+  @IsBoolean()
+  unassignTasks?: boolean;
+}
+
+/** F2-19: cambio de modalidad con reglas propias (no forma parte de la edicion general). */
+export class ChangeProjectMethodologyDto {
+  @IsIn(PROJECT_METHODOLOGIES)
+  methodology!: ProjectMethodology;
+}

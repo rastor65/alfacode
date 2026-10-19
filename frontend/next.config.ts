@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 const apiProxyTarget = process.env.API_PROXY_TARGET ?? "http://localhost:4000";
 
 const nextConfig: NextConfig = {
+  // La prueba E2E compila en su propia carpeta (con el proxy hacia su backend temporal) para no
+  // tocar la compilacion normal ni enviar peticiones al backend de quien desarrolla.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  experimental: {
+    // El proxy `/api/v1` corta los cuerpos a 10 MB por defecto; los documentos admiten 20 MiB
+    // (F3-07) mas la envoltura multipart. El backend aplica el limite real.
+    proxyClientMaxBodySize: "21mb",
+  },
   // Las vistas privadas viven bajo /hub (DEC-019); las rutas anteriores siguen funcionando.
   // Temporales (307) para no fijar en caches de navegador una estructura aun en evolucion.
   async redirects() {

@@ -1,3 +1,5 @@
+import type { ProjectProgress } from "@/features/tasks/types";
+
 export type ProjectType = "research" | "software" | "innovation" | "extension" | "internal" | "other";
 export type ProjectMethodology = "traditional" | "agile";
 export type ProjectStatus = "proposed" | "planning" | "active" | "paused" | "completed" | "cancelled";
@@ -54,6 +56,7 @@ export type ProjectSummary = {
   myRole: ProjectRole | null;
   memberCount: number;
   leaders: { userId: string; fullName: string }[];
+  progress: ProjectProgress;
 };
 
 export type ProjectMemberItem = {
@@ -66,7 +69,13 @@ export type ProjectMemberItem = {
 
 export type ProjectDetail = Omit<ProjectSummary, "memberCount" | "leaders"> & {
   members: ProjectMemberItem[];
-  permissions: { canEdit: boolean; canManageMembers: boolean; allowedTransitions: ProjectStatus[] };
+  permissions: {
+    canEdit: boolean;
+    canManageMembers: boolean;
+    canManageTasks: boolean;
+    canChangeMethodology: boolean;
+    allowedTransitions: ProjectStatus[];
+  };
 };
 
 export const ALL = "all";

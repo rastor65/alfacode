@@ -21,7 +21,6 @@ import {
   Phone,
   PhoneCall,
   QrCode,
-  School,
   ShieldCheck,
   Sparkles,
   Tag,
@@ -162,11 +161,11 @@ export function RegisterForm() {
   const [celular, setCelular] = useState("");
   const [telefonoFijo, setTelefonoFijo] = useState("");
   const [nacionalidad, setNacionalidad] = useState("Colombiana");
-  const [fechaElaboracion, setFechaElaboracion] = useState(() => new Date().toISOString().split("T")[0]);
+  const [fechaElaboracion] = useState(() => new Date().toISOString().split("T")[0]);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   // 2. Información académica
-  const [facultad, setFacultad] = useState("Facultad de Ingeniería");
+  const [facultad] = useState("Facultad de Ingeniería");
   const [programa, setPrograma] = useState("Ingeniería de Sistemas");
   const [isCustomPrograma, setIsCustomPrograma] = useState(false);
   const [sede, setSede] = useState("Riohacha (Sede Principal)");
