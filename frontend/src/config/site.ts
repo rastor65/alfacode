@@ -5,8 +5,10 @@ export const siteConfig = {
     "Semillero de investigacion enfocado en desarrollo de software, inteligencia artificial, IoT e investigacion aplicada.",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   links: {
-    github: "https://github.com/",
-    contact: "mailto:contacto@alfacode.dev",
+    github: "https://github.com/rastor65/alfacode",
+    contact: "mailto:rdamianquintero@uniguajira.edu.co",
+    email: "rdamianquintero@uniguajira.edu.co",
+    institution: "Universidad de La Guajira",
   },
 };
 

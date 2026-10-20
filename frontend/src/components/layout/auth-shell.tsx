@@ -146,7 +146,7 @@ export async function AuthShell({
               />
               <section
                 aria-labelledby="auth-title"
-                className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-5 sm:p-7 lg:p-9 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_25px_rgba(3,130,161,0.12)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
+                className="relative overflow-hidden rounded-xl border border-cyan-400/20 bg-slate-950/85 p-5 sm:p-7 lg:p-9 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_25px_rgba(3,130,161,0.12)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
               >
                 {/* Línea superior con gradiente de luz cian */}
                 <div
@@ -240,12 +240,12 @@ export async function AuthShell({
               <div className={cn("relative w-full min-w-0 mx-auto", wideCard ? "max-w-2xl lg:max-w-none lg:col-span-7" : "max-w-md lg:max-w-none lg:col-span-5")}>
                 {/* Resplandor ambiental exterior de la tarjeta */}
                 <div
-                  className="pointer-events-none absolute -inset-1 rounded-[30px] bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent opacity-20 dark:opacity-40 blur-xl"
+                  className="pointer-events-none absolute -inset-1 rounded-2xl bg-gradient-to-b from-cyan-500/10 via-transparent to-transparent opacity-20 dark:opacity-40 blur-xl"
                   aria-hidden="true"
                 />
                 <section
                   aria-labelledby="auth-title"
-                  className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-cyan-400/20 bg-slate-950/85 p-4 sm:p-5 lg:p-6 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
+                  className="relative overflow-hidden rounded-xl border border-cyan-400/20 bg-slate-950/85 p-4 sm:p-5 lg:p-6 shadow-[var(--panel-shadow)] dark:shadow-[var(--panel-shadow),0_0_15px_rgba(3,130,161,0.08)] backdrop-blur-3xl transition-all duration-300 hover:border-cyan-400/35"
                 >
                   {/* Línea superior con gradiente de luz cian */}
                   <div

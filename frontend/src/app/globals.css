@@ -23,16 +23,23 @@
  * header, rotulos). Oscuros por defecto; en claro los cambia `.public-site` (mas abajo).
  */
 :root {
-  --site-page: #05080d;
+  --site-page: #071018;
   --site-bg: #071018;
-  --site-bg-alt: #081522;
-  --site-bg-deep: #04090e;
+  --site-bg-alt: #071018;
+  --site-bg-deep: #071018;
   --site-ink: #06111a;
   --site-eyebrow: #7ed4e8;
   --site-highlight: #e1feff;
   --site-header-shadow: 0 10px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --site-cta-shadow: 0 20px 70px rgba(2, 8, 14, 0.6);
+  --site-header-bg: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(7, 17, 26, 0.88) 50%, rgba(3, 7, 18, 0.96) 100%);
+  --site-header-border: rgba(34, 211, 238, 0.22);
+  --site-header-border-hover: rgba(34, 211, 238, 0.45);
+  --site-header-shadow-glow: 0 12px 36px -6px rgba(0, 0, 0, 0.75), 0 0 24px rgba(6, 182, 212, 0.14), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+  --site-header-nav-bg: rgba(255, 255, 255, 0.04);
+  --site-header-nav-border: rgba(255, 255, 255, 0.08);
 }
+
 
 /*
  * Tokens de color del HUB. Por defecto son oscuros, como el sitio publico. Dentro de
@@ -150,13 +157,19 @@
 .public-site[data-theme="light"] {
   --site-page: #f3f7f9;
   --site-bg: #f3f7f9;
-  --site-bg-alt: #e7f0f4;
-  --site-bg-deep: #e3ecf0;
+  --site-bg-alt: #f3f7f9;
+  --site-bg-deep: #f3f7f9;
   --site-ink: #ffffff;
   --site-eyebrow: #155e75;
   --site-highlight: #0b4a5c;
   --site-header-shadow: 0 8px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --site-cta-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  --site-header-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.92) 50%, rgba(241, 245, 249, 0.96) 100%);
+  --site-header-border: rgba(14, 116, 144, 0.25);
+  --site-header-border-hover: rgba(14, 116, 144, 0.45);
+  --site-header-shadow-glow: 0 12px 32px -6px rgba(15, 23, 42, 0.08), 0 0 20px rgba(14, 116, 144, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  --site-header-nav-bg: rgba(15, 23, 42, 0.04);
+  --site-header-nav-border: rgba(15, 23, 42, 0.08);
   --panel: rgba(255, 255, 255, 0.78);
   --panel-border: rgba(14, 116, 144, 0.16);
   --panel-hover-border: rgba(14, 116, 144, 0.35);
@@ -180,20 +193,29 @@
   --color-cyan-300: #164e63;
   --color-cyan-400: #164e63;
   --color-cyan-950: #cffafe;
+  --color-emerald-300: #065f46;
   --color-emerald-400: #059669;
+  --color-emerald-500: #047857;
+  --color-emerald-950: #ecfdf5;
 }
 
 @media (prefers-color-scheme: light) {
   .public-site[data-theme="system"] {
     --site-page: #f3f7f9;
     --site-bg: #f3f7f9;
-    --site-bg-alt: #e7f0f4;
-    --site-bg-deep: #e3ecf0;
+    --site-bg-alt: #f3f7f9;
+    --site-bg-deep: #f3f7f9;
     --site-ink: #ffffff;
     --site-eyebrow: #155e75;
     --site-highlight: #0b4a5c;
     --site-header-shadow: 0 8px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
     --site-cta-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    --site-header-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.92) 50%, rgba(241, 245, 249, 0.96) 100%);
+    --site-header-border: rgba(14, 116, 144, 0.25);
+    --site-header-border-hover: rgba(14, 116, 144, 0.45);
+    --site-header-shadow-glow: 0 12px 32px -6px rgba(15, 23, 42, 0.08), 0 0 20px rgba(14, 116, 144, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+    --site-header-nav-bg: rgba(15, 23, 42, 0.04);
+    --site-header-nav-border: rgba(15, 23, 42, 0.08);
     --panel: rgba(255, 255, 255, 0.78);
     --panel-border: rgba(14, 116, 144, 0.16);
     --panel-hover-border: rgba(14, 116, 144, 0.35);
@@ -217,7 +239,10 @@
     --color-cyan-300: #164e63;
     --color-cyan-400: #164e63;
     --color-cyan-950: #cffafe;
+    --color-emerald-300: #065f46;
     --color-emerald-400: #059669;
+    --color-emerald-500: #047857;
+    --color-emerald-950: #ecfdf5;
   }
 }
 
@@ -320,13 +345,16 @@ body::after {
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
   backdrop-filter: blur(20px);
-  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              background 0.25s ease;
 }
 
 .glass-card-interactive:hover {
   background: var(--card-hover-bg);
   border-color: var(--panel-hover-border);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.006);
   box-shadow: var(--card-hover-shadow);
 }
 
@@ -363,23 +391,269 @@ body::after {
   background: linear-gradient(90deg, transparent, rgba(70, 158, 180, 0.75), transparent);
 }
 
-/* Custom subtle scrollbar */
+/* Custom High-Tech Neon Glass Scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.45) #05080d;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #06111a;
+  background: #05080d;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(70, 158, 180, 0.3);
-  border-radius: 4px;
+  background: linear-gradient(180deg, #0e7490 0%, #06b6d4 50%, #469eb4 100%);
+  border-radius: 9999px;
+  border: 2px solid #05080d;
+  box-shadow: inset 0 0 6px rgba(34, 211, 238, 0.35);
+  transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(70, 158, 180, 0.55);
+  background: linear-gradient(180deg, #06b6d4 0%, #22d3ee 50%, #67e8f9 100%);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.7), inset 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+::-webkit-scrollbar-corner {
+  background: #05080d;
+}
+
+/* Scroll-Build-In Reveal Animation - Progressive and fluid */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  filter: blur(2px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* Stagger delays for children */
+.stagger-1 { transition-delay: 70ms; }
+.stagger-2 { transition-delay: 140ms; }
+.stagger-3 { transition-delay: 210ms; }
+.stagger-4 { transition-delay: 280ms; }
+.stagger-5 { transition-delay: 350ms; }
+.stagger-6 { transition-delay: 420ms; }
+.stagger-7 { transition-delay: 490ms; }
+.stagger-8 { transition-delay: 560ms; }
+
+/* Hero Entrance Animations with Smooth Deceleration */
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-hero-fade-in {
+  opacity: 0;
+  animation: heroFadeIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform, filter;
+}
+
+.stagger-hero-1 { animation-delay: 60ms; }
+.stagger-hero-2 { animation-delay: 180ms; }
+.stagger-hero-3 { animation-delay: 320ms; }
+.stagger-hero-4 { animation-delay: 460ms; }
+
+/* Continuous Parallax Floating Keyframes with Smooth Drift */
+@keyframes parallaxFloatSlow {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(24px, -30px, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-18px, 20px, 0) scale(0.95);
+  }
+}
+
+@keyframes parallaxFloatFast {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-26px, 26px, 0) scale(1.1);
+  }
+  100% {
+    transform: translate3d(22px, -20px, 0) scale(0.92);
+  }
+}
+
+.animate-parallax-float {
+  animation: parallaxFloatSlow 16s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  will-change: transform;
+}
+
+.animate-parallax-float-delayed {
+  animation: parallaxFloatFast 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) -7s infinite alternate;
+  will-change: transform;
+}
+
+.animate-parallax-float-slow {
+  animation: parallaxFloatSlow 26s cubic-bezier(0.45, 0.05, 0.55, 0.95) -12s infinite alternate;
+  will-change: transform;
+}
+
+/* Carousel Lively Transitions & Energy Core Keyframes */
+@keyframes stageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-stage-enter {
+  animation: stageEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stageProgressBar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-stage-progress {
+  animation: stageProgressBar 5.5s linear forwards;
+}
+
+@keyframes radarWave {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.animate-radar-wave {
+  animation: radarWave 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.animate-radar-wave-delayed {
+  animation: radarWave 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) 1.4s infinite;
+}
+
+@keyframes logoAuraPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), inset 0 0 10px rgba(34, 211, 238, 0.2);
+    border-color: rgba(34, 211, 238, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(34, 211, 238, 0.7), 0 0 45px rgba(6, 182, 212, 0.35), inset 0 0 14px rgba(34, 211, 238, 0.35);
+    border-color: rgba(103, 232, 249, 0.85);
+  }
+}
+
+.animate-logo-accent {
+  animation: logoAuraPulse 3s ease-in-out infinite;
+}
+
+/* GPU-Accelerated Theme Transition Keyframes */
+@keyframes scanlineSweepGpu {
+  0% {
+    transform: translateY(-5vh);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(105vh);
+    opacity: 0;
+  }
+}
+
+@keyframes cyberFlashGpu {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes cyberGridPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  40% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes hudPulseFast {
+  0% {
+    transform: translate(-50%, -6px) scale(0.94);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 4px) scale(0.96);
+    opacity: 0;
+  }
+}
+
+/* Transición suave global ultra-rápida (200ms) para cambio de tema */
+.public-site,
+.hub-theme {
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
