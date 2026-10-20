@@ -151,6 +151,7 @@ export function MembersDirectoryClient({
 
   // Sincronizar initialMembers cuando cambian las props
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMembers(initialMembers);
   }, [initialMembers]);
 

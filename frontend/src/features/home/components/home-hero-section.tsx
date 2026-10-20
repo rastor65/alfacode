@@ -82,7 +82,7 @@ export function HomeHeroSection() {
         </div>
 
         {/* Right Column: Interactive Lifecycle Pipeline with Eased Entrance */}
-        <div className="animate-hero-fade-in stagger-hero-3 flex flex-col justify-center">
+        <div className="min-w-0 w-full animate-hero-fade-in stagger-hero-3 flex flex-col justify-center">
           <HomeHeroPipeline />
         </div>
       </div>
