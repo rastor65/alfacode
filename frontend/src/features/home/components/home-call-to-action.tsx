@@ -4,15 +4,15 @@ import { ButtonLink } from "@/components/ui/button-link";
 
 export function HomeCallToAction() {
   return (
-    <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
-      <div className="glass-panel relative mx-auto overflow-hidden rounded-3xl p-8 sm:p-12 lg:p-14 max-w-7xl border border-cyan-400/25 shadow-site-cta">
-        {/* Ambient radial spotlights */}
+    <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+      <div className="glass-panel relative mx-auto overflow-hidden rounded-xl p-8 sm:p-12 lg:p-14 max-w-7xl border border-cyan-400/25 shadow-site-cta">
+        {/* Ambient radial spotlights with parallax drift */}
         <div
-          className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-[#469eb4]/20 blur-3xl"
+          className="pointer-events-none absolute -right-24 -top-24 size-96 rounded-full bg-[#469eb4]/20 blur-3xl animate-parallax-float"
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute -bottom-24 -left-24 size-96 rounded-full bg-[#7ed4e8]/15 blur-3xl"
+          className="pointer-events-none absolute -bottom-24 -left-24 size-96 rounded-full bg-[#7ed4e8]/15 blur-3xl animate-parallax-float-delayed"
           aria-hidden="true"
         />
 
@@ -20,7 +20,7 @@ export function HomeCallToAction() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-950/60 px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
               <Sparkles size={14} className="text-cyan-400" aria-hidden="true" />
-              Convocatoria & Vinculación
+              Convocatoria &amp; Vinculación
             </div>
 
             <h2 className="mt-5 max-w-3xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
@@ -28,7 +28,7 @@ export function HomeCallToAction() {
             </h2>
 
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-              AlfaCode busca mentes curiosas: estudiantes e investigadores apasionados por la inteligencia artificial, el desarrollo de software y la ingeniería para construir tecnología de impacto real.
+              AlfaCode busca mentes curiosas: estudiantes e investigadores para construir software e inteligencia artificial con impacto real.
             </p>
           </div>
 

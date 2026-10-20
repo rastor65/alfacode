@@ -12,16 +12,16 @@ export function HomeResearchLinesSection({
   researchLines,
 }: HomeResearchLinesSectionProps) {
   return (
-    <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
-      {/* Ambient background glow */}
+    <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+      {/* Ambient background glow with parallax float */}
       <div
-        className="pointer-events-none absolute left-0 top-1/2 size-96 -translate-y-1/2 rounded-full bg-[#469eb4]/10 blur-3xl"
+        className="pointer-events-none absolute left-0 top-1/2 size-96 -translate-y-1/2 rounded-full bg-[#469eb4]/10 blur-3xl animate-parallax-float"
         aria-hidden="true"
       />
 
       <div className="mx-auto max-w-7xl">
-        <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-          <div>
+        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div className="scroll-reveal stagger-1">
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-site-eyebrow">
               <span className="size-1.5 rounded-full bg-cyan-400" aria-hidden="true" />
               Ecosistema Científico
@@ -40,35 +40,33 @@ export function HomeResearchLinesSection({
             </div>
           </div>
 
-          <div className="glass-panel relative rounded-2xl p-6 sm:p-7">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {researchLines.map((line, index) => {
-                const Icon = researchLineIcons[index % researchLineIcons.length];
+          <div className="grid gap-4 sm:grid-cols-2">
+            {researchLines.map((line, index) => {
+              const Icon = researchLineIcons[index % researchLineIcons.length];
 
-                return (
-                  <div
-                    key={line.id}
-                    className="glass-card-interactive group relative flex flex-col justify-between rounded-xl p-5"
-                  >
-                    <div>
-                      <div className="flex size-11 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-950/40 text-cyan-200 shadow-[0_0_15px_rgba(70,158,180,0.15)] transition-transform duration-200 group-hover:scale-105 group-hover:border-cyan-300">
-                        <Icon size={20} aria-hidden="true" />
-                      </div>
-                      <h3 className="mt-4 text-base font-semibold text-white transition group-hover:text-cyan-100">
-                        {line.name}
-                      </h3>
-                      <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                        {line.description}
-                      </p>
+              return (
+                <div
+                  key={line.id}
+                  className={`scroll-reveal stagger-${(index % 4) + 1} glass-card-interactive group relative flex flex-col justify-between rounded-xl p-5`}
+                >
+                  <div>
+                    <div className="flex size-11 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-950/40 text-cyan-200 shadow-[0_0_15px_rgba(70,158,180,0.15)] transition-transform duration-200 group-hover:scale-105 group-hover:border-cyan-300">
+                      <Icon size={20} aria-hidden="true" />
                     </div>
-
-                    <div className="mt-4 flex items-center gap-1.5 border-t border-white/5 pt-3 text-[11px] font-medium text-cyan-400/80">
-                      <span>Línea Activa</span>
-                    </div>
+                    <h3 className="mt-4 text-base font-semibold text-white transition group-hover:text-cyan-100">
+                      {line.name}
+                    </h3>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                      {line.description}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="mt-4 flex items-center gap-1.5 border-t border-white/5 pt-3 text-[11px] font-medium text-cyan-400/80">
+                    <span>Línea Activa</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -1,10 +1,20 @@
-import { PublicPlaceholderPage } from "@/components/layout/public-placeholder-page";
+import type { Metadata } from "next";
+
+import { PublicPageShell } from "@/components/layout/public-page-shell";
+import { publications } from "@/data/portfolio";
+import { PublicPublicationsPage } from "@/features/publications/components/public-publications-page";
+
+export const metadata: Metadata = {
+  title: "Publicaciones",
+  description:
+    "Producción científica, ponencias en congresos y desarrollo tecnológico del semillero AlfaCode.",
+};
 
 export default function PublicationsPage() {
+  const hasContent = Boolean(publications && publications.length > 0);
   return (
-    <PublicPlaceholderPage
-      title="Publicaciones"
-      description="La produccion academica se gestionara desde `publications` y sus autores relacionados, separada de los articulos editoriales."
-    />
+    <PublicPageShell withInteractiveBackground={hasContent}>
+      <PublicPublicationsPage publications={publications} />
+    </PublicPageShell>
   );
 }

@@ -2,8 +2,10 @@
 
 import {
   Award,
+  BarChart3,
   BookOpen,
   Brain,
+  Building2,
   Calendar,
   Check,
   CheckCircle2,
@@ -11,8 +13,10 @@ import {
   ChevronRight,
   Clock,
   Code2,
+  Cog,
   Copy,
   Cpu,
+  Eye,
   GraduationCap,
   IdCard,
   Layers,
@@ -90,10 +94,10 @@ const SEDES_UNIGUAJIRA = [
 ];
 
 const PROGRAMAS_INGENIERIA = [
-  { name: "Ingeniería de Sistemas", short: "Sistemas", icon: "💻" },
-  { name: "Ingeniería Industrial", short: "Industrial", icon: "📊" },
-  { name: "Ingeniería Mecánica", short: "Mecánica", icon: "⚙️" },
-  { name: "Ingeniería Civil", short: "Civil", icon: "🏗️" },
+  { name: "Ingeniería de Sistemas", short: "Sistemas", icon: Code2 },
+  { name: "Ingeniería Industrial", short: "Industrial", icon: BarChart3 },
+  { name: "Ingeniería Mecánica", short: "Mecánica", icon: Cog },
+  { name: "Ingeniería Civil", short: "Civil", icon: Building2 },
 ];
 
 const SEMESTRES = [
@@ -437,7 +441,7 @@ export function RegisterForm() {
         </div>
 
         {/* Tarjeta Credencial Digital Holográfica de Postulación */}
-        <div className="relative mx-auto max-w-md overflow-hidden rounded-3xl border border-cyan-400/35 bg-gradient-to-b from-slate-900/95 via-slate-950 to-slate-950 p-6 text-left shadow-[0_20px_50px_-10px_rgba(3,130,161,0.3)] backdrop-blur-2xl">
+        <div className="relative mx-auto max-w-md overflow-hidden rounded-xl border border-cyan-400/35 bg-gradient-to-b from-slate-900/95 via-slate-950 to-slate-950 p-6 text-left shadow-[0_20px_50px_-10px_rgba(3,130,161,0.3)] backdrop-blur-2xl">
           {/* Línea superior con gradiente cian */}
           <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
@@ -574,11 +578,11 @@ export function RegisterForm() {
   const numPromedio = Number.parseFloat(promedioAcademico);
   const promedioStatus =
     !Number.isNaN(numPromedio) && numPromedio >= 4.5
-      ? { label: "⭐ Excelencia Académica", color: "text-emerald-500 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10" }
+      ? { label: "Excelencia Académica", color: "text-emerald-500 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/10" }
       : !Number.isNaN(numPromedio) && numPromedio >= 4.0
-        ? { label: "✨ Alto Rendimiento", color: "text-cyan-600 dark:text-cyan-400 border-cyan-500/30 bg-cyan-500/10" }
+        ? { label: "Alto Rendimiento", color: "text-cyan-600 dark:text-cyan-400 border-cyan-500/30 bg-cyan-500/10" }
         : !Number.isNaN(numPromedio) && numPromedio >= 3.5
-          ? { label: "👍 Buen Desempeño", color: "text-teal-600 dark:text-teal-400 border-teal-500/30 bg-teal-500/10" }
+          ? { label: "Buen Desempeño", color: "text-teal-600 dark:text-teal-400 border-teal-500/30 bg-teal-500/10" }
           : null;
 
   return (
@@ -929,7 +933,7 @@ export function RegisterForm() {
                         : "border-hub-border bg-hub-input text-hub-text hover:bg-hub-hover",
                     )}
                   >
-                    <span className="text-lg">{item.icon}</span>
+                    <item.icon size={18} className="shrink-0 text-cyan-400" aria-hidden="true" />
                     <div className="min-w-0">
                       <span className="text-xs block truncate leading-tight">
                         {item.short}
@@ -1188,8 +1192,8 @@ export function RegisterForm() {
             </div>
             <p className="text-[11px] text-hub-muted leading-relaxed">
               {affinityScore >= 80
-                ? "🚀 Perfil de alta afinidad: tus intereses coinciden con los proyectos activos del semillero."
-                : "💡 Selecciona tus líneas y tecnologías clave para maximizar tu compatibilidad."}
+                ? "Perfil de alta afinidad: tus intereses coinciden con los proyectos activos del semillero."
+                : "Selecciona tus líneas y tecnologías clave para maximizar tu compatibilidad."}
             </p>
           </div>
 
@@ -1391,8 +1395,8 @@ export function RegisterForm() {
               onClick={() => setShowCredentialPreview((v) => !v)}
               className="inline-flex items-center gap-1.5 text-xs text-hub-accent hover:underline cursor-pointer font-bold"
             >
-              <QrCode size={13} />
-              <span>{showCredentialPreview ? "Ocultar carnet preliminar" : "👁️ Ver vista previa de tu Credencial de Postulación"}</span>
+              <Eye size={13} aria-hidden="true" />
+              <span>{showCredentialPreview ? "Ocultar carnet preliminar" : "Ver vista previa de tu Credencial de Postulación"}</span>
             </button>
 
             {showCredentialPreview && (

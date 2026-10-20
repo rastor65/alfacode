@@ -7,24 +7,22 @@ import { HomeHeroPipeline } from "@/features/home/components/home-hero-pipeline"
 
 export function HomeHeroSection() {
   return (
-    <section className="node-grid relative overflow-hidden border-b border-cyan-500/10 pt-28 pb-16 lg:pt-32 lg:pb-24">
-      {/* Soft gradient bottom blend */}
+    <section className="relative pt-28 pb-16 lg:pt-32 lg:pb-20">
+      {/* Ambient background glows with subtle parallax drift */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-site-bg via-site-bg/80 to-transparent"
+        className="pointer-events-none absolute left-1/4 top-10 size-96 rounded-full bg-[#469eb4]/15 blur-3xl animate-parallax-float"
         aria-hidden="true"
       />
-
-      {/* Ambient background glows */}
       <div
-        className="pointer-events-none absolute left-1/4 top-10 size-96 rounded-full bg-[#469eb4]/15 blur-3xl"
+        className="pointer-events-none absolute -right-20 top-1/3 size-80 rounded-full bg-cyan-500/10 blur-3xl animate-parallax-float-delayed"
         aria-hidden="true"
       />
 
       <div className="relative mx-auto grid max-w-7xl content-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8">
         {/* Left Column: Vision & Action */}
         <div className="flex flex-col justify-center">
-          <div>
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-950/50 py-1 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.2)]">
+          <div className="animate-hero-fade-in stagger-hero-1">
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-cyan-400/30 bg-cyan-950/50 py-1 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200 shadow-[0_0_20px_rgba(70,158,180,0.2)] transition-transform duration-300 hover:scale-[1.02]">
               <span className="flex size-5 items-center justify-center rounded-full bg-cyan-500/20 p-0.5">
                 <AlfaCodeSymbol className="size-full" />
               </span>
@@ -32,18 +30,21 @@ export function HomeHeroSection() {
             </span>
           </div>
 
-          <h1 className="text-balance mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-6xl xl:text-7xl">
+          <h1 className="text-balance animate-hero-fade-in stagger-hero-2 mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-6xl xl:text-7xl">
             Investigamos problemas.{" "}
-            <span className="block bg-gradient-to-r from-white via-cyan-100 to-site-eyebrow bg-clip-text text-transparent">
-              Construimos soluciones.
+            <span className="relative mt-2 block w-fit">
+              {/* Color sólido de alta energía institucional (sin gradiente) */}
+              <span className="text-cyan-400 dark:text-cyan-300 drop-shadow-[0_0_22px_rgba(34,211,238,0.3)]">
+                Construimos soluciones.
+              </span>
             </span>
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-            Desarrollo de software de vanguardia, inteligencia artificial e investigación aplicada. Transformamos desafíos reales en soluciones tecnológicas funcionales, medibles y transferibles a la sociedad.
+          <p className="animate-hero-fade-in stagger-hero-3 mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            Software de vanguardia, IA e investigación aplicada. Convertimos desafíos en soluciones tecnológicas funcionales y transferibles.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="animate-hero-fade-in stagger-hero-4 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <ButtonLink href="/proyectos" variant="primary" className="gap-2.5">
               Explorar proyectos
               <ArrowRight size={17} aria-hidden="true" />
@@ -54,13 +55,13 @@ export function HomeHeroSection() {
           </div>
 
           {/* Stats Bar */}
-          <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {homeStats.map((stat) => {
+          <div className="animate-hero-fade-in stagger-hero-4 mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {homeStats.map((stat, idx) => {
               const Icon = stat.icon;
               return (
                 <div
                   key={stat.label}
-                  className="glass-card-interactive rounded-xl p-4"
+                  className={`scroll-reveal stagger-${idx + 1} glass-card-interactive rounded-xl p-4`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-2xl font-bold text-site-highlight">
@@ -80,8 +81,8 @@ export function HomeHeroSection() {
           </div>
         </div>
 
-        {/* Right Column: Interactive Lifecycle Pipeline */}
-        <div className="flex flex-col justify-center">
+        {/* Right Column: Interactive Lifecycle Pipeline with Eased Entrance */}
+        <div className="animate-hero-fade-in stagger-hero-3 flex flex-col justify-center">
           <HomeHeroPipeline />
         </div>
       </div>

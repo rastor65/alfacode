@@ -8,7 +8,7 @@ export function ProjectCard({ project }: { project: Project }) {
   const isCompleted = project.status.toLowerCase().includes("completado") || project.status.toLowerCase().includes("produccion");
 
   return (
-    <article className="glass-card-interactive group relative flex flex-col justify-between overflow-hidden rounded-2xl p-6 transition-all duration-200">
+    <article className="glass-card-interactive group relative flex w-full flex-col justify-between overflow-hidden rounded-xl p-6">
       {/* Top accent glow line */}
       <div
         className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#469eb4] to-transparent opacity-80"
@@ -52,7 +52,7 @@ export function ProjectCard({ project }: { project: Project }) {
         </h3>
 
         {/* Summary */}
-        <p className="mt-2.5 text-sm leading-relaxed text-slate-300 line-clamp-3">
+        <p className="mt-2.5 text-sm leading-relaxed text-slate-300 line-clamp-2">
           {project.summary}
         </p>
       </div>

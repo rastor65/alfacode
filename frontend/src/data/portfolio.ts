@@ -1,4 +1,10 @@
-import type { Project, ResearchLine, Technology } from "@/types/domain";
+import type {
+  Project,
+  Publication,
+  ResearchLine,
+  TeamMember,
+  Technology,
+} from "@/types/domain";
 
 export const researchLines: ResearchLine[] = [
   {
@@ -51,6 +57,8 @@ export const projects: Project[] = [
       "Sistema web con captura de datos, visualizacion historica y analitica aplicada.",
     status: "RESEARCH",
     visibility: "PUBLIC",
+    trl: "TRL 3",
+    developers: ["Jesus Monsalvo", "Robert Quintero"],
     researchLines: [researchLines[1], researchLines[2], researchLines[3]],
     technologies: [technologies[3], technologies[5], technologies[2]],
   },
@@ -68,6 +76,9 @@ export const projects: Project[] = [
       "Aplicacion administrativa conceptual con modulos de informacion y reportes operativos.",
     status: "DEVELOPMENT",
     visibility: "PUBLIC",
+    liveUrl: "https://wayra-travel.com/",
+    developers: ["Cristian Ramirez"],
+    trl: "TRL 5",
     researchLines: [researchLines[0], researchLines[3]],
     technologies: [technologies[0], technologies[1], technologies[2]],
   },
@@ -85,6 +96,9 @@ export const projects: Project[] = [
       "Plataforma con retos, progreso, logros, retroalimentacion y seguimiento docente.",
     status: "DESIGN",
     visibility: "PUBLIC",
+    liveUrl: "https://edubid-unigua.up.railway.app/",
+    developers: ["Juan Añez", "Ivan Martinez"],
+    trl: "TRL 4",
     researchLines: [researchLines[0], researchLines[3]],
     technologies: [technologies[0], technologies[1]],
   },
@@ -102,6 +116,8 @@ export const projects: Project[] = [
       "Asistente educativo conectado a herramientas y fuentes academicas controladas.",
     status: "RESEARCH",
     visibility: "PUBLIC",
+    trl: "TRL 4",
+    developers: ["Robert Quintero", "Ivan Martinez"],
     researchLines: [researchLines[1], researchLines[3]],
     technologies: [technologies[1], technologies[3], technologies[4]],
   },
@@ -119,6 +135,8 @@ export const projects: Project[] = [
       "Frontend responsivo orientado a accesibilidad, rendimiento y compatibilidad multidispositivo.",
     status: "VALIDATION",
     visibility: "PUBLIC",
+    trl: "TRL 6",
+    developers: ["Cristian Ramirez", "Juan Añez"],
     researchLines: [researchLines[0], researchLines[3]],
     technologies: [technologies[0], technologies[1], technologies[2]],
   },
@@ -127,3 +145,122 @@ export const projects: Project[] = [
 export function getProjectBySlug(slug: string) {
   return projects.find((project) => project.slug === slug);
 }
+
+export const mockTeamMembers: TeamMember[] = [
+  {
+    id: "robert-quintero",
+    name: "Robert Quintero",
+    role: "LEADER",
+    roleLabel: "Director del Semillero",
+    bio: "Docente e investigador de la Universidad de La Guajira. Líder y director general de AlfaCode.",
+    focusArea: "Dirección de I+D & Arquitectura de Software",
+    researchLines: ["Desarrollo de Software", "Investigación Aplicada"],
+    status: "ACTIVE",
+    email: "rdamianquintero@uniguajira.edu.co",
+    github: "https://github.com/rastor65",
+  },
+  {
+    id: "cristian-ramirez",
+    name: "Cristian Ramirez",
+    role: "STUDENT",
+    roleLabel: "Estudiante · Desarrollador",
+    bio: "Ingeniería de Sistemas. Desarrollo web y arquitectura de interfaces.",
+    focusArea: "Desarrollo Frontend & Sistemas Web",
+    researchLines: ["Desarrollo de Software"],
+    status: "ACTIVE",
+  },
+  {
+    id: "jesus-monsalvo",
+    name: "Jesus Monsalvo",
+    role: "STUDENT",
+    roleLabel: "Estudiante · Desarrollador",
+    bio: "Ingeniería de Sistemas. Arquitectura de servicios y bases de datos.",
+    focusArea: "Backend & Persistencia de Datos",
+    researchLines: ["Desarrollo de Software"],
+    status: "ACTIVE",
+  },
+  {
+    id: "ivan-martinez",
+    name: "Ivan Martinez",
+    role: "STUDENT",
+    roleLabel: "Estudiante · Investigador",
+    bio: "Ingeniería de Sistemas. Modelos inteligentes e investigación aplicada.",
+    focusArea: "Inteligencia Artificial & Software",
+    researchLines: ["Inteligencia Artificial", "Desarrollo de Software"],
+    status: "ACTIVE",
+  },
+  {
+    id: "juan-anez",
+    name: "Juan Añez",
+    role: "STUDENT",
+    roleLabel: "Estudiante · Investigador",
+    bio: "Ingeniería de Sistemas. Dispositivos conectados y experimentación.",
+    focusArea: "IoT & Sistemas Embebidos",
+    researchLines: ["IoT", "Investigación Aplicada"],
+    status: "ACTIVE",
+  },
+];
+
+export const teamMembers: TeamMember[] = [];
+
+export const mockPublications: Publication[] = [
+  {
+    id: "pub-01",
+    title:
+      "Arquitectura de Software y Sistemas Distribuidos para el Monitoreo de Parámetros Fisiológicos en Entornos Educativos",
+    authors: ["R. Damian Quintero", "Equipo AlfaCode"],
+    year: 2025,
+    type: "ARTICLE",
+    typeLabel: "Artículo Científico",
+    venue: "Revista Colombiana de Tecnologías de Información (RCTI)",
+    abstract:
+      "Se describe el diseño, prototipado y validación de una plataforma web modular con soporte para captura continua de señales fisiológicas, procesamiento en borde y visualización analítica.",
+    tags: ["Arquitectura de Software", "IoT", "Salud Digital"],
+    url: "https://github.com/rastor65/alfacode",
+  },
+  {
+    id: "pub-02",
+    title:
+      "Integración de Modelos de Lenguaje (LLM) y Agentes Contextuales en Entornos Universitarios de Aprendizaje",
+    authors: ["R. Damian Quintero", "Investigadores AlfaCode"],
+    year: 2026,
+    type: "CONFERENCE",
+    typeLabel: "Ponencia en Congreso",
+    venue: "Congreso Internacional de Computación y Sistemas Aplicados (CICSA 2026)",
+    abstract:
+      "Evaluación empírica del impacto de asistentes educativos basados en el protocolo MCP para la tutoría guiada en cursos de ingeniería y ciencias exactas.",
+    tags: ["Inteligencia Artificial", "LLM", "Educación"],
+    url: "https://github.com/rastor65/alfacode",
+  },
+  {
+    id: "pub-03",
+    title:
+      "Plataforma AlfaCode HUB: Sistema de Gestión de Proyectos y Actividades Investigativas (SGPAI)",
+    authors: ["Semillero AlfaCode", "Universidad de La Guajira"],
+    year: 2026,
+    type: "SOFTWARE_REGISTRY",
+    typeLabel: "Registro de Soporte Lógico",
+    venue: "Dirección Nacional de Derecho de Autor (DNDA) - En trámite",
+    abstract:
+      "Monolito modular con backend en NestJS y frontend en Next.js diseñado para articular la producción científica, la gobernanza de proyectos y la trazabilidad de integrantes del semillero.",
+    tags: ["Gestión I+D", "Open Source", "Software Universitario"],
+    url: "https://github.com/rastor65/alfacode",
+  },
+  {
+    id: "pub-04",
+    title:
+      "Diseño e Implementación de Experiencias WebAR con Glassmorphism para la Divulgación Académica",
+    authors: ["Investigadores AlfaCode"],
+    year: 2025,
+    type: "TECHNICAL_REPORT",
+    typeLabel: "Reporte Técnico de I+D",
+    venue: "Universidad de La Guajira - Serie Técnica AlfaCode",
+    abstract:
+      "Lineamientos de diseño visual, optimización de renderizado 3D en navegadores móviles y accesibilidad para aplicaciones educativas interactivas.",
+    tags: ["WebAR", "Three.js", "UI/UX"],
+    url: "https://github.com/rastor65/alfacode",
+  },
+];
+
+export const publications: Publication[] = [];
+

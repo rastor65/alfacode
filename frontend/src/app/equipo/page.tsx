@@ -1,10 +1,20 @@
-import { PublicPlaceholderPage } from "@/components/layout/public-placeholder-page";
+import type { Metadata } from "next";
+
+import { PublicPageShell } from "@/components/layout/public-page-shell";
+import { teamMembers } from "@/data/portfolio";
+import { PublicTeamPage } from "@/features/team/components/public-team-page";
+
+export const metadata: Metadata = {
+  title: "Equipo",
+  description:
+    "Docentes, estudiantes e investigadores del semillero de investigación AlfaCode.",
+};
 
 export default function TeamPage() {
+  const hasContent = Boolean(teamMembers && teamMembers.length > 0);
   return (
-    <PublicPlaceholderPage
-      title="Equipo AlfaCode"
-      description="Este modulo se conectara a `members` para publicar integrantes activos, alumni y responsables de lineas segun visibilidad."
-    />
+    <PublicPageShell withInteractiveBackground={hasContent}>
+      <PublicTeamPage members={teamMembers} />
+    </PublicPageShell>
   );
 }

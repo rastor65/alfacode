@@ -18,14 +18,14 @@ export function HomeHeroPipeline() {
     detailedProcessSteps[3];
 
   return (
-    <div className="glass-panel relative flex flex-col justify-between overflow-hidden rounded-2xl p-6 lg:p-7">
-      {/* Ambient background glow inside panel */}
+    <div className="glass-panel relative flex flex-col justify-between overflow-hidden rounded-xl p-6 lg:p-7">
+      {/* Ambient background glow inside panel with parallax drift */}
       <div
-        className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-[#469eb4]/15 blur-3xl"
+        className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-[#469eb4]/15 blur-3xl animate-parallax-float"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -bottom-20 -left-20 size-64 rounded-full bg-[#7ed4e8]/10 blur-3xl"
+        className="pointer-events-none absolute -bottom-20 -left-20 size-64 rounded-full bg-[#7ed4e8]/10 blur-3xl animate-parallax-float-delayed"
         aria-hidden="true"
       />
 
@@ -94,12 +94,13 @@ export function HomeHeroPipeline() {
         </div>
       </div>
 
-      {/* Active Phase Details Card */}
+      {/* Active Phase Details Card with Easing Crossfade */}
       <div
+        key={currentStage.id}
         id={`panel-${currentStage.id}`}
         role="tabpanel"
         aria-labelledby={`tab-${currentStage.id}`}
-        className="relative flex-1 rounded-xl border border-cyan-400/20 bg-slate-950/70 p-5 backdrop-blur-md"
+        className="animate-stage-enter relative flex-1 rounded-xl border border-cyan-400/20 bg-slate-950/70 p-5 backdrop-blur-md"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
