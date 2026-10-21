@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { ArrowRight, Lock, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -37,24 +38,40 @@ export function LoginForm({ next }: LoginFormProps) {
         method: "POST",
         body: { email: String(form.get("email") ?? ""), password: String(form.get("password") ?? "") },
       });
+
+      toast.success("¡Bienvenido a AlfaCode HUB!", {
+        description: `Sesión iniciada con éxito.`,
+      });
+
       // La cookie de sesion ya quedo fijada por el backend; se renderiza el destino con ella.
       // Con contrasena temporal, lo primero es cambiarla.
       router.replace(user.mustChangePassword ? CHANGE_PASSWORD_PATH : next);
       router.refresh();
     } catch (caught) {
       const fields = invalidFields(caught);
+      const errorMessage = describeError(caught);
+
       setFieldErrors({
         email: fields.includes("email") ? "Ingresa un correo válido." : undefined,
         password: fields.includes("password") ? "Ingresa tu contraseña." : undefined,
       });
-      setError(describeError(caught));
+      setError(errorMessage);
+
+      toast.error("No se pudo iniciar sesión", {
+        description: errorMessage,
+      });
+
       setPending(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
-      {error && <Alert tone="error">{error}</Alert>}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="animate-in fade-in-50 slide-in-from-top-1 duration-200">
+          <Alert tone="error">{error}</Alert>
+        </div>
+      )}
       <FormField
         label="Correo institucional"
         name="email"
@@ -62,7 +79,7 @@ export function LoginForm({ next }: LoginFormProps) {
         autoComplete="email"
         inputMode="email"
         placeholder="nombre@uniguajira.edu.co"
-        icon={<Mail size={16} aria-hidden="true" />}
+        icon={<Mail size={16} className="text-cyan-500" aria-hidden="true" />}
         required
         maxLength={254}
         error={fieldErrors.email}
@@ -72,7 +89,7 @@ export function LoginForm({ next }: LoginFormProps) {
         name="password"
         type="password"
         autoComplete="current-password"
-        icon={<Lock size={16} aria-hidden="true" />}
+        icon={<Lock size={16} className="text-cyan-500" aria-hidden="true" />}
         required
         maxLength={256}
         error={fieldErrors.password}
@@ -80,14 +97,14 @@ export function LoginForm({ next }: LoginFormProps) {
       <p className="-mt-1 text-right text-xs">
         <Link
           href="/recuperar-contrasena"
-          className="text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline"
+          className="text-cyan-600 dark:text-cyan-400 font-medium underline-offset-4 transition hover:text-cyan-700 dark:hover:text-cyan-300 hover:underline"
         >
           ¿Olvidaste tu contraseña?
         </Link>
       </p>
       <Button
         type="submit"
-        className="w-full group relative overflow-hidden !text-[#ffffff] shadow-[0_0_25px_rgba(70,158,180,0.35)] hover:shadow-[0_0_35px_rgba(70,158,180,0.55)] transition-all font-semibold"
+        className="w-full h-11 group relative overflow-hidden !text-[#ffffff] rounded-xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-500 hover:from-cyan-500 hover:to-teal-400 active:scale-[0.98] shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/35 transition-all duration-200 font-semibold cursor-pointer"
         style={{ color: "#ffffff" }}
         pending={pending}
         pendingLabel="Ingresando…"

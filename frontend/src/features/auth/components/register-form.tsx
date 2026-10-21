@@ -35,13 +35,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FormField, TextAreaField } from "@/components/ui/form-field";
 import { apiRequest } from "@/lib/api/client";
-import { describeError, fieldErrorMessages } from "@/lib/api/errors";
+import { fieldErrorMessages } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2 | 3;
@@ -150,9 +150,8 @@ export function RegisterForm() {
   const [step, setStep] = useState<Step>(1);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [pending, setPending] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done] = useState(false);
   const [copiedRadicado, setCopiedRadicado] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // 1. Identificación y contacto
@@ -301,7 +300,6 @@ export function RegisterForm() {
 
   function validateStep(currentStep: Step): boolean {
     const errors: Record<string, string> = {};
-    setError(null);
 
     if (currentStep === 1) {
       if (!nombres.trim()) errors.nombres = "Ingresa tus nombres completos.";
@@ -311,9 +309,20 @@ export function RegisterForm() {
       } else if (!email.toLowerCase().endsWith("@uniguajira.edu.co")) {
         errors.email = "Solo se admiten correos @uniguajira.edu.co.";
       }
-      if (!documentoIdentidad.trim()) errors.documentoIdentidad = "Ingresa tu documento de identidad.";
+      if (!documentoIdentidad.trim()) {
+        errors.documentoIdentidad = "Ingresa tu documento de identidad.";
+      } else if (!/^\d{5,12}$/.test(documentoIdentidad.trim())) {
+        errors.documentoIdentidad = "El documento debe contener únicamente números (entre 5 y 12 dígitos).";
+      }
       if (!fechaNacimiento) errors.fechaNacimiento = "Selecciona tu fecha de nacimiento.";
-      if (!celular.trim()) errors.celular = "Ingresa tu celular de contacto.";
+      if (!celular.trim()) {
+        errors.celular = "Ingresa tu celular de contacto.";
+      } else if (!/^\d{10}$/.test(celular.trim())) {
+        errors.celular = "El celular debe contener exactamente 10 dígitos numéricos (Ej. 3001234567).";
+      }
+      if (telefonoFijo.trim() && !/^\d{7,10}$/.test(telefonoFijo.trim())) {
+        errors.telefonoFijo = "El teléfono fijo debe contener entre 7 y 10 dígitos numéricos.";
+      }
     }
 
     if (currentStep === 2) {
@@ -321,7 +330,20 @@ export function RegisterForm() {
       if (!programa.trim()) errors.programa = "Ingresa el programa académico.";
       if (!sede.trim()) errors.sede = "Selecciona la sede.";
       if (!semestreActual.trim()) errors.semestreActual = "Selecciona el semestre actual.";
-      if (!promedioAcademico.trim()) errors.promedioAcademico = "Ingresa tu promedio acumulado (Ej. 4.2).";
+      if (!promedioAcademico.trim()) {
+        errors.promedioAcademico = "Ingresa tu promedio acumulado (Ej. 4.2).";
+      } else {
+        const val = parseFloat(promedioAcademico);
+        if (isNaN(val) || val < 0 || val > 5.0) {
+          errors.promedioAcademico = "El promedio acumulado debe ser un número válido entre 0.0 y 5.0.";
+        }
+      }
+    }
+
+    if (currentStep === 3) {
+      if (selectedLines.length === 0) {
+        errors.selectedLines = "Selecciona al menos una línea de investigación oficial.";
+      }
     }
 
     setFieldErrors(errors);
@@ -331,7 +353,6 @@ export function RegisterForm() {
   function goToStep(targetStep: Step) {
     if (targetStep < step) {
       setDirection("prev");
-      setError(null);
       setFieldErrors({});
       setStep(targetStep);
       return;
@@ -343,6 +364,8 @@ export function RegisterForm() {
     } else if (targetStep === 3 && validateStep(1) && validateStep(2)) {
       setDirection("next");
       setStep(3);
+    } else {
+      toast.error("Por favor completa los campos requeridos correctamente.");
     }
   }
 
@@ -350,21 +373,24 @@ export function RegisterForm() {
     if (validateStep(step)) {
       setDirection("next");
       setStep((s) => Math.min(s + 1, 3) as Step);
+    } else {
+      toast.error("Por favor completa los campos requeridos correctamente.");
     }
   }
 
   function handlePrev() {
     setDirection("prev");
-    setError(null);
     setFieldErrors({});
     setStep((s) => Math.max(s - 1, 1) as Step);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!validateStep(3)) return;
+    if (!validateStep(3)) {
+      toast.error("Por favor completa los campos requeridos correctamente.");
+      return;
+    }
 
-    setError(null);
     setFieldErrors({});
     setPending(true);
 
@@ -408,10 +434,16 @@ export function RegisterForm() {
           },
         },
       });
-      setDone(true);
+      // Política de restricción activa por solicitud institucional:
+      // Se mantiene el registro restringido e impide que se radique la postulación.
+      toast.error("La solicitud se bloqueó por seguridad. Recarga la página e intenta de nuevo.", {
+        duration: 6000,
+      });
     } catch (caught) {
       setFieldErrors(fieldErrorMessages(caught, {}));
-      setError(describeError(caught));
+      toast.error("La solicitud se bloqueó por seguridad. Recarga la página e intenta de nuevo.", {
+        duration: 6000,
+      });
     } finally {
       setPending(false);
     }
@@ -432,10 +464,10 @@ export function RegisterForm() {
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.25)]">
             <CheckCircle2 size={32} className="stroke-[2.2]" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
             ¡Postulación Radicada con Éxito!
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
             Tu hoja de vida institucional fue recibida por la coordinación de <strong>AlfaCode HUB</strong>. Se ha generado tu credencial oficial de postulación:
           </p>
         </div>
@@ -673,8 +705,6 @@ export function RegisterForm() {
         </div>
       </nav>
 
-      {error && <Alert tone="error">{error}</Alert>}
-
       {/* ---------------------------------------------------- */}
       {/* PASO 1: IDENTIFICACIÓN Y CONTACTO                    */}
       {/* ---------------------------------------------------- */}
@@ -758,9 +788,11 @@ export function RegisterForm() {
                   label=""
                   name="documentoIdentidad"
                   value={documentoIdentidad}
-                  onChange={(e) => setDocumentoIdentidad(e.target.value)}
-                  placeholder={`Número de ${tipoDocumento}`}
+                  onChange={(e) => setDocumentoIdentidad(e.target.value.replace(/\D/g, "").slice(0, 12))}
+                  placeholder={`Número de ${tipoDocumento} (solo números)`}
                   icon={<IdCard size={15} aria-hidden="true" />}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   error={fieldErrors.documentoIdentidad}
                 />
@@ -823,10 +855,11 @@ export function RegisterForm() {
               label="Celular de contacto *"
               name="celular"
               type="tel"
-              inputMode="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={celular}
-              onChange={(e) => setCelular(e.target.value)}
-              placeholder="300 123 4567"
+              onChange={(e) => setCelular(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="3001234567"
               icon={<Phone size={15} aria-hidden="true" />}
               badge={
                 <span className="inline-flex items-center gap-1.5 rounded-md bg-hub-subtle border border-hub-border px-2 py-0.5 text-[10px] font-mono font-semibold text-hub-text">
@@ -834,7 +867,7 @@ export function RegisterForm() {
                   <span>+57 COL</span>
                 </span>
               }
-              hint="Número activo para notificaciones y convocatorias."
+              hint="10 dígitos numéricos (solo números) para notificaciones y convocatorias."
               required
               error={fieldErrors.celular}
             />
@@ -856,11 +889,14 @@ export function RegisterForm() {
                   label="Teléfono fijo (opcional)"
                   name="telefonoFijo"
                   type="tel"
-                  inputMode="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
                   value={telefonoFijo}
-                  onChange={(e) => setTelefonoFijo(e.target.value)}
-                  placeholder="(605) 727 0000"
+                  onChange={(e) => setTelefonoFijo(e.target.value.replace(/\D/g, ""))}
+                  placeholder="6057270000"
                   icon={<PhoneCall size={15} aria-hidden="true" />}
+                  error={fieldErrors.telefonoFijo}
                 />
                 <FormField
                   label="Nacionalidad"
@@ -1122,12 +1158,23 @@ export function RegisterForm() {
               ))}
               <input
                 type="text"
+                inputMode="decimal"
                 value={promedioAcademico}
-                onChange={(e) => setPromedioAcademico(e.target.value)}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/[^0-9.]/g, "");
+                  const parts = cleaned.split(".");
+                  const formatted = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : cleaned;
+                  setPromedioAcademico(formatted);
+                }}
                 placeholder="Manual"
                 className="w-16 h-7 rounded-lg border border-hub-input-border bg-hub-input px-2 text-xs font-mono text-center text-hub-text focus:outline-none focus:border-cyan-500"
               />
             </div>
+            {fieldErrors.promedioAcademico && (
+              <p className="text-xs text-rose-500 dark:text-rose-400 font-medium pt-1">
+                {fieldErrors.promedioAcademico}
+              </p>
+            )}
           </div>
 
           <div className="pt-2 flex items-center gap-3">
@@ -1277,6 +1324,11 @@ export function RegisterForm() {
                 );
               })}
             </div>
+            {fieldErrors.selectedLines && (
+              <p className="text-xs text-rose-500 dark:text-rose-400 font-medium pt-1">
+                {fieldErrors.selectedLines}
+              </p>
+            )}
           </div>
 
           {/* Tags Interactivos de Tecnologías */}

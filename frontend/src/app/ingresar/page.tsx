@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       footer={
         <>
           ¿Aún no tienes cuenta?{" "}
-          <Link href="/registro" className="font-semibold text-cyan-300 underline-offset-4 transition hover:text-cyan-200 hover:underline">
+          <Link href="/registro" className="font-semibold text-cyan-600 dark:text-cyan-300 underline-offset-4 transition hover:text-cyan-700 dark:hover:text-cyan-200 hover:underline">
             Solicitar acceso
           </Link>
         </>
