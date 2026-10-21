@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Activity,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Pause,
@@ -12,6 +11,25 @@ import {
 } from "lucide-react";
 
 import { detailedProcessSteps } from "@/features/home/data/home-content";
+import {
+  PhaseVisual01,
+  PhaseVisual02,
+  PhaseVisual03,
+  PhaseVisual04,
+  PhaseVisual05,
+  PhaseVisual06,
+  PhaseVisual07,
+} from "./hero-pipeline-visuals";
+
+const PHASE_VISUALS = [
+  PhaseVisual01,
+  PhaseVisual02,
+  PhaseVisual03,
+  PhaseVisual04,
+  PhaseVisual05,
+  PhaseVisual06,
+  PhaseVisual07,
+];
 
 const AUTOPLAY_INTERVAL = 5500; // 5.5s por slide
 
@@ -195,14 +213,15 @@ export function HomeHeroPipeline() {
         </div>
       </div>
 
-      {/* Contenedor Carrusel Horizontal (Limpio, enfocado y sin SVG) */}
-      <div className="relative w-full min-w-0 overflow-hidden rounded-xl border border-cyan-400/20 bg-slate-950/70 backdrop-blur-md">
+      {/* Contenedor Carrusel Horizontal (Enfoque puramente visual con diagramas vectoriales) */}
+      <div className="relative w-full min-w-0 overflow-hidden rounded-xl border border-cyan-400/25 bg-slate-950/80 backdrop-blur-md">
         <div
           className="flex w-full transition-transform duration-500 ease-out will-change-transform"
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
         >
-          {detailedProcessSteps.map((stage) => {
+          {detailedProcessSteps.map((stage, idx) => {
             const Icon = stage.icon;
+            const VisualComponent = PHASE_VISUALS[idx];
 
             return (
               <div
@@ -210,70 +229,33 @@ export function HomeHeroPipeline() {
                 id={`panel-${stage.id}`}
                 role="tabpanel"
                 aria-labelledby={`tab-${stage.id}`}
-                className="w-full shrink-0 flex-none flex flex-col p-5 sm:p-6"
+                className="w-full min-w-full max-w-full shrink-0 flex-none overflow-hidden flex flex-col p-4 sm:p-5"
               >
-                {/* Header de la fase: Icono, número, título y categoría */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-9 items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.2)]">
-                      <Icon size={18} aria-hidden="true" />
+                {/* Header compacto de la fase: Icono, número, título y categoría */}
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-7 items-center justify-center rounded-lg border border-cyan-400/40 bg-cyan-500/15 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                      <Icon size={15} aria-hidden="true" />
                     </span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-cyan-300">
-                          FASE {stage.step}
-                        </span>
-                        <span className="text-slate-500 text-xs">/</span>
-                        <span className="font-mono text-xs text-slate-400">07</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-white tracking-tight">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-cyan-300">
+                        FASE {stage.step}
+                      </span>
+                      <span className="text-slate-600 text-xs font-mono">/</span>
+                      <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight">
                         {stage.title}
                       </h3>
                     </div>
                   </div>
 
-                  <span className="rounded-md border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-300 uppercase tracking-wider font-mono">
+                  <span className="rounded-md border border-cyan-400/25 bg-cyan-500/10 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-cyan-300 uppercase tracking-wider font-mono">
                     {stage.category}
                   </span>
                 </div>
 
-                {/* Descripción conceptual */}
-                <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                  {stage.description}
-                </p>
-
-                {/* Entregable clave */}
-                <div className="mt-5 rounded-lg border border-white/10 bg-white/[0.03] p-3.5">
-                  <div className="flex items-start gap-2.5">
-                    <CheckCircle2
-                      size={17}
-                      className="mt-0.5 shrink-0 text-cyan-400"
-                      aria-hidden="true"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 font-mono">
-                        Entregable principal
-                      </p>
-                      <p className="mt-1 text-xs sm:text-sm font-medium text-slate-200">
-                        {stage.deliverable}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Herramientas & Estándares */}
-                <div className="mt-4 flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[11px] uppercase tracking-wider text-slate-400 mr-1.5 font-mono">
-                    Herramientas:
-                  </span>
-                  {stage.techStack.map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded border border-cyan-400/20 bg-cyan-950/30 px-2.5 py-0.5 font-mono text-xs text-cyan-200/90 transition hover:border-cyan-400/50 hover:text-white"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+                {/* Diagrama Visual Técnico Vectorial */}
+                <div className="relative mt-3 flex items-center justify-center w-full min-h-[200px] sm:min-h-[225px] overflow-hidden rounded-lg border border-white/5 bg-slate-950/60 p-1 sm:p-2">
+                  <VisualComponent />
                 </div>
               </div>
             );
