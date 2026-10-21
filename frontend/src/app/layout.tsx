@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import { ScrollRestoration } from "@/components/common/scroll-restoration";
 import { ScrollRevealProvider } from "@/components/common/scroll-reveal-provider";
 import { TopProgressBar } from "@/components/common/top-progress-bar";
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full bg-[#05080d] text-slate-100">
+        <Toaster position="top-right" richColors closeButton theme="system" />
         <TopProgressBar />
         <ScrollRestoration />
         <ScrollRevealProvider />

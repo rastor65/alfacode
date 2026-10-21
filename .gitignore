@@ -49,3 +49,7 @@ next-env.d.ts
 # LLM dumps
 repomix-output.md
 
+# python
+__pycache__/
+*.py[cod]
+
