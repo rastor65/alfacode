@@ -431,6 +431,55 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Alcance:** verificacion acumulada de F5-01 a F5-07, relaciones/permisos, decisiones, adjuntos, desvinculacion e historia, migraciones e integridad SQLite. Solo revision y pruebas, con correcciones de defectos comprobados si aparecen; sin funcionalidades nuevas.
 - **Limites:** no aprueba formalmente I-20/I-21 ni declara cierre integral de Fase 5. PostgreSQL sigue pausado; pendientes de UI real, ESLint y almacenamiento/retencion productivos conservados. No autoriza Fase 6, commit, push ni despliegue.
 
+### DEC-044 - Aprobacion de I-20, I-21 e I-22
+
+- **Fecha:** 2026-10-21
+- **Estado:** aprobada por el responsable ("apruebo i 20, 21 y 22"), incluidas las reglas de implementacion de DEC-040 y DEC-042.
+- **Solicitud asociada:** ejecutar la prueba de interaccion en navegador real pendiente de `docs/revision-i22.md`. Ejecutada el mismo dia en Chrome headless via DevTools Protocol sobre el entorno `--review`: 35/36; bloqueos de salida con enlaces no observables con las fixtures (sin responsabilidades abiertas), cubiertos por HTTP/E2E. Detalle en `docs/revision-i22.md`.
+- **Limites:** no autoriza Fase 6, commit, push ni despliegue. PostgreSQL sigue pausado; ESLint y almacenamiento/retencion productivos conservan su estado.
+
+### DEC-045 - Autorizacion de Fase 6 e iteracion I-23
+
+- **Fecha:** 2026-10-21
+- **Estado:** Fase 6 autorizada por el responsable ("autorizo empezar con la fase 6"). I-23 implementada y verificada tecnicamente en SQLite (2026-10-21); reglas de implementacion pendientes de revision del responsable.
+- **Numeracion:** el backlog maestro asigna a F6 las iteraciones I-19/I-20/I-21, ya usadas en la ejecucion real. Por continuidad: I-23 = F6-01 a F6-04 (catalogo y paneles institucional, de proyecto y personal); I-24 = F6-05 a F6-08 (seguimiento cualitativo, reportes, exactitud y UI); I-25 = validacion de Fase 6, solo verificacion.
+- **Reglas de implementacion de I-23 (propuestas por el agente, sujetas a revision):**
+  - Catalogo en `docs/catalogo-indicadores.md`, escrito antes de implementar: definicion, fuente, filtros, fecha de corte, permiso y consulta de cada indicador.
+  - Panel institucional solo para admin/coordinator (matriz v0.2: "Reportes institucionales: Coordinador y roles habilitados"; no se definen otros roles habilitados). Otras personas reciben 403 en API y 404 en la pagina.
+  - Panel de proyecto con el mismo acceso que el proyecto (autoridad, lider o colaborador; sin acceso 404). Entregables = resultados investigativos y productos academicos vinculados al proyecto; no se crea una entidad nueva.
+  - Panel personal solo con datos de la propia persona y filtrado por la visibilidad vigente antes de contar; sin rankings ni comparaciones entre personas.
+  - Fecha de corte: momento de la consulta (se devuelve); dias calendario en America/Bogota. Sprints cerrados usan `sprint_closure_items`. Avance solo con total > 0; si no, "Sin tareas".
+  - Sin migraciones, dependencias ni graficos (los graficos basicos corresponden a F6-08/I-24).
+- **Conflicto registrado:** el criterio F6 "consultas agregadas y filtros funcionan en SQLite y PostgreSQL" no puede verificarse mientras PostgreSQL siga pausado (DEC-003). Se usaran consultas portables (QueryBuilder/SQL estandar) y la verificacion PostgreSQL quedara pendiente para I-25 o la reactivacion del motor; no se declara cumplido.
+- **Limites:** no autoriza commit, push, despliegue ni datos reales. I-24 e I-25 se ejecutan tras I-23 dentro de esta autorizacion de fase, sin declararse aprobadas sin revision.
+
+### DEC-046 - Continuacion con I-24 (seguimiento cualitativo, reportes, exactitud y UI)
+
+- **Fecha:** 2026-10-21
+- **Estado:** ejecucion autorizada ("continua con i 24", dentro de la Fase 6 autorizada en DEC-045). I-23 sin aprobacion formal atribuida. I-24 implementada y verificada tecnicamente en SQLite (2026-10-21); reglas pendientes de revision.
+- **Ajuste durante la implementacion:** los `loading.tsx` de ruta iniciaban streaming y fijaban HTTP 200 antes de `notFound()` (documentacion de Next.js, "Status codes"), lo que el E2E detecto como perdida del 404 de I-23. Se retiraron; el permiso se comprueba antes de un `<Suspense>` interno que muestra la carga.
+- **Reglas de implementacion (propuestas por el agente, sujetas a revision):**
+  - **F6-05 observaciones:** tabla nueva `project_observations` (migracion versionada SQLite) con proyecto, autor, tipo (`progress` avance, `difficulty` dificultad, `result` resultado, `general` observacion) y texto. Registran lider del proyecto o autoridad mientras el proyecto sea editable; consultan quienes tienen acceso al proyecto. Sin edicion (se elimina y se registra de nuevo); elimina el autor si conserva permiso o una autoridad; alta y baja auditadas. Sin campo de persona evaluada, puntaje, ranking ni evaluacion automatica (evaluaciones nominales no aprobadas, plan F6-05 y documento completo 8.7).
+  - **F6-06 reportes:** `/hub/reportes`, solo admin/coordinator, como el panel institucional. Tres reportes en pantalla: proyectos, produccion academica y actividades. Filtros: rango de fechas, tipo de proyecto/producto/actividad, estado y linea de investigacion (via `project_research_lines` del proyecto vinculado); paginacion de 20 (max. 100). Rango de fechas: proyectos cuyo periodo planificado se cruza con el rango (sin fecha de inicio se excluyen al filtrar por fechas); productos por `product_date` (sin fecha se excluyen al filtrar); actividades por dia de inicio en Bogota. Sin exportacion PDF/Excel (posterior).
+  - **F6-07:** pruebas con fixture contada a mano para filtros, limites de fechas, paginacion, totales y permisos antes de agregar.
+  - **F6-08:** graficos de barras horizontales propios (HTML/CSS con cifras en texto, sin dependencias), estados de carga (`loading.tsx`), error (`error.tsx`) y "Sin datos" en paneles y reportes.
+- **Limites:** sin dependencias nuevas, PostgreSQL (migracion falla explicitamente en ese motor como las anteriores, DEC-003), commit, push ni despliegue. I-25 valida despues la fase.
+
+### DEC-047 - Continuacion con I-25: validacion de Fase 6
+
+- **Fecha:** 2026-10-22
+- **Estado:** ejecucion autorizada ("continua con i 25", dentro de la Fase 6 autorizada en DEC-045). I-23/I-24 sin aprobacion formal atribuida.
+- **Alcance:** verificacion acumulada de F6-01 a F6-08 contra los criterios de aceptacion F6: exactitud con fixtures, no inferencia de cifras privadas, terminadas sin duplicar por sprints, pantallas sin datos, permisos, migraciones e integridad SQLite y UI. Solo pruebas, revision y correccion de defectos comprobados; sin funcionalidades nuevas.
+- **Limites:** el criterio "SQLite y PostgreSQL" queda bloqueado mientras PostgreSQL siga pausado (DEC-003/DEC-045); no se declara cierre integral de la Fase 6 ni aprobacion humana. Sin commit, push ni despliegue.
+- **Resultado (2026-10-22):** ejecutada; sin defectos comprobados. Cuatro de cinco criterios F6 cumplidos en SQLite; PostgreSQL bloqueado. Evidencia en `docs/revision-i25.md`.
+
+### DEC-048 - Aprobacion de I-23, I-24 e I-25
+
+- **Fecha:** 2026-10-22
+- **Estado:** aprobadas por el responsable ("apruebo las iteraciones, haz los commits"), incluidas las reglas de implementacion de DEC-045 y DEC-046.
+- **Alcance de la aprobacion:** resultados de I-23/I-24/I-25 en SQLite. El criterio F6 de compatibilidad PostgreSQL sigue bloqueado (DEC-003); no se declara disponibilidad productiva.
+- **Solicitud asociada:** registrar el trabajo en Git (commits locales en `dev`). No autoriza push, despliegue, reactivacion de PostgreSQL ni nueva fase.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

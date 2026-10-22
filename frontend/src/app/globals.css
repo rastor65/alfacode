@@ -48,6 +48,8 @@
   --hub-text-soft: #cbd5e1;
   --hub-muted: #94a3b8;
   --hub-accent: #67e8f9;
+  /* Barras de graficos (F6-08): validadas con el validador dataviz contra --hub-bg de cada tema. */
+  --hub-chart: #12a4c2;
   --hub-accent-soft: rgba(6, 182, 212, 0.15);
   --hub-hover: rgba(255, 255, 255, 0.05);
   --hub-subtle: rgba(255, 255, 255, 0.03);
@@ -85,6 +87,7 @@
   --hub-text-soft: #2b3d48;
   --hub-muted: #5b6b75;
   --hub-accent: #0e7490;
+  --hub-chart: #0891b2;
   --hub-accent-soft: #e0f4f8;
   --hub-hover: #f1f5f8;
   --hub-subtle: #f6f9fb;
@@ -116,6 +119,7 @@
     --hub-text-soft: #2b3d48;
     --hub-muted: #5b6b75;
     --hub-accent: #0e7490;
+    --hub-chart: #0891b2;
     --hub-accent-soft: #e0f4f8;
     --hub-hover: #f1f5f8;
     --hub-subtle: #f6f9fb;
@@ -230,6 +234,7 @@
   --color-hub-soft: var(--hub-text-soft);
   --color-hub-muted: var(--hub-muted);
   --color-hub-accent: var(--hub-accent);
+  --color-hub-chart: var(--hub-chart);
   --color-hub-accent-soft: var(--hub-accent-soft);
   --color-hub-hover: var(--hub-hover);
   --color-hub-subtle: var(--hub-subtle);

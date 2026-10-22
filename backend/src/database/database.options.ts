@@ -36,12 +36,15 @@ import { Academic1728790000000 } from "./migrations/1728790000000-academic";
 import { Events1728800000000 } from "./migrations/1728800000000-events";
 import { AdministrativeRequests1728810000000 } from "./migrations/1728810000000-administrative-requests";
 import { RequestAttachments1728820000000 } from "./migrations/1728820000000-request-attachments";
+import { ProjectObservations1728830000000 } from "./migrations/1728830000000-project-observations";
+import { ProjectObservation } from "../modules/tracking/project-observation.entity";
 import { RequestAttachment } from "../modules/documents/request-attachment.entity";
 import { AdministrativeRequest } from "../modules/administration/administrative-request.entity";
 import { EventDocument, EventParticipant, EventRecord } from "../modules/events/event.entities";
 import { AcademicProduct, AcademicProductResult, ProductAuthor, Recognition } from "../modules/academic/academic.entities";
 
 export const entities = [
+  ProjectObservation,
   RequestAttachment,
   AdministrativeRequest,
   EventRecord, EventParticipant, EventDocument,
@@ -82,6 +85,7 @@ export const migrations = [
   Events1728800000000,
   AdministrativeRequests1728810000000,
   RequestAttachments1728820000000,
+  ProjectObservations1728830000000,
 ];
 
 function loadEnvFile(filePath: string) {

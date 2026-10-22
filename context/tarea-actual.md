@@ -1,14 +1,17 @@
-# Tarea actual - Fase 5, I-22 (verificacion acumulada)
+# Tarea actual - Fase 6, I-25 (validacion de la fase)
 
 ## Estado
 
-**Fase activa:** 5 - I-22, verificacion acumulada de F5-01 a F5-07 (DEC-043). I-20 e I-21 implementadas/verificadas, pendientes de aprobacion formal. I-17, I-18 e I-19 aprobadas. Pendientes de I-16 conservados y PostgreSQL pausado.
+**Fase activa:** 6 - I-25, validacion de F6-01 a F6-08 (DEC-047). I-23 e I-24 implementadas y verificadas tecnicamente, sin aprobacion formal atribuida. PostgreSQL pausado: criterio F6 de compatibilidad bloqueado.
+**Trabajo actualmente autorizado:** I-25 por "continua con i 25" (DEC-047): solo pruebas, revision y correcciones de defectos comprobados. Sin funcionalidades nuevas, commit, push ni despliegue.
+**Resultado I-25 (2026-10-22):** ejecutada; sin defectos comprobados. Verify 74 + 297, E2E 143/143, Chrome 17/17 y 22/22. Criterios F6 cumplidos en SQLite salvo PostgreSQL (bloqueado). Detalle en `docs/revision-i25.md`. I-23/I-24/I-25 aprobadas (DEC-048). No hay iteracion siguiente autorizada.
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026), I-14 y DEC-027 (DEC-028).
 **Aprobacion posterior:** I-17/DEC-034, I-18/DEC-036 e I-19/DEC-038 revisadas y aprobadas por el responsable (DEC-039); sus apartados historicos siguientes conservan la evidencia de ejecucion y los pendientes tecnicos comunicados.
 **Pendiente:** prueba de interaccion en navegador real (arrastrar tarjetas, selectores, modales).
 **I-14 (F3-01 a F3-04):** aprobada (DEC-028).
 **I-15 (F3-05 a F3-09):** aprobada por el responsable el 2026-10-18 (DEC-031), incluidas las decisiones de implementacion de DEC-030.
-**Trabajo actualmente autorizado:** I-22: verificar solicitudes, decisiones, privacidad, desvinculacion, historia e integridad de la Fase 5, por "continua con 9 22" (I-22 segun la continuidad; DEC-043). Solo pruebas/revision/correcciones de defectos comprobados, sin funcionalidades nuevas. No implica aprobacion formal de I-20/I-21 ni autoriza Fase 6 o despliegue.
+**Trabajo autorizado anterior (I-22, concluida):** I-22: verificar solicitudes, decisiones, privacidad, desvinculacion, historia e integridad de la Fase 5, por "continua con 9 22" (I-22 segun la continuidad; DEC-043). Solo pruebas/revision/correcciones de defectos comprobados, sin funcionalidades nuevas. No implica aprobacion formal de I-20/I-21 ni autoriza Fase 6 o despliegue.
+**Resultado I-22 (2026-10-21):** verificada tecnicamente en SQLite: `npm run verify` salida 0 (72 + 273), `npm run e2e` salida 0 (130/130), audits sin cambios respecto a I-16, sin defectos comprobados ni correcciones de codigo. Detalle y recorrido manual pendiente en `docs/revision-i22.md`. Aprobada con I-20/I-21 por el responsable el 2026-10-21 (DEC-044); recorrido en Chrome 35/36 registrado en `docs/revision-i22.md`. No hay iteracion habilitada: Fase 6 requiere nueva autorizacion.
 
 ## Fases de I-08
 
@@ -342,9 +345,41 @@
 - I-22 corresponde a revision acumulada de Fase 5, dentro de la autorizacion vigente; no se marca cierre integral ni aprobacion humana de I-21 por implementarla.
 - Sin instalaciones, commit, push, despliegue ni datos personales reales. Cambios anteriores conservados.
 
+## I-23 (catalogo de indicadores y paneles, F6-01 a F6-04)
+
+**Autorizacion:** DEC-045 ("autorizo empezar con la fase 6"). **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de revision.
+
+| Tarea | Resultado | Evidencia |
+|---|---|---|
+| F6-01 | Catalogo con definicion, fuente, filtros, corte, permiso y consulta, escrito antes de implementar | `docs/catalogo-indicadores.md` |
+| F6-02 | Panel institucional solo admin/coordinator: integrantes activos, proyectos por estado/tipo, actividades realizadas y asistencias, productos por estado, tareas y cumplimiento | `GET /tracking/institutional`, `/hub/seguimiento`; fixture contada a mano y E2E contra SQLite |
+| F6-03 | Panel de proyecto: avance ("Sin tareas" sin datos), vencidas, proximas 7 dias, sin responsable, sprint activo y ultimo cierre (snapshot), entregables, actividades, equipo y fechas | `GET /tracking/projects/:id`, `/hub/proyectos/[id]/seguimiento` |
+| F6-04 | Panel personal: proyectos, tareas abiertas/vencidas/terminadas, asistencias, proximas actividades y productos, filtrado por visibilidad | `GET /tracking/me`, `/hub` |
+
+- Archivos nuevos: `backend/src/modules/tracking/{tracking.service,tracking.controller,tracking.module,tracking.http.spec}.ts`; `frontend/src/features/tracking/{types,types.test,personal-panel}.ts(x)`, `components/panel-ui.tsx`; paginas `app/(privado)/hub/seguimiento/page.tsx` y `app/(privado)/hub/proyectos/[id]/seguimiento/page.tsx`; `docs/catalogo-indicadores.md`.
+- Modificados: `backend/src/app.module.ts`, `frontend/src/app/(privado)/hub/page.tsx`, `components/layout/app-shell.tsx`, `features/projects/components/project-header.tsx`, `scripts/e2e.mjs`, README/AGENTS/context/decisiones.
+- Comandos: `npx tsx --test src/modules/tracking/tracking.http.spec.ts` 10/10 al primer intento; `npm run verify` salida 0 (74 + 283), repetido tras ajustes de texto; `npm run e2e` salida 0, 136/136; recorrido Chrome headless 17/17 (script temporal fuera del repositorio).
+- Pendientes: PostgreSQL (DEC-045), graficos y estados de carga/error completos (F6-08, I-24), reportes y seguimiento cualitativo (I-24). Sin migraciones, dependencias, commit, push ni despliegue.
+
+## I-24 (seguimiento cualitativo, reportes, exactitud y UI, F6-05 a F6-08)
+
+**Autorizacion:** DEC-046 ("continua con i 24"). **Estado:** implementada y verificada tecnicamente en SQLite; pendiente de revision.
+
+| Tarea | Resultado | Evidencia |
+|---|---|---|
+| F6-05 | Observaciones de proyecto (avance, dificultad, resultado, general) sin persona evaluada ni puntaje; permisos de proyecto y auditoria | Migracion `ProjectObservations1728830000000`, `observations.service.ts`, seccion en `/hub/proyectos/[id]/seguimiento` |
+| F6-06 | Reportes de proyectos, produccion y actividades, solo autoridades, filtros y paginacion en pantalla | `reports.service.ts`, `/hub/reportes`, catalogo R-01..R-03 |
+| F6-07 | Exactitud contra fixture manual y permisos antes de agregar | `reports.http.spec.ts` 12/12; E2E compara reporte con SQLite |
+| F6-08 | Barras accesibles con color validado por tema, estados de carga/error/"Sin datos", tabla con desplazamiento interno | `panel-ui.tsx`, `panel-states.tsx`, `error.tsx`, token `--hub-chart`; Chrome 22/22 |
+
+- Archivos nuevos: migracion `backend/src/database/migrations/1728830000000-project-observations.ts`; `backend/src/modules/tracking/{project-observation.entity,tracking.dto,observations.service,reports.service,reports.http.spec}.ts`; `frontend/src/features/tracking/{reports-page.tsx,components/observations.tsx,components/panel-states.tsx}`; `frontend/src/app/(privado)/hub/reportes/{page,error}.tsx`; `error.tsx` en `hub/seguimiento` y `hub/proyectos/[id]/seguimiento`.
+- Modificados: `database.options.ts`, `tracking.{controller,module,service}.ts`, `globals.css` (token), `panel-ui.tsx`, `types.ts`, paginas de seguimiento, menu, `scripts/e2e.mjs`, catalogo, README/AGENTS/context/decisiones.
+- Comandos: `npx tsx --test src/modules/tracking/reports.http.spec.ts` 12/12; `npm run verify` salida 0 (74 + 295, sin migraciones pendientes tras aplicar la nueva a la base local con respaldo); `npm run e2e` salida 0, 141/141; Chrome 22/22.
+- Pendientes: PostgreSQL (DEC-045/046), exportacion PDF/Excel (posterior), lector de pantalla no evaluado. Siguiente: I-25 validacion de Fase 6.
+
 ## No realizar sin nueva autorizacion
 
-- No iniciar Fase 6 ni publicar con usuarios reales sin nueva autorizacion. Iteracion activa I-22 (DEC-043), solo verificacion de Fase 5.
+- No publicar con usuarios reales sin nueva autorizacion. Iteracion activa I-23 (DEC-045); I-24/I-25 despues, dentro de la Fase 6 autorizada.
 - No elegir proveedor de almacenamiento de produccion ni crear credenciales sin autorizacion (F3-06).
 - No modificar el trabajo de otras personas colaboradoras sin acuerdo.
 - No configurar PostgreSQL ni Railway.

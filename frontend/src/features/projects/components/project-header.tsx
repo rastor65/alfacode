@@ -9,7 +9,7 @@ import { METHODOLOGY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS, type Pr
 type ProjectHeaderProps = {
   project: ProjectDetail;
   eyebrow: string;
-  current: "tareas" | "sprints" | "investigacion" | "documentos" | "produccion" | "actividades";
+  current: "tareas" | "sprints" | "investigacion" | "documentos" | "produccion" | "actividades" | "seguimiento";
 };
 
 /**
@@ -24,6 +24,7 @@ export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps)
     { key: "documentos", label: "Documentos", href: `/hub/proyectos/${project.id}/documentos` },
     { key: "produccion", label: "Producción", href: `/hub/proyectos/${project.id}/produccion` },
     { key: "actividades", label: "Actividades", href: `/hub/proyectos/${project.id}/actividades` },
+    { key: "seguimiento", label: "Seguimiento", href: `/hub/proyectos/${project.id}/seguimiento` },
   ];
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard, type LucideIcon, Menu, UserRound, Users, X } from "lucide-react";
+import { ChartColumn, FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard, type LucideIcon, Menu, Table2, UserRound, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +24,8 @@ type NavigationItem = {
 /** Menu lateral. Solo incluye vistas ya implementadas. */
 const NAVIGATION: NavigationItem[] = [
   { href: "/hub", label: "Panel", icon: LayoutDashboard, exact: true },
+  { href: "/hub/seguimiento", label: "Seguimiento", icon: ChartColumn, roles: ["admin", "coordinator"] },
+  { href: "/hub/reportes", label: "Reportes", icon: Table2, roles: ["admin", "coordinator"] },
   { href: "/hub/proyectos", label: "Proyectos", icon: FolderKanban },
   { href: "/hub/investigacion", label: "Investigación", icon: FlaskConical },
   { href: "/hub/documentos", label: "Documentos", icon: FileText },

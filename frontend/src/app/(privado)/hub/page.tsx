@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { roleLabel } from "@/lib/auth/roles";
+import { PersonalPanelView } from "@/features/tracking/personal-panel";
+import type { PersonalPanel } from "@/features/tracking/types";
+import { ApiRequestError } from "@/lib/api/errors";
+import { serverApi } from "@/lib/api/server";
+import { isAuthority, roleLabel } from "@/lib/auth/roles";
 import { requireSessionUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -10,8 +15,19 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+async function loadPanel(): Promise<PersonalPanel | null> {
+  // Solo errores de la API: la redireccion por sesion vencida debe propagarse.
+  try {
+    return await serverApi<PersonalPanel>("/tracking/me", "/hub");
+  } catch (caught) {
+    if (caught instanceof ApiRequestError || caught instanceof TypeError) return null;
+    throw caught;
+  }
+}
+
 export default async function PanelPage() {
   const user = await requireSessionUser("/hub");
+  const panel = await loadPanel();
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -20,8 +36,20 @@ export default async function PanelPage() {
         Hola, {user.fullName}
       </h1>
 
+      {isAuthority(user.roles) && (
+        <p className="mt-4 text-sm">
+          <Link href="/hub/seguimiento" className="font-medium text-hub-accent underline-offset-4 hover:underline">
+            Ver el panel institucional
+          </Link>
+        </p>
+      )}
+
+      <div className="mt-6">
+        {panel ? <PersonalPanelView data={panel} /> : <Alert tone="error">No se pudieron cargar tus indicadores. Recarga la página en unos minutos.</Alert>}
+      </div>
+
       <section
-        className="mt-8 rounded-2xl border border-hub-border bg-hub-subtle p-5 sm:p-6"
+        className="mt-10 rounded-2xl border border-hub-border bg-hub-subtle p-5 sm:p-6"
         aria-labelledby="account-title"
       >
         <h2 id="account-title" className="text-base font-semibold text-hub-text">
@@ -41,15 +69,14 @@ export default async function PanelPage() {
             </dd>
           </div>
         </dl>
+        <p className="mt-4 text-sm text-hub-muted">
+          Puedes editar tu nombre y cambiar tu contraseña en{" "}
+          <Link href="/hub/perfil" className="font-medium text-hub-accent underline-offset-4 hover:underline">
+            Mi perfil
+          </Link>
+          .
+        </p>
       </section>
-
-      <p className="mt-6 text-sm text-hub-muted">
-        Puedes editar tu nombre y cambiar tu contraseña en{" "}
-        <Link href="/hub/perfil" className="font-medium text-hub-accent underline-offset-4 hover:underline">
-          Mi perfil
-        </Link>
-        .
-      </p>
     </div>
   );
 }
