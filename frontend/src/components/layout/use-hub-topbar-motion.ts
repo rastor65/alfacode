@@ -88,6 +88,13 @@ export function useHubTopbarMotion(
         { opacity: 0, y: -6, scale: 0.97, transformOrigin: `${origin}px top` },
         { opacity: 1, y: 0, scale: 1, duration: ENTER, ease: EASE, overwrite: true, clearProps: "opacity,transform" },
       );
+      const items = panel.querySelectorAll(".hub-bar-identity, .hub-bar-menu-item, .hub-bar-appearance, .hub-bar-logout, .hub-bar-shortcut-grid .hub-bar-menu-item");
+      if (items.length > 0) {
+        gsap.fromTo(items,
+          { opacity: 0, y: -4 },
+          { opacity: 1, y: 0, duration: ENTER, stagger: 0.02, ease: EASE, overwrite: true, clearProps: "opacity,transform" }
+        );
+      }
     });
   }, [cancel, panelRef, position]);
 

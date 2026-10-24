@@ -376,28 +376,71 @@ export function HubTopbar({
             )}
 
             {popover === "account" && (
-              <>
+              <div className="hub-bar-account-content">
                 <div className="hub-bar-identity">
-                  <span className="hub-bar-avatar" aria-hidden="true">{avatarContent}</span>
-                  <div><p>{user.fullName}</p><span>{user.email}</span></div>
-                  <div className="hub-bar-roles">{user.roles.map((role) => <span key={role}>{roleLabel(role)}</span>)}</div>
+                  <div className="hub-bar-identity-header">
+                    <div className="hub-bar-avatar-wrap">
+                      <span className="hub-bar-avatar hub-bar-avatar-lg" aria-hidden="true">{avatarContent}</span>
+                      <span className="hub-bar-status-dot" title="En línea" />
+                    </div>
+                    <div className="hub-bar-identity-info">
+                      <p className="hub-bar-identity-name">{user.fullName}</p>
+                      <span className="hub-bar-identity-email">{user.email}</span>
+                    </div>
+                  </div>
+                  <div className="hub-bar-roles">
+                    {user.roles.map((role) => (
+                      <span key={role} className="hub-bar-role-badge">
+                        <span className="hub-bar-role-diamond" aria-hidden="true">◆</span>
+                        {roleLabel(role)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <Link href="/hub/perfil" className="hub-bar-menu-item" onClick={() => setPopover(null)}><UserRound size={18} aria-hidden="true" /><span>Mi perfil</span><ChevronRight size={15} aria-hidden="true" /></Link>
-                <button type="button" className="hub-bar-menu-item" onClick={() => { setPopover(null); onOpenAvatar(); }}><Camera size={18} aria-hidden="true" /><span>Cambiar imagen</span></button>
-                <button type="button" className="hub-bar-menu-item" onClick={() => { setPopover(null); onOpenShortcuts(); }}><Keyboard size={18} aria-hidden="true" /><span>Atajos de teclado</span><kbd className="hub-bar-keycap">?</kbd></button>
-                <Link href="/" className="hub-bar-menu-item" onClick={() => setPopover(null)}><ExternalLink size={18} aria-hidden="true" /><span>Portal público</span><ArrowUpRight size={15} aria-hidden="true" /></Link>
+
+                <div className="hub-bar-menu-list">
+                  <Link href="/hub/perfil" className="hub-bar-menu-item" onClick={() => setPopover(null)}>
+                    <span className="hub-bar-item-icon"><UserRound size={17} aria-hidden="true" /></span>
+                    <span className="hub-bar-item-label">Mi perfil</span>
+                    <ChevronRight size={15} className="hub-bar-menu-chevron" aria-hidden="true" />
+                  </Link>
+                  <button type="button" className="hub-bar-menu-item" onClick={() => { setPopover(null); onOpenAvatar(); }}>
+                    <span className="hub-bar-item-icon"><Camera size={17} aria-hidden="true" /></span>
+                    <span className="hub-bar-item-label">Cambiar imagen</span>
+                  </button>
+                  <button type="button" className="hub-bar-menu-item" onClick={() => { setPopover(null); onOpenShortcuts(); }}>
+                    <span className="hub-bar-item-icon"><Keyboard size={17} aria-hidden="true" /></span>
+                    <span className="hub-bar-item-label">Atajos de teclado</span>
+                    <kbd className="hub-bar-keycap">?</kbd>
+                  </button>
+                  <Link href="/" className="hub-bar-menu-item" onClick={() => setPopover(null)}>
+                    <span className="hub-bar-item-icon"><ExternalLink size={17} aria-hidden="true" /></span>
+                    <span className="hub-bar-item-label">Portal público</span>
+                    <ArrowUpRight size={15} className="hub-bar-menu-arrow" aria-hidden="true" />
+                  </Link>
+                </div>
+
                 <div className="hub-bar-appearance">
-                  <span className="hub-bar-section-label">Apariencia</span>
+                  <div className="hub-bar-appearance-header">
+                    <span className="hub-bar-section-label">APARIENCIA</span>
+                    <span className="hub-bar-appearance-hint">Modo visual</span>
+                  </div>
                   <div className="hub-bar-theme-options" role="group" aria-label="Apariencia del HUB">
                     <span className="hub-bar-theme-indicator" aria-hidden="true" />
                     {([{ value: "light", label: "Claro", icon: Sun }, { value: "dark", label: "Oscuro", icon: Moon }, { value: "system", label: "Sistema", icon: Monitor }] as const).map((option) => {
                       const Icon = option.icon;
-                      return <button key={option.value} type="button" aria-pressed={theme === option.value} onClick={() => setTheme(option.value)}><Icon size={16} aria-hidden="true" />{option.label}</button>;
+                      return (
+                        <button key={option.value} type="button" aria-pressed={theme === option.value} onClick={() => setTheme(option.value)} className={`hub-bar-theme-btn hub-bar-theme-${option.value}`}>
+                          <Icon size={15} aria-hidden="true" />
+                          <span>{option.label}</span>
+                        </button>
+                      );
                     })}
                   </div>
                 </div>
+
                 <div className="hub-bar-logout"><LogoutButton /></div>
-              </>
+              </div>
             )}
           </div>
         )}
