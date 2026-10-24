@@ -343,8 +343,17 @@
   transform: scale(0.97);
 }
 
+/* Botón de tema circular activo cuando el menú está abierto */
+.public-bar-deck .public-bar-icon-button[aria-expanded="true"] {
+  border-color: rgb(148 238 254 / 85%) !important;
+  background: linear-gradient(135deg, rgb(148 238 254 / 35%), rgb(6 68 93 / 65%)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 16px rgb(148 238 254 / 50%), inset 0 1px 0 #ffffff !important;
+}
+
 /* Menú desplegable flotante de selección de tema (ThemeMenu) */
-.public-bar-deck .public-bar-actions [role="menu"] {
+.public-bar-deck [role="menu"],
+.public-bar-theme-menu {
   min-width: 154px;
   margin-top: 10px;
   padding: 6px;
@@ -365,8 +374,12 @@
 }
 
 /* Modo claro para el menú de tema */
-.public-site[data-theme="light"] .public-bar-deck .public-bar-actions [role="menu"],
-.hub-theme[data-theme="light"] .public-bar-deck .public-bar-actions [role="menu"] {
+[data-theme="light"] .public-bar-deck [role="menu"],
+[data-theme="light"] .public-bar-theme-menu,
+.public-site[data-theme="light"] .public-bar-deck [role="menu"],
+.public-site[data-theme="light"] .public-bar-theme-menu,
+.hub-theme[data-theme="light"] .public-bar-deck [role="menu"],
+.hub-theme[data-theme="light"] .public-bar-theme-menu {
   border-color: rgba(148, 238, 254, 0.45) !important;
   background: linear-gradient(165deg, rgba(6, 57, 79, 0.98) 0%, rgba(3, 111, 140, 0.98) 52%, rgba(7, 84, 110, 0.99) 100%) !important;
   box-shadow:
@@ -377,8 +390,14 @@
 }
 
 @media (prefers-color-scheme: light) {
-  .public-site[data-theme="system"] .public-bar-deck .public-bar-actions [role="menu"],
-  .hub-theme[data-theme="system"] .public-bar-deck .public-bar-actions [role="menu"] {
+  :root:not([data-theme="dark"]) .public-bar-deck [role="menu"],
+  :root:not([data-theme="dark"]) .public-bar-theme-menu,
+  [data-theme="system"] .public-bar-deck [role="menu"],
+  [data-theme="system"] .public-bar-theme-menu,
+  .public-site[data-theme="system"] .public-bar-deck [role="menu"],
+  .public-site[data-theme="system"] .public-bar-theme-menu,
+  .hub-theme[data-theme="system"] .public-bar-deck [role="menu"],
+  .hub-theme[data-theme="system"] .public-bar-theme-menu {
     border-color: rgba(148, 238, 254, 0.45) !important;
     background: linear-gradient(165deg, rgba(6, 57, 79, 0.98) 0%, rgba(3, 111, 140, 0.98) 52%, rgba(7, 84, 110, 0.99) 100%) !important;
     box-shadow:
@@ -400,7 +419,8 @@
   }
 }
 
-.public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"] {
+.public-bar-deck [role="menu"] [role="menuitemradio"],
+.public-bar-theme-menu [role="menuitemradio"] {
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 13px;
@@ -411,33 +431,39 @@
   transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"] > svg:first-child {
+.public-bar-deck [role="menu"] [role="menuitemradio"] > svg:first-child,
+.public-bar-theme-menu [role="menuitemradio"] > svg:first-child {
   color: #94eefe !important;
   transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"] > svg:last-child {
+.public-bar-deck [role="menu"] [role="menuitemradio"] > svg:last-child,
+.public-bar-theme-menu [role="menuitemradio"] > svg:last-child {
   color: #94eefe !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"]:hover,
-  .public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"]:focus-visible {
+  .public-bar-deck [role="menu"] [role="menuitemradio"]:hover,
+  .public-bar-deck [role="menu"] [role="menuitemradio"]:focus-visible,
+  .public-bar-theme-menu [role="menuitemradio"]:hover,
+  .public-bar-theme-menu [role="menuitemradio"]:focus-visible {
     border-color: rgba(148, 238, 254, 0.35) !important;
     background: linear-gradient(90deg, rgba(148, 238, 254, 0.22) 0%, rgba(3, 111, 140, 0.35) 100%) !important;
     color: #ffffff !important;
     transform: translateX(2px);
   }
 
-  .public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"]:hover > svg:first-child {
+  .public-bar-deck [role="menu"] [role="menuitemradio"]:hover > svg:first-child,
+  .public-bar-theme-menu [role="menuitemradio"]:hover > svg:first-child {
     transform: scale(1.15);
     color: #ffffff !important;
   }
 }
 
-.public-bar-deck .public-bar-actions [role="menu"] [role="menuitemradio"][aria-checked="true"] {
+.public-bar-deck [role="menu"] [role="menuitemradio"][aria-checked="true"],
+.public-bar-theme-menu [role="menuitemradio"][aria-checked="true"] {
   border-color: rgba(148, 238, 254, 0.3) !important;
-  background: rgba(148, 238, 254, 0.14) !important;
+  background: rgba(148, 238, 254, 0.16) !important;
   color: #ffffff !important;
   font-weight: 600;
 }

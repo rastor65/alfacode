@@ -22,6 +22,7 @@ type ThemeMenuProps = {
   align?: "start" | "end";
   className?: string;
   triggerClassName?: string;
+  menuClassName?: string;
 };
 
 /**
@@ -34,6 +35,7 @@ export function ThemeMenu({
   align = "start",
   className,
   triggerClassName,
+  menuClassName,
 }: ThemeMenuProps) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
@@ -154,6 +156,7 @@ export function ThemeMenu({
             placement === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
             align === "start" ? "left-0" : "right-0",
             variant === "row" && "w-full",
+            menuClassName,
           )}
         >
           {OPTIONS.map(({ value, label, icon: Icon }, index) => {

@@ -131,6 +131,7 @@ export function AuthHeader() {
             placement="bottom"
             align="end"
             triggerClassName="public-bar-icon-button focus-visible:ring-2 focus-visible:ring-cyan-400"
+            menuClassName="public-bar-theme-menu"
           />
         </div>
       </div>
