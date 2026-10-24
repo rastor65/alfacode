@@ -20,7 +20,7 @@ const DURATION = 0.3;
  * 7. Escaneo holográfico superficial (Sheen) y micro-stagger en cascada.
  * 8. Respeto absoluto de accesibilidad (prefers-reduced-motion).
  */
-export function useHubSidebarMotion() {
+export function useHubSidebarMotion(sidebarCollapsed = false) {
   const pathname = usePathname();
   const sidebarContainerRef = useRef<HTMLElement | null>(null);
   const sidebarDeckRef = useRef<HTMLDivElement | null>(null);
@@ -51,15 +51,20 @@ export function useHubSidebarMotion() {
     if (!list || !pill) return;
 
     const activeItem = list.querySelector<HTMLElement>(".hub-sidebar-item-active");
-    if (!activeItem) {
+    if (!activeItem || activeItem.offsetParent === null) {
       gsap.to(pill, { opacity: 0, duration: 0.15, overwrite: true });
       return;
     }
 
-    const itemTop = activeItem.offsetTop;
+    const offsetParentIsList = activeItem.offsetParent === list;
+    const itemTop = activeItem.offsetTop + (offsetParentIsList ? list.offsetTop : 0);
+    const itemLeft = activeItem.offsetLeft + (offsetParentIsList ? list.offsetLeft : 0);
     const itemHeight = activeItem.offsetHeight;
-    const itemLeft = activeItem.offsetLeft;
     const itemWidth = activeItem.offsetWidth;
+
+    if (itemWidth === 0 || itemHeight === 0) {
+      return;
+    }
 
     if (instant || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.killTweensOf(pill);
@@ -280,6 +285,54 @@ export function useHubSidebarMotion() {
     const onResize = () => syncActivePill(true);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, [syncActivePill]);
+
+  // Sincroniza dinámicamente la píldora activa cuando el aside se expande o comprime (en tiempo real durante los 200ms)
+  useEffect(() => {
+    let animId: number;
+    const startTime = performance.now();
+    const duration = 260; // Cubre la transición CSS de 200ms con margen de estabilización
+
+    const step = (now: number) => {
+      syncActivePill(true);
+      if (now - startTime < duration) {
+        animId = requestAnimationFrame(step);
+      } else {
+        syncActivePill(true);
+      }
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [sidebarCollapsed, syncActivePill]);
+
+  // Garantiza alineación final exacta cuando concluye la transición CSS de ancho del contenedor
+  useEffect(() => {
+    const container = sidebarContainerRef.current;
+    if (!container) return;
+
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.target === container && e.propertyName === "width") {
+        syncActivePill(true);
+      }
+    };
+
+    container.addEventListener("transitionend", onTransitionEnd);
+    return () => container.removeEventListener("transitionend", onTransitionEnd);
+  }, [syncActivePill]);
+
+  // Observa cambios dimensionales en la lista de navegación
+  useEffect(() => {
+    if (typeof ResizeObserver === "undefined") return;
+    const list = navListRef.current;
+    if (!list) return;
+
+    const observer = new ResizeObserver(() => {
+      syncActivePill(true);
+    });
+
+    observer.observe(list);
+    return () => observer.disconnect();
   }, [syncActivePill]);
 
   return {

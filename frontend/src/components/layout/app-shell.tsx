@@ -108,8 +108,7 @@ export function AppShell({ user, children }: AppShellProps) {
     ambientConeRef,
     sheenRef,
     contentRef,
-    syncActivePill,
-  } = useHubSidebarMotion();
+  } = useHubSidebarMotion(sidebarCollapsed);
 
   // Menú dinámico basado estrictamente en los recursos autorizados del usuario (RBAC)
   const authorizedResources = getAuthorizedMenu(user);
@@ -162,11 +161,7 @@ export function AppShell({ user, children }: AppShellProps) {
 
   const toggleSidebar = () => {
     if (window.matchMedia("(min-width: 1024px)").matches && hasSidebar) {
-      setSidebarCollapsed((collapsed) => {
-        const next = !collapsed;
-        setTimeout(() => syncActivePill(true), 210);
-        return next;
-      });
+      setSidebarCollapsed((collapsed) => !collapsed);
     } else toggleMobileMenu();
   };
 
