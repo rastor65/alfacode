@@ -16,7 +16,7 @@
   --bar-action: #94eefe;
   --bar-action-ink: #053448;
   --bar-shadow: 0 16px 48px rgb(0 19 36 / 28%);
-  --chrome-fill: linear-gradient(135deg, #06283c 0%, #063d55 45%, #052a3f 100%);
+  --chrome-fill: linear-gradient(165deg, #041926 0%, #06283c 52%, #02121d 100%);
   --chrome-ink: #effdff;
   --chrome-muted: #c4edf8;
   --chrome-line: rgb(148 238 254 / 22%);
@@ -36,7 +36,7 @@
   --bar-action: #037795;
   --bar-action-ink: #fff;
   --bar-shadow: 0 16px 48px rgb(3 84 116 / 14%);
-  --chrome-fill: linear-gradient(135deg, #053448 0%, #036884 45%, #054862 100%);
+  --chrome-fill: linear-gradient(165deg, #06394f 0%, #036f8c 52%, #07546e 100%);
 }
 
 @media (prefers-color-scheme: light) {
@@ -52,7 +52,7 @@
     --bar-action: #037795;
     --bar-action-ink: #fff;
     --bar-shadow: 0 16px 48px rgb(3 84 116 / 14%);
-    --chrome-fill: linear-gradient(135deg, #053448 0%, #036884 45%, #054862 100%);
+    --chrome-fill: linear-gradient(165deg, #06394f 0%, #036f8c 52%, #07546e 100%);
   }
 }
 
