@@ -49,8 +49,9 @@ export class RegistrationService {
    * temporal, y recibirla demuestra la propiedad del correo.
    */
   async register(dto: RegisterDto, ip: string) {
-    // Sin correo real no se habilita el auto-registro publico (plan-desarrollo, seccion 2.3).
-    if (this.mailer.transport === "none") {
+    // Sin correo real no se habilita el auto-registro publico (plan-desarrollo, seccion 2.3),
+    // salvo que se habilite explicitamente con ENABLE_PUBLIC_REGISTRATION=true (DEC-016).
+    if (this.mailer.transport === "none" && process.env.ENABLE_PUBLIC_REGISTRATION !== "true") {
       throw new ApiError(503, "REGISTRATION_DISABLED", "El registro publico no esta disponible por ahora");
     }
 

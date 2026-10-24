@@ -45,10 +45,18 @@ function parseMailTransport(value: string | undefined): MailTransport {
 }
 
 function parseOrigins(value: string | undefined) {
-  return (value ?? "http://localhost:3000")
+  const list = (value ?? "http://localhost:3000,https://www.alfacode.app,https://alfacode.app")
     .split(",")
     .map((origin) => origin.trim().replace(/\/$/, ""))
     .filter(Boolean);
+
+  if (list.includes("https://www.alfacode.app") && !list.includes("https://alfacode.app")) {
+    list.push("https://alfacode.app");
+  } else if (list.includes("https://alfacode.app") && !list.includes("https://www.alfacode.app")) {
+    list.push("https://www.alfacode.app");
+  }
+
+  return list;
 }
 
 function parseTrustProxy(value: string | undefined): boolean | number | string {

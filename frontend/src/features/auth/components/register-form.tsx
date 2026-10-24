@@ -41,7 +41,7 @@ import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { Button } from "@/components/ui/button";
 import { FormField, TextAreaField } from "@/components/ui/form-field";
 import { apiRequest } from "@/lib/api/client";
-import { fieldErrorMessages } from "@/lib/api/errors";
+import { describeError, fieldErrorMessages } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 
 type Step = 1 | 2 | 3;
@@ -150,7 +150,7 @@ export function RegisterForm() {
   const [step, setStep] = useState<Step>(1);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [pending, setPending] = useState(false);
-  const [done] = useState(false);
+  const [done, setDone] = useState(false);
   const [copiedRadicado, setCopiedRadicado] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -434,16 +434,11 @@ export function RegisterForm() {
           },
         },
       });
-      // Política de restricción activa por solicitud institucional:
-      // Se mantiene el registro restringido e impide que se radique la postulación.
-      toast.error("La solicitud se bloqueó por seguridad. Recarga la página e intenta de nuevo.", {
-        duration: 6000,
-      });
+      setDone(true);
+      toast.success("¡Postulación radicada con éxito!");
     } catch (caught) {
       setFieldErrors(fieldErrorMessages(caught, {}));
-      toast.error("La solicitud se bloqueó por seguridad. Recarga la página e intenta de nuevo.", {
-        duration: 6000,
-      });
+      toast.error(describeError(caught));
     } finally {
       setPending(false);
     }
