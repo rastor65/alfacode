@@ -701,3 +701,295 @@ html:has(dialog[open]) {
   animation: pulse-ring 2s infinite;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOPBAR COCKPIT & HARDWARE MICRO-INTERACTIONS (AlfaCode HUB Identity)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Topbar Quantum Mesh Backgrounds */
+@keyframes mesh-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.topbar-mesh-dark {
+  background-color: rgba(6, 21, 36, 0.94);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(3, 130, 161, 0.35) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.22) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(14, 116, 144, 0.30) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(3, 130, 161, 0.20) 0px, transparent 40%);
+  background-size: 150% 150%;
+  animation: mesh-shift 18s ease infinite;
+}
+
+.topbar-mesh-light {
+  background-color: rgba(255, 255, 255, 0.92);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(148, 238, 254, 0.4) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(3, 130, 161, 0.12) 0px, transparent 50%);
+  background-size: 150% 150%;
+  animation: mesh-shift 18s ease infinite;
+}
+
+/* Specular Hairline Highlight across the top edge */
+@keyframes specular-shift {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.specular-line {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(6, 182, 212, 0.3) 25%,
+    rgba(148, 238, 254, 0.95) 50%,
+    rgba(6, 182, 212, 0.3) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: specular-shift 8s linear infinite;
+}
+
+/* Moving Quantum Laser Beam on bottom edge */
+@keyframes beam-slide {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(500%); }
+}
+
+.topbar-beam {
+  animation: beam-slide 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Iridescent Text Shimmer for Brand Name */
+@keyframes text-iridescence {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.text-shimmer {
+  background-size: 200% auto;
+  animation: text-iridescence 4s linear infinite;
+}
+
+/* Radar Pulse Beacon (Multi-ring Live Indicator) */
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.radar-ping {
+  animation: radar-pulse 2.2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* Floating animation for Logo Emblem */
+@keyframes logo-subtle-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+
+.logo-float {
+  animation: logo-subtle-float 4s ease-in-out infinite;
+}
+
+/* Badge Bounce on arrival or unread change */
+@keyframes badge-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.badge-bounce {
+  animation: badge-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* Avatar Ring Orbital Pulse */
+.avatar-ring-glow {
+  box-shadow: 0 0 0 1.5px rgba(6, 182, 212, 0.4), 0 0 16px rgba(6, 182, 212, 0.25);
+  transition: all 0.3s ease;
+}
+.group:hover .avatar-ring-glow {
+  box-shadow: 0 0 0 2px rgba(148, 238, 254, 0.9), 0 0 24px rgba(6, 182, 212, 0.55);
+}
+
+/* Bell micro-interaction wiggle */
+@keyframes bell-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20%      { transform: rotate(15deg); }
+  40%      { transform: rotate(-12deg); }
+  60%      { transform: rotate(8deg); }
+  80%      { transform: rotate(-4deg); }
+}
+
+.group:hover .bell-hover-wiggle {
+  animation: bell-wiggle 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Keycap 3D tactile feel */
+.kbd-cap {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.dark .kbd-cap {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* 3D Chamfered emblem card */
+.emblem-3d {
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(3, 130, 161, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+}
+.dark .emblem-3d {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    0 10px 30px rgba(3, 130, 161, 0.4),
+    0 0 40px rgba(6, 182, 212, 0.2),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* Blueprint micro-grid pattern for topbar */
+.topbar-grid-pattern {
+  background-image: radial-gradient(rgba(3, 130, 161, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.dark .topbar-grid-pattern {
+  background-image: radial-gradient(rgba(148, 238, 254, 0.07) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Live Telemetry pill container */
+.telemetry-pill {
+  background: linear-gradient(135deg, rgba(3, 130, 161, 0.12) 0%, rgba(6, 182, 212, 0.06) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.22);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.dark .telemetry-pill {
+  background: linear-gradient(135deg, rgba(3, 130, 161, 0.22) 0%, rgba(6, 182, 212, 0.10) 100%);
+  border: 1px solid rgba(148, 238, 254, 0.25);
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Rotating conic gradient for search bar aura glow */
+@keyframes rotate-conic {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.search-conic-glow {
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, transparent 0%, rgba(6, 182, 212, 0.6) 25%, rgba(148, 238, 254, 0.9) 50%, rgba(3, 130, 161, 0.6) 75%, transparent 100%);
+  filter: blur(4px);
+  animation: rotate-conic 4s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.group-focus-within .search-conic-glow,
+.group:hover .search-conic-glow {
+  opacity: 1;
+}
+
+/* Custom micro-scrollbar for HUD dropdowns */
+.custom-hub-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-hub-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-hub-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.25);
+  border-radius: 9999px;
+}
+.custom-hub-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 238, 254, 0.5);
+}
+
+/* High-tech telemetry HUD card */
+.telemetry-hud-card {
+  box-shadow: 
+    0 24px 60px -12px rgba(3, 130, 161, 0.35),
+    0 8px 24px -4px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(148, 238, 254, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.dark .telemetry-hud-card {
+  box-shadow: 
+    0 28px 75px -10px rgba(0, 0, 0, 0.95),
+    0 0 35px rgba(6, 182, 212, 0.18),
+    0 0 0 1px rgba(148, 238, 254, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Oscilloscope waveform animation */
+@keyframes oscilloscope-flow {
+  0%   { stroke-dashoffset: 240; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.oscilloscope-path {
+  stroke-dasharray: 240;
+  animation: oscilloscope-flow 2.8s linear infinite;
+}
+
+/* Quick Action button — holographic high-tech capsule */
+.btn-quick-action {
+  background: linear-gradient(135deg, rgba(3, 130, 161, 0.95) 0%, rgba(6, 182, 212, 0.95) 100%);
+  box-shadow: 
+    0 2px 14px rgba(6, 182, 212, 0.35),
+    0 0 0 1px rgba(148, 238, 254, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-quick-action:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 
+    0 4px 22px rgba(6, 182, 212, 0.6),
+    0 0 0 1.5px rgba(148, 238, 254, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.btn-quick-action:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Breadcrumb interactive module switcher pill */
+.breadcrumb-switcher-btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.breadcrumb-switcher-btn:hover {
+  border-color: rgba(6, 182, 212, 0.6);
+  background: linear-gradient(to right, rgba(6, 182, 212, 0.18), rgba(3, 130, 161, 0.14));
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.22);
+}
+
+/* Live Ping diagnostic pulsing effect */
+@keyframes ping-glow {
+  0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 4px #34d399); }
+  50% { opacity: 1; filter: drop-shadow(0 0 12px #10b981); }
+}
+.ping-pulse-glow {
+  animation: ping-glow 1.6s ease-in-out infinite;
+}
+
+

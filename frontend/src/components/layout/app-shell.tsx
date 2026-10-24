@@ -1,48 +1,26 @@
 "use client";
 
 import {
-  Award,
-  Calendar,
-  Camera,
-  Check,
-  CheckSquare,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  FlaskConical,
-  FolderKanban,
-  Inbox,
-  LayoutDashboard,
+  Award, Calendar, Check, CheckSquare, ChevronLeft, ChevronRight,
+  FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard,
+  Repeat, Shield, Trash2, Upload, UserPlus, UserRound, Users, X,
   type LucideIcon,
-  Menu,
-  Monitor,
-  Moon,
-  Palette,
-  Repeat,
-  Search,
-  Shield,
-  Sun,
-  Trash2,
-  Upload,
-  UserPlus,
-  UserRound,
-  Users,
-  X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
-import { useTheme } from "@/components/theme/theme-provider";
+import { AlfaCodeLogo } from "@/components/brand/alfacode-logo";
+import { HubTopbar } from "@/components/layout/hub-topbar";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { LogoutButton } from "@/features/auth/components/logout-button";
 import { getAuthorizedMenu } from "@/lib/auth/permissions";
 import { PermissionsProvider } from "@/lib/auth/permissions-context";
-import { type RoleCode, type SessionUser, roleLabel } from "@/lib/auth/roles";
+import { type RoleCode, type SessionUser } from "@/lib/auth/roles";
 import { cn } from "@/lib/utils";
+
+import "./hub-sidebar.css";
+import { useHubSidebarMotion } from "./use-hub-sidebar-motion";
 
 type NavigationItem = {
   href: string;
@@ -78,7 +56,7 @@ function getResourceIcon(iconName: string | null): LucideIcon {
 
 /** Menú de respaldo si aún no se ha cargado el RBAC dinámico del backend. */
 const NAVIGATION: NavigationItem[] = [
-  { href: "/hub", label: "Panel", description: "Métricas y resumen general del semillero", icon: LayoutDashboard, exact: true },
+  { href: "/hub", label: "Panel", description: "Tu cuenta y accesos al semillero", icon: LayoutDashboard, exact: true },
   { href: "/hub/proyectos", label: "Proyectos", description: "Gestión de proyectos tradicionales y tableros ágiles", icon: FolderKanban },
   { href: "/hub/investigacion", label: "Investigación", description: "Líneas de investigación y semilleros vinculados", icon: FlaskConical },
   { href: "/hub/documentos", label: "Documentos", description: "Repositorio institucional de archivos y actas", icon: FileText },
@@ -109,13 +87,19 @@ type AppShellProps = {
  */
 export function AppShell({ user, children }: AppShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { theme, setTheme } = useTheme();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [studentNavOpen, setStudentNavOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const {
+    sidebarDeckRef,
+    navListRef,
+    activePillRef,
+    beamRef,
+    contentRef,
+    syncActivePill,
+  } = useHubSidebarMotion();
 
   // Menú dinámico basado estrictamente en los recursos autorizados del usuario (RBAC)
   const authorizedResources = getAuthorizedMenu(user);
@@ -130,12 +114,11 @@ export function AppShell({ user, children }: AppShellProps) {
         }))
       : NAVIGATION.filter((item) => !item.roles || item.roles.some((role) => user.roles.includes(role)));
 
-  // Buscador de módulos
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [selectedSearchIndex, setSelectedSearchIndex] = useState(0);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isMac = useSyncExternalStore(
+    () => () => { },
+    () => typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent),
+    () => false,
+  );
 
   // Avatar personalizado (sincronizado con localStorage vía useSyncExternalStore)
   const avatarStorageKey = `alfacode_avatar_${user.id}`;
@@ -158,128 +141,49 @@ export function AppShell({ user, children }: AppShellProps) {
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [avatarFileError, setAvatarFileError] = useState<string | null>(null);
 
-  const toggleRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const userMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const hasSidebar = user.roles.some((role) => ["admin", "coordinator", "teacher_leader"].includes(role));
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
 
-  // Docentes y Administrativos tienen aside por el volumen de vistas del sistema
-  const isStaff = user.roles.some((role) => ["admin", "coordinator", "teacher_leader"].includes(role));
-  const hasSidebar = isStaff;
+  const toggleMobileMenu = () => {
+    if (hasSidebar) setMenuOpen((open) => !open);
+    else setStudentNavOpen((open) => !open);
+  };
 
-  const filteredModules = dynamicNavItems.filter((item) => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      item.label.toLowerCase().includes(q) ||
-      (item.description && item.description.toLowerCase().includes(q)) ||
-      item.href.toLowerCase().includes(q)
-    );
-  });
+  const toggleSidebar = () => {
+    if (window.matchMedia("(min-width: 1024px)").matches && hasSidebar) {
+      setSidebarCollapsed((collapsed) => {
+        const next = !collapsed;
+        setTimeout(() => syncActivePill(true), 210);
+        return next;
+      });
+    } else toggleMobileMenu();
+  };
 
-  // Atajo global Ctrl+K o Cmd+K para abrir el buscador de módulos
   useEffect(() => {
-    const onGlobalKeyDown = (event: globalThis.KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        searchInputRef.current?.focus();
-        setSearchOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", onGlobalKeyDown);
-    return () => document.removeEventListener("keydown", onGlobalKeyDown);
-  }, []);
-
-  // Clic fuera del buscador de módulos para cerrarlo
-  useEffect(() => {
-    if (!searchOpen) return;
-
-    const onPointerDown = (event: PointerEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setSearchOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [searchOpen]);
-
-  // Manejo de teclado (Escape) y foco para el drawer lateral de docentes/administrativos
-  useEffect(() => {
-    if (!menuOpen) {
-      return;
-    }
-
-    drawerRef.current?.querySelector<HTMLElement>("a, button")?.focus();
-
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+    if (!menuOpen && !studentNavOpen) return;
+    const drawer = hasSidebar ? drawerRef.current : document.getElementById("student-navigation");
+    const trigger = document.querySelector<HTMLButtonElement>('[aria-controls="' + (hasSidebar ? 'app-sidebar-mobile' : 'student-navigation') + '"]');
+    drawer?.querySelector<HTMLElement>("a, button")?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setMenuOpen(false);
-        toggleRef.current?.focus();
+        setStudentNavOpen(false);
+        trigger?.focus();
+      }
+      if (event.key === "Tab" && hasSidebar && drawer) {
+        const controls = Array.from(drawer.querySelectorAll<HTMLElement>("a, button"));
+        const first = controls[0];
+        const last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
       }
     };
-
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen]);
-
-  // Manejo de clic fuera y Escape para el menú de usuario (todos los roles)
-  useEffect(() => {
-    if (!userMenuOpen && !studentNavOpen) {
-      return;
-    }
-
-    const onPointerDown = (event: PointerEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    };
-
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setUserMenuOpen(false);
-        setStudentNavOpen(false);
-        userMenuTriggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [userMenuOpen, studentNavOpen]);
-
-  const handleSelectModule = (href: string) => {
-    setSearchOpen(false);
-    setSearchQuery("");
-    router.push(href);
-  };
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedSearchIndex((prev) => (prev + 1) % Math.max(1, filteredModules.length));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedSearchIndex((prev) => (prev - 1 + filteredModules.length) % Math.max(1, filteredModules.length));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const target = filteredModules[selectedSearchIndex];
-      if (target) {
-        handleSelectModule(target.href);
-      }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      setSearchOpen(false);
-      searchInputRef.current?.blur();
-    }
-  };
+  }, [menuOpen, studentNavOpen, hasSidebar]);
 
   const handleOpenAvatarModal = () => {
-    setUserMenuOpen(false);
     setAvatarPreview(customAvatar);
     setAvatarFileError(null);
     setAvatarModalOpen(true);
@@ -333,50 +237,109 @@ export function AppShell({ user, children }: AppShellProps) {
     }
   };
 
-  const renderSidebar = (isCollapsed: boolean) => (
-    <div className="flex h-full flex-col">
-      <nav aria-label="Menú principal" className="flex-1">
-        <ul className={cn("space-y-0.5", isCollapsed && "space-y-1.5")}>
-          {dynamicNavItems.map((item) => {
-            const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
-            const Icon = item.icon;
+  const renderSidebar = (isCollapsed: boolean, isMobile = false) => (
+    <div className="flex h-full flex-col min-h-0">
+      <span className="hub-sidebar-edge-highlight" aria-hidden="true" />
+      <svg className="hub-sidebar-network" viewBox="0 0 240 600" fill="none" aria-hidden="true" focusable="false">
+        <path d="M20 0v80l24 24v120l-16 16v90m150-330v140l-28 28v160l20 20v90M80 0v160l32 32v180l-20 20v208" />
+        <circle cx="20" cy="80" r="3" />
+        <circle cx="44" cy="224" r="3" />
+        <circle cx="28" cy="330" r="3" />
+        <circle cx="194" cy="140" r="3" />
+        <circle cx="166" cy="328" r="3" />
+        <circle cx="112" cy="192" r="3" />
+        <circle cx="92" cy="392" r="3" />
+      </svg>
 
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  title={isCollapsed ? item.label : undefined}
-                  aria-label={isCollapsed ? item.label : undefined}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(
-                    "flex items-center rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
-                    isCollapsed
-                      ? "size-10 justify-center mx-auto"
-                      : "gap-2.5 px-3 py-2 text-sm",
-                    active
-                      ? "bg-white font-semibold text-hub-accent shadow-xs border border-hub-border/60 dark:bg-hub-accent/15 dark:text-hub-accent dark:border-hub-accent/30"
-                      : "text-hub-muted hover:bg-white/60 hover:text-hub-text dark:hover:bg-hub-hover dark:hover:text-hub-text",
-                  )}
-                >
-                  <Icon
-                    size={isCollapsed ? 18 : 17}
-                    aria-hidden="true"
-                    className={cn("shrink-0", active ? "text-hub-accent" : undefined)}
-                  />
-                  {!isCollapsed && <span className="truncate">{item.label}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      {/* Cabecera del sidebar */}
+      {isMobile ? (
+        <div className="hub-sidebar-mobile-header">
+          <Link href="/hub" className="hub-bar-brand" onClick={() => setMenuOpen(false)} aria-label="AlfaCode HUB, ir al panel">
+            <AlfaCodeLogo tone="on-blue" width={140} height={42} alt="AlfaCode" className="hub-bar-logo" />
+            <span className="hub-bar-hub-label">HUB</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            className="hub-bar-icon-button"
+            aria-label="Cerrar menú"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
+      ) : isCollapsed ? (
+        <div className="hub-sidebar-header-collapsed" title="Espacio AlfaCode">
+          <span className="hub-sidebar-status-dot" aria-hidden="true" />
+        </div>
+      ) : (
+        <div className="hub-sidebar-header">
+          <span className="hub-sidebar-eyebrow">Navegación</span>
+          <span className="hub-sidebar-counter">{dynamicNavItems.length} vistas</span>
+        </div>
+      )}
+
+      {/* Navegación */}
+      <nav aria-label="Menú principal" className="hub-sidebar-nav">
+        <div className="hub-sidebar-nav-inner">
+          {!isMobile && (
+            <span ref={activePillRef} className="hub-sidebar-active-pill" aria-hidden="true" />
+          )}
+          <ul ref={!isMobile ? navListRef : undefined} className="hub-sidebar-list">
+            {dynamicNavItems.map((item) => {
+              const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
+              const Icon = item.icon;
+
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    title={isCollapsed ? item.label : undefined}
+                    aria-label={isCollapsed ? item.label : undefined}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "hub-sidebar-item",
+                      isCollapsed && "hub-sidebar-item-collapsed",
+                      active && "hub-sidebar-item-active",
+                    )}
+                  >
+                    <span className="hub-sidebar-item-icon">
+                      <Icon size={isCollapsed ? 18 : 17} aria-hidden="true" />
+                    </span>
+                    {!isCollapsed && <span className="hub-sidebar-item-label">{item.label}</span>}
+                    {!isCollapsed && active && <span className="hub-sidebar-active-indicator" aria-hidden="true" />}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </nav>
+
+      {/* Pie del sidebar */}
+      {!isMobile && (
+        isCollapsed ? (
+          <div className="hub-sidebar-footer-collapsed" title="AlfaCode HUB (Ctrl+B para expandir)">
+            <span className="hub-sidebar-status-dot" aria-hidden="true" />
+          </div>
+        ) : (
+          <div className="hub-sidebar-footer">
+            <span className="hub-sidebar-status-pill">
+              <span className="hub-sidebar-status-dot" aria-hidden="true" />
+              AlfaCode HUB
+            </span>
+            <kbd className="hub-sidebar-keycap" title="Atajo para comprimir o expandir el menú lateral">
+              {isMac ? "⌘" : "Ctrl"}<span>B</span>
+            </kbd>
+          </div>
+        )
+      )}
     </div>
   );
 
   return (
     <PermissionsProvider user={user}>
-      <div className="min-h-screen bg-hub-bg">
+      <div className={cn("hub-bar-workspace", "min-h-screen bg-hub-bg")}>
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-hub-panel focus:px-3 focus:py-2 focus:text-sm focus:text-hub-text focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
@@ -384,308 +347,21 @@ export function AppShell({ user, children }: AppShellProps) {
         Saltar al contenido
       </a>
 
-      {/* Header / Topbar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-hub-border bg-hub-chrome/95 px-4 backdrop-blur-md sm:px-6 shadow-xs">
-        {/* Izquierda: Toggle móvil y Logotipo */}
-        <div className="flex min-w-0 shrink-0 items-center gap-2">
-          {hasSidebar ? (
-            <button
-              ref={toggleRef}
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              className="-ml-1.5 flex size-9 shrink-0 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 lg:hidden"
-              aria-expanded={menuOpen}
-              aria-controls="app-sidebar-mobile"
-              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-            >
-              {menuOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setStudentNavOpen((open) => !open)}
-              className="-ml-1.5 flex size-9 shrink-0 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 lg:hidden"
-              aria-expanded={studentNavOpen}
-              aria-label={studentNavOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
-            >
-              {studentNavOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />}
-            </button>
-          )}
+      <HubTopbar
+        user={user}
+        navigation={dynamicNavItems}
+        avatar={customAvatar}
+        hasSidebar={hasSidebar}
+        mobileMenuOpen={hasSidebar ? menuOpen : studentNavOpen}
+        onToggleMobileMenu={toggleMobileMenu}
+        onToggleSidebar={toggleSidebar}
+        onOpenAvatar={handleOpenAvatarModal}
+        onOpenShortcuts={() => setShortcutsModalOpen(true)}
+      />
 
-          <Link
-            href="/hub"
-            className="flex min-w-0 items-center gap-2 rounded-md text-sm font-semibold tracking-tight text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-          >
-            <AlfaCodeSymbol className="size-5 shrink-0" />
-            <span className="truncate">
-              AlfaCode <span className="font-normal text-hub-muted">HUB</span>
-            </span>
-          </Link>
-        </div>
-
-        {/* Centro: Buscador de módulos y navegación horizontal para estudiantes */}
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-3 max-w-2xl mx-auto">
-          {/* Buscador de módulos interactivo */}
-          <div ref={searchContainerRef} className="relative w-full max-w-xs sm:max-w-sm md:max-w-md">
-            <div className="relative flex items-center">
-              <Search size={14} className="absolute left-3 text-hub-muted pointer-events-none" aria-hidden="true" />
-              <input
-                ref={searchInputRef}
-                type="search"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSearchOpen(true);
-                  setSelectedSearchIndex(0);
-                }}
-                onFocus={() => setSearchOpen(true)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Buscar módulo... (Ctrl + K)"
-                aria-label="Buscar módulo en el sistema"
-                className="h-9 w-full rounded-xl border border-hub-border bg-white/90 pl-8 pr-14 text-xs text-hub-text placeholder:text-hub-muted transition hover:border-hub-border/80 hover:bg-white focus:border-cyan-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:bg-hub-bg/60 dark:hover:bg-hub-bg/80 dark:focus:bg-hub-bg"
-              />
-              <kbd className="absolute right-2.5 hidden rounded border border-hub-border bg-hub-hover px-1.5 py-0.5 text-[10px] font-mono text-hub-muted pointer-events-none sm:inline-block">
-                Ctrl K
-              </kbd>
-            </div>
-
-            {searchOpen && (
-              <div
-                role="listbox"
-                aria-label="Módulos encontrados"
-                className="absolute left-0 right-0 top-full mt-1.5 z-50 max-h-80 overflow-y-auto rounded-2xl border border-hub-border bg-hub-chrome p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
-              >
-                {filteredModules.length > 0 ? (
-                  <ul className="space-y-0.5">
-                    {filteredModules.map((item, index) => {
-                      const Icon = item.icon;
-                      const isSelected = index === selectedSearchIndex;
-
-                      return (
-                        <li key={item.href} role="option" aria-selected={isSelected}>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectModule(item.href)}
-                            onMouseEnter={() => setSelectedSearchIndex(index)}
-                            className={cn(
-                              "flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition",
-                              isSelected
-                                ? "bg-hub-hover text-hub-text"
-                                : "text-hub-muted hover:bg-hub-hover hover:text-hub-text",
-                            )}
-                          >
-                            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-hub-accent-soft text-hub-accent">
-                              <Icon size={14} aria-hidden="true" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-xs font-semibold text-hub-text">{item.label}</p>
-                              {item.description && (
-                                <p className="truncate text-[11px] text-hub-muted">{item.description}</p>
-                              )}
-                            </div>
-                            <span className="text-[10px] text-hub-muted/70 font-mono">Ir</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <div className="py-4 text-center text-xs text-hub-muted">
-                    No se encontraron módulos con &ldquo;{searchQuery}&rdquo;
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Opciones del menú del estudiante en el Topbar (Desktop) */}
-          {!hasSidebar && (
-            <nav
-              aria-label="Menú principal de estudiante"
-              className="hidden xl:flex items-center gap-1 rounded-xl border border-hub-border/60 bg-hub-hover/30 p-1 shrink-0"
-            >
-              {dynamicNavItems.map((item) => {
-                const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
-                      active
-                        ? "bg-hub-hover font-semibold text-hub-text shadow-sm"
-                        : "text-hub-muted hover:bg-hub-hover/80 hover:text-hub-text",
-                    )}
-                  >
-                    <Icon size={14} aria-hidden="true" className={active ? "text-hub-accent" : undefined} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
-        </div>
-
-        {/* Derecha: Menú de usuario unificado con submenú */}
-        <div className="flex min-w-0 shrink-0 items-center gap-2">
-          <div ref={userMenuRef} className="relative">
-            <button
-              ref={userMenuTriggerRef}
-              type="button"
-              onClick={() => setUserMenuOpen((open) => !open)}
-              aria-haspopup="menu"
-              aria-expanded={userMenuOpen}
-              aria-label="Menú de usuario"
-              className="flex items-center gap-2 rounded-full border border-hub-border/80 bg-hub-hover/20 p-1 pl-2.5 text-xs text-hub-text transition hover:bg-hub-hover hover:border-hub-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-            >
-              <div className="hidden min-w-0 text-right sm:block pr-1">
-                <p className="truncate text-xs font-semibold leading-tight text-hub-text max-w-[130px]">{user.fullName}</p>
-                <p className="truncate text-[10px] text-hub-muted leading-tight">{user.roles.map(roleLabel).join(" · ")}</p>
-              </div>
-              <span
-                className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-hub-accent-soft text-xs font-bold text-hub-accent ring-1 ring-hub-border/80"
-                aria-hidden="true"
-              >
-                {customAvatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={customAvatar} alt={user.fullName} className="size-full object-cover" />
-                ) : (
-                  initials(user.fullName)
-                )}
-              </span>
-              <ChevronDown
-                size={13}
-                className={cn(
-                  "mr-1 text-hub-muted transition-transform duration-200",
-                  userMenuOpen && "rotate-180",
-                )}
-                aria-hidden="true"
-              />
-            </button>
-
-            {userMenuOpen && (
-              <div
-                role="menu"
-                aria-label="Opciones de cuenta"
-                className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-hub-border bg-hub-chrome p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150"
-              >
-                {/* Cabecera del usuario */}
-                <div className="border-b border-hub-border px-3 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-hub-accent-soft text-sm font-bold text-hub-accent ring-1 ring-hub-border">
-                      {customAvatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={customAvatar} alt={user.fullName} className="size-full object-cover" />
-                      ) : (
-                        initials(user.fullName)
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-hub-text">{user.fullName}</p>
-                      <p className="truncate text-xs text-hub-muted">{user.email}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2.5 flex flex-wrap gap-1">
-                    {user.roles.map((role) => (
-                      <span
-                        key={role}
-                        className="inline-flex items-center rounded-md bg-hub-accent-soft px-2 py-0.5 text-[10px] font-medium text-hub-accent"
-                      >
-                        {roleLabel(role)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Opciones de perfil */}
-                <div className="py-1.5 space-y-0.5">
-                  <Link
-                    href="/hub/perfil"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-hub-text transition hover:bg-hub-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                  >
-                    <UserRound size={15} className="text-hub-accent" aria-hidden="true" />
-                    <span>Mi perfil</span>
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenAvatarModal}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-hub-text transition hover:bg-hub-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                  >
-                    <Camera size={15} className="text-hub-accent" aria-hidden="true" />
-                    <span>Cambiar imagen de perfil</span>
-                  </button>
-                </div>
-
-                {/* Color del sistema (Tema) */}
-                <div className="border-t border-hub-border px-3 py-2.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-hub-muted">
-                      Color del sistema
-                    </span>
-                    <Palette size={13} className="text-hub-muted" aria-hidden="true" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-1 rounded-xl bg-hub-hover/40 p-1 border border-hub-border/60">
-                    <button
-                      type="button"
-                      onClick={() => setTheme("light")}
-                      className={cn(
-                        "flex flex-col items-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition",
-                        theme === "light"
-                          ? "bg-hub-bg text-hub-text shadow-sm ring-1 ring-hub-border"
-                          : "text-hub-muted hover:text-hub-text hover:bg-hub-bg/50"
-                      )}
-                    >
-                      <Sun size={14} className={theme === "light" ? "text-amber-500" : undefined} />
-                      <span>Claro</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTheme("dark")}
-                      className={cn(
-                        "flex flex-col items-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition",
-                        theme === "dark"
-                          ? "bg-hub-bg text-hub-text shadow-sm ring-1 ring-hub-border"
-                          : "text-hub-muted hover:text-hub-text hover:bg-hub-bg/50"
-                      )}
-                    >
-                      <Moon size={14} className={theme === "dark" ? "text-indigo-400" : undefined} />
-                      <span>Oscuro</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTheme("system")}
-                      className={cn(
-                        "flex flex-col items-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition",
-                        theme === "system"
-                          ? "bg-hub-bg text-hub-text shadow-sm ring-1 ring-hub-border"
-                          : "text-hub-muted hover:text-hub-text hover:bg-hub-bg/50"
-                      )}
-                    >
-                      <Monitor size={14} className={theme === "system" ? "text-cyan-500" : undefined} />
-                      <span>Sistema</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Cerrar sesión */}
-                <div className="border-t border-hub-border pt-1">
-                  <LogoutButton />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Navegación móvil para Estudiantes */}
       {!hasSidebar && studentNavOpen && (
         <div className="border-b border-hub-border bg-hub-chrome px-4 py-3 shadow-lg lg:hidden">
-          <nav aria-label="Navegación móvil de estudiante">
+          <nav id="student-navigation" aria-label="Navegación móvil de estudiante">
             <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
               {dynamicNavItems.map((item) => {
                 const active = pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
@@ -720,7 +396,7 @@ export function AppShell({ user, children }: AppShellProps) {
         <div className="lg:hidden">
           <button
             type="button"
-            className="fixed inset-0 z-30 bg-black/40"
+            className="hub-sidebar-mobile-backdrop"
             aria-label="Cerrar menú"
             onClick={() => setMenuOpen(false)}
           />
@@ -728,30 +404,39 @@ export function AppShell({ user, children }: AppShellProps) {
             ref={drawerRef}
             id="app-sidebar-mobile"
             aria-label="Menú"
-            className="fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] overflow-y-auto border-r border-hub-border bg-hub-chrome p-4 shadow-xl"
+            className="hub-sidebar-drawer hub-sidebar-mobile-drawer"
           >
-            {renderSidebar(false)}
+            <div className="hub-sidebar-deck hub-sidebar-mobile-deck">
+              {renderSidebar(false, true)}
+            </div>
           </aside>
         </div>
       )}
 
       {/* Contenedor principal */}
-      <div className="flex">
+      <div className="flex relative">
         {hasSidebar && (
           <aside
             className={cn(
-              "relative sticky top-14 z-40 hidden h-[calc(100vh-3.5rem)] shrink-0 border-r border-hub-border bg-hub-chrome shadow-xs transition-[width] duration-200 ease-in-out lg:block",
-              sidebarCollapsed ? "w-16 p-2" : "w-60 p-3",
+              "hub-sidebar-container hidden lg:block",
+              sidebarCollapsed ? "w-[76px]" : "w-64",
             )}
           >
-            {/* Botón para comprimir / expandir en la intersección entre el aside y el topbar */}
+            {/* Haz de luz direccional emitido desde el aside hacia el contenido */}
+            <div ref={beamRef} className="hub-sidebar-beam" aria-hidden="true" />
+
+            <div ref={sidebarDeckRef} className="hub-sidebar-deck">
+              {renderSidebar(sidebarCollapsed, false)}
+            </div>
+
+            {/* Botón para comprimir / expandir en el borde derecho del deck */}
             <button
               type="button"
               onClick={() => setSidebarCollapsed((prev) => !prev)}
               aria-expanded={!sidebarCollapsed}
-              aria-label={sidebarCollapsed ? "Expandir menú lateral" : "Comprimir menú lateral"}
-              title={sidebarCollapsed ? "Expandir menú lateral" : "Comprimir menú lateral"}
-              className="absolute -right-3 top-0 -translate-y-1/2 z-50 flex size-6 items-center justify-center rounded-full border border-hub-border bg-white text-hub-muted shadow-sm transition hover:scale-110 hover:border-hub-accent/40 hover:bg-hub-hover hover:text-hub-text active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:bg-hub-chrome"
+              aria-label={sidebarCollapsed ? "Expandir menú lateral (Ctrl+B)" : "Comprimir menú lateral (Ctrl+B)"}
+              title={sidebarCollapsed ? "Expandir menú lateral (Ctrl+B)" : "Comprimir menú lateral (Ctrl+B)"}
+              className="hub-sidebar-toggle"
             >
               {sidebarCollapsed ? (
                 <ChevronRight size={13} aria-hidden="true" />
@@ -759,10 +444,6 @@ export function AppShell({ user, children }: AppShellProps) {
                 <ChevronLeft size={13} aria-hidden="true" />
               )}
             </button>
-
-            <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden">
-              {renderSidebar(sidebarCollapsed)}
-            </div>
           </aside>
         )}
         <main
@@ -770,7 +451,9 @@ export function AppShell({ user, children }: AppShellProps) {
           tabIndex={-1}
           className={cn("min-w-0 flex-1 bg-hub-bg px-4 py-8 focus:outline-none sm:px-8 lg:px-10", !hasSidebar && "w-full")}
         >
-          {children}
+          <div ref={contentRef} className="hub-content-view">
+            {children}
+          </div>
         </main>
       </div>
 
@@ -814,7 +497,7 @@ export function AppShell({ user, children }: AppShellProps) {
               <Upload size={20} className="text-hub-muted" aria-hidden="true" />
               <div>
                 <span className="text-xs font-medium text-hub-text">Haz clic para seleccionar una foto</span>
-                <p className="text-[11px] text-hub-muted">o arrastra un archivo aquí</p>
+                <p className="text-[11px] text-hub-muted">Selecciona un archivo de tu dispositivo</p>
               </div>
               <input
                 id="avatar-file-input"
@@ -854,6 +537,78 @@ export function AppShell({ user, children }: AppShellProps) {
           </div>
         </div>
       </Modal>
+
+
+
+
+            {/* Modal de Atajos de Teclado del HUB */}
+      <Modal
+        open={shortcutsModalOpen}
+        onClose={() => setShortcutsModalOpen(false)}
+        title="Atajos de Teclado del HUB"
+        description="Acelera tu flujo de trabajo en el semillero AlfaCode con estos comandos rápidos."
+      >
+        <div className="space-y-4 py-2">
+          <div className="grid gap-2 sm:grid-cols-2 text-xs">
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 dark:bg-cyan-950/20">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-hub-text">Buscar en el HUB</span>
+                <kbd className="rounded border border-cyan-500/30 bg-white dark:bg-[#061524] px-1.5 py-0.5 font-mono text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
+                  {isMac ? "⌘K" : "Ctrl+K"}
+                </kbd>
+              </div>
+              <p className="text-[11px] text-hub-muted">Abre el buscador instantáneo de módulos, vistas y acciones.</p>
+            </div>
+
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 dark:bg-cyan-950/20">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-hub-text">Accesos rápidos</span>
+                <kbd className="rounded border border-cyan-500/30 bg-white dark:bg-[#061524] px-1.5 py-0.5 font-mono text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
+                  {isMac ? "⌘J" : "Ctrl+J"}
+                </kbd>
+              </div>
+              <p className="text-[11px] text-hub-muted">Despliega el menú de accesos a proyectos, solicitudes y documentos.</p>
+            </div>
+
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 dark:bg-cyan-950/20">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-hub-text">Alternar navegación</span>
+                <kbd className="rounded border border-cyan-500/30 bg-white dark:bg-[#061524] px-1.5 py-0.5 font-mono text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
+                  {isMac ? "⌘B" : "Ctrl+B"}
+                </kbd>
+              </div>
+              <p className="text-[11px] text-hub-muted">Comprime la barra lateral o abre el menú en pantallas pequeñas.</p>
+            </div>
+
+            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 dark:bg-cyan-950/20">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-hub-text">Guía de Atajos</span>
+                <kbd className="rounded border border-cyan-500/30 bg-white dark:bg-[#061524] px-1.5 py-0.5 font-mono text-[10px] font-bold text-cyan-800 dark:text-cyan-300">
+                  ?
+                </kbd>
+              </div>
+              <p className="text-[11px] text-hub-muted">Muestra este cuadro de diálogo con los comandos disponibles.</p>
+            </div>
+
+            <div className="rounded-xl border border-hub-border/40 bg-hub-hover/20 p-3 sm:col-span-2">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-hub-text">Cerrar ventanas y popovers</span>
+                <kbd className="rounded border border-hub-border bg-white dark:bg-[#061524] px-1.5 py-0.5 font-mono text-[10px] font-bold text-hub-text">
+                  Esc
+                </kbd>
+              </div>
+              <p className="text-[11px] text-hub-muted">Cierra inmediatamente cualquier menú flotante, búsqueda o modal activo.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end border-t border-hub-border/40 pt-3">
+            <Button type="button" variant="primary" onClick={() => setShortcutsModalOpen(false)}>
+              Entendido
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       </div>
     </PermissionsProvider>
   );

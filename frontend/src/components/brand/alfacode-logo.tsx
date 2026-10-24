@@ -47,6 +47,8 @@ export function AlfaCodeSymbol({
 
 type AlfaCodeLogoProps = {
   variant?: "horizontal" | "vertical" | "symbol";
+  /** Variante horizontal con trazos claros para superficies azules. */
+  tone?: "original" | "on-blue";
   className?: string;
   width?: number;
   height?: number;
@@ -60,6 +62,7 @@ type AlfaCodeLogoProps = {
  */
 export function AlfaCodeLogo({
   variant = "horizontal",
+  tone = "original",
   className = "",
   width,
   height,
@@ -91,7 +94,9 @@ export function AlfaCodeLogo({
 
   return (
     <Image
-      src="/AlfaCode_logos/SVG/AlfaCode_logo_horizontal.svg"
+      src={tone === "on-blue"
+        ? "/AlfaCode_logos/SVG/AlfaCode_logo_horizontal_sobre_azul.svg"
+        : "/AlfaCode_logos/SVG/AlfaCode_logo_horizontal.svg"}
       alt={alt}
       width={defaultW}
       height={defaultH}
