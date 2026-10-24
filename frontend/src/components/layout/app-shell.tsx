@@ -2,7 +2,7 @@
 
 import {
   Award, Calendar, ChartColumn, Check, CheckSquare, ChevronLeft, ChevronRight,
-  FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard, Menu,
+  FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard,
   Repeat, Shield, Table2, Trash2, Upload, UserPlus, UserRound, Users, X,
   type LucideIcon,
 } from "lucide-react";
