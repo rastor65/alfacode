@@ -70,8 +70,7 @@ export function HubTopbar({
   const headerRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const searchTriggerRef = useRef<HTMLButtonElement>(null);
-  const searchDialogRef = useRef<HTMLDialogElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const { source, reveal, dismiss, cancel, position, syncAppearance } = useHubTopbarMotion(headerRef, panelRef);
@@ -140,10 +139,11 @@ export function HubTopbar({
 
   function openSearch() {
     setPopover(null);
-    setQuery("");
-    setFilter("all");
-    setSelected(0);
     setSearchOpen(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    }, 30);
   }
 
   const togglePopover = useCallback((next: Exclude<Popover, null>, trigger: HTMLButtonElement) => {
@@ -202,44 +202,68 @@ export function HubTopbar({
   }, [popover, dismiss]);
 
   useEffect(() => {
-    const dialog = searchDialogRef.current;
-    if (searchOpen && dialog && !dialog.open) {
-      dialog.showModal();
-      searchInputRef.current?.focus();
-    } else if (!searchOpen && dialog?.open) dialog.close();
+    if (!searchOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!searchContainerRef.current?.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [searchOpen]);
 
   useEffect(() => {
-    resultsRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
-  }, [selected, query, filter]);
+    if (searchOpen) {
+      resultsRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+    }
+  }, [selected, query, filter, searchOpen]);
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!searchOpen) {
+        setSearchOpen(true);
+        return;
+      }
+      setSelected((prev) => (prev + (event.key === "ArrowDown" ? 1 : -1) + Math.max(1, results.length)) % Math.max(1, results.length));
+    } else if (event.key === "Enter" && results[selected]) {
+      event.preventDefault();
+      setSearchOpen(false);
+      results[selected].run();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      setSearchOpen(false);
+      searchInputRef.current?.blur();
+    }
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const editing = event.target instanceof HTMLElement &&
         (event.target.matches("input, textarea, select") || event.target.isContentEditable);
-      if (event.target instanceof Element && event.target.closest("dialog") && !searchDialogRef.current?.contains(event.target)) return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         openSearch();
       } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "j") {
-        if (searchDialogRef.current?.open) return;
+        if (searchOpen) return;
         event.preventDefault();
         const trigger = headerRef.current?.querySelector<HTMLButtonElement>('[data-trigger="quick"]');
         if (trigger) togglePopover("quick", trigger);
       } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "b") {
-        if (searchDialogRef.current?.open) return;
+        if (searchOpen) return;
         if (!hasSidebar && window.matchMedia("(min-width: 1024px)").matches) return;
         event.preventDefault();
         onToggleSidebar();
       } else if (event.key === "?" && !editing) {
         event.preventDefault();
         setPopover(null);
+        setSearchOpen(false);
         onOpenShortcuts();
       }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onToggleSidebar, onOpenShortcuts, hasSidebar, togglePopover]);
+  }, [onToggleSidebar, onOpenShortcuts, hasSidebar, togglePopover, searchOpen]);
 
   const avatarContent = avatar ? (
     // El avatar es un data URL privado del dispositivo, no un recurso remoto optimizable.
@@ -292,11 +316,130 @@ export function HubTopbar({
           </button>
         </div>
 
-        <button ref={searchTriggerRef} type="button" className="hub-bar-search-trigger" onClick={openSearch} aria-label="Buscar en AlfaCode HUB" aria-keyshortcuts="Control+k Meta+k" aria-haspopup="dialog">
-          <span className="hub-bar-search-icon"><Search size={18} aria-hidden="true" /></span>
-          <span className="hub-bar-search-copy"><span className="hub-bar-search-placeholder">Buscar en el HUB</span><span className="hub-bar-search-hint">Módulos, vistas y acciones</span></span>
-          <kbd className="hub-bar-keycap">{isMac ? "⌘" : "Ctrl"}<span>K</span></kbd>
-        </button>
+        <div ref={searchContainerRef} className="hub-bar-search-container">
+          <div className={cn("hub-bar-search-box", searchOpen && "hub-bar-search-box-active")}>
+            <span className="hub-bar-search-icon" aria-hidden="true"><Search size={18} /></span>
+            <input
+              ref={searchInputRef}
+              type="text"
+              role="combobox"
+              aria-expanded={searchOpen}
+              aria-autocomplete="list"
+              aria-controls={`${id}-results`}
+              aria-activedescendant={results[selected] ? `${id}-result-${selected}` : undefined}
+              aria-label="Buscar en AlfaCode HUB"
+              placeholder="Buscar en el HUB... (Ctrl + K)"
+              autoComplete="off"
+              spellCheck={false}
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setSearchOpen(true);
+                setSelected(0);
+              }}
+              onFocus={() => {
+                setSearchOpen(true);
+                setPopover(null);
+              }}
+              onKeyDown={handleSearchKeyDown}
+              className="hub-bar-search-input"
+            />
+            {query ? (
+              <button
+                type="button"
+                className="hub-bar-search-clear"
+                onClick={() => {
+                  setQuery("");
+                  setSelected(0);
+                  searchInputRef.current?.focus();
+                }}
+                aria-label="Limpiar búsqueda"
+              >
+                <X size={15} aria-hidden="true" />
+              </button>
+            ) : (
+              <kbd className="hub-bar-keycap">{isMac ? "⌘" : "Ctrl"}<span>K</span></kbd>
+            )}
+          </div>
+
+          {searchOpen && (
+            <div
+              id={`${id}-results`}
+              role="listbox"
+              aria-label="Resultados de búsqueda"
+              className="hub-bar-search-dropdown"
+              ref={resultsRef}
+            >
+              <div className="hub-bar-search-filters" role="group" aria-label="Filtrar búsqueda">
+                {([{ value: "all", label: "Todo" }, { value: "modules", label: "Módulos" }, { value: "actions", label: "Acciones" }] as const).map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    aria-pressed={filter === item.value}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setFilter(item.value); setSelected(0); }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <span role="status">{results.length} {results.length === 1 ? "resultado" : "resultados"}</span>
+              </div>
+
+              <div className="hub-bar-results">
+                {resultGroups.map((group) => (
+                  <div key={group.kind} role="group" aria-label={group.label} className="hub-bar-result-group">
+                    <div className="hub-bar-result-group-heading" aria-hidden="true">
+                      <span>{group.label}</span>
+                      <span>{group.entries.length}</span>
+                    </div>
+                    {group.entries.map(({ item, index }) => {
+                      const Icon = item.icon;
+                      const isSelected = selected === index;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          id={`${id}-result-${index}`}
+                          role="option"
+                          aria-selected={isSelected}
+                          tabIndex={-1}
+                          className={cn("hub-bar-result", isSelected && "hub-bar-result-selected")}
+                          onPointerMove={() => setSelected(index)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setSearchOpen(false);
+                            item.run();
+                          }}
+                        >
+                          <span className="hub-bar-item-icon"><Icon size={18} aria-hidden="true" /></span>
+                          <span className="hub-bar-item-text">
+                            <span>{item.label}</span>
+                            {item.description && <small>{item.description}</small>}
+                          </span>
+                          <ArrowRight size={15} aria-hidden="true" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+
+                {results.length === 0 && (
+                  <div className="hub-bar-empty-results">
+                    <Search size={22} aria-hidden="true" />
+                    <p>No encontramos “{query}”</p>
+                    <span>Prueba con otro término o cambia el filtro.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="hub-bar-search-footer">
+                <Command size={13} aria-hidden="true" />
+                <span>Tu espacio, a un atajo.</span>
+                <span><kbd>↑ ↓</kbd> Navegar <kbd>↵</kbd> Abrir <kbd>Esc</kbd> Cerrar</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="hub-bar-tools">
           <button type="button" data-trigger="quick" className="hub-bar-quick-trigger"
@@ -456,52 +599,6 @@ export function HubTopbar({
         </nav>
       )}
 
-      <dialog ref={searchDialogRef} className="hub-bar-command-dialog" aria-labelledby={`${id}-search-title`}
-        onClose={() => { setSearchOpen(false); searchTriggerRef.current?.focus(); }}
-        onClick={(event) => { if (event.target === event.currentTarget) setSearchOpen(false); }}
-      >
-        {searchOpen && (
-          <div className="hub-bar-command-content">
-            <h2 id={`${id}-search-title`} className="sr-only">Buscar en AlfaCode HUB</h2>
-            <div className="hub-bar-command-input-row">
-              <Search size={22} aria-hidden="true" />
-              <input ref={searchInputRef} type="text" role="combobox" aria-autocomplete="list" aria-expanded="true"
-                aria-controls={`${id}-results`} aria-activedescendant={results[selected] ? `${id}-result-${selected}` : undefined}
-                aria-label="Buscar módulos y acciones" placeholder="¿A dónde quieres ir?" autoComplete="off" spellCheck={false}
-                value={query} onChange={(event) => { setQuery(event.target.value); setSelected(0); }}
-                onKeyDown={(event) => {
-                  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                    event.preventDefault();
-                    setSelected((value) => (value + (event.key === "ArrowDown" ? 1 : -1) + Math.max(1, results.length)) % Math.max(1, results.length));
-                  } else if (event.key === "Enter" && results[selected]) {
-                    event.preventDefault(); setSearchOpen(false); results[selected].run();
-                  }
-                }}
-              />
-              <button type="button" className="hub-bar-icon-button" onClick={() => setSearchOpen(false)} aria-label="Cerrar búsqueda"><X size={19} aria-hidden="true" /></button>
-            </div>
-            <div className="hub-bar-search-filters" role="group" aria-label="Filtrar búsqueda">
-              {([{ value: "all", label: "Todo" }, { value: "modules", label: "Módulos" }, { value: "actions", label: "Acciones" }] as const).map((item) => <button key={item.value} type="button" aria-pressed={filter === item.value} onClick={() => { setFilter(item.value); setSelected(0); }}>{item.label}</button>)}
-              <span role="status">{results.length} {results.length === 1 ? "resultado" : "resultados"}</span>
-            </div>
-            <div ref={resultsRef} id={`${id}-results`} role="listbox" aria-label="Resultados de búsqueda" className="hub-bar-results">
-              {resultGroups.map((group) => <div key={group.kind} role="group" aria-label={group.label} className="hub-bar-result-group">
-                <div className="hub-bar-result-group-heading" aria-hidden="true"><span>{group.label}</span><span>{group.entries.length}</span></div>
-                {group.entries.map(({ item, index }) => {
-                const Icon = item.icon;
-                return <button key={item.id} type="button" id={`${id}-result-${index}`} role="option" aria-selected={selected === index} tabIndex={-1}
-                  className="hub-bar-result" onPointerMove={() => setSelected(index)} onClick={() => { setSearchOpen(false); item.run(); }}>
-                  <span className="hub-bar-item-icon"><Icon size={19} aria-hidden="true" /></span>
-                  <span className="hub-bar-item-text"><span>{item.label}</span>{item.description && <small>{item.description}</small>}</span>
-                  <ArrowRight size={16} aria-hidden="true" />
-                </button>;
-              })}</div>)}
-            </div>
-            {results.length === 0 && <div className="hub-bar-empty-results"><Search size={26} aria-hidden="true" /><p>No encontramos “{query}”</p><span>Prueba con otro nombre o cambia el filtro.</span></div>}
-            <div className="hub-bar-search-footer"><Command size={14} aria-hidden="true" /><span>Tu espacio, a un atajo.</span><span><kbd>↑ ↓</kbd> Navegar <kbd>↵</kbd> Abrir <kbd>Esc</kbd> Cerrar</span></div>
-          </div>
-        )}
-      </dialog>
     </>
   );
 }
