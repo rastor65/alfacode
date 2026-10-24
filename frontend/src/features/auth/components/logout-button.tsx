@@ -44,15 +44,20 @@ export function LogoutButton({ className, iconOnly = false }: LogoutButtonProps)
       {error && <Alert tone="error">{error}</Alert>}
       <Button
         variant="ghost"
-        className={cn("w-full", iconOnly && "size-10 px-0 justify-center mx-auto")}
+        className={cn(
+          "hub-logout-button w-full",
+          iconOnly && "size-10 px-0 justify-center mx-auto"
+        )}
         onClick={logout}
         pending={pending}
         pendingLabel={iconOnly ? "" : "Cerrando sesión…"}
         aria-label="Cerrar sesión"
         title="Cerrar sesión"
       >
-        <LogOut size={17} className={cn(!iconOnly && "mr-2.5")} aria-hidden="true" />
-        {!iconOnly && <span>Cerrar sesión</span>}
+        <span className="hub-logout-icon-badge" aria-hidden="true">
+          <LogOut size={16} />
+        </span>
+        {!iconOnly && <span className="hub-logout-label">Cerrar sesión</span>}
       </Button>
     </div>
   );
