@@ -1,5 +1,5 @@
 // Prueba E2E del HUB: cierre de la Fase 2 (pruebas F2 #9, #11 en SQLite y #12), investigacion
-// (I-14) y documentos (I-15) de la Fase 3, cierre Fase 4 (I-19), Fase 5 (I-20 a I-22) y Fase 6 (I-23/I-24), por API y paginas SSR.
+// (I-14) y documentos (I-15) de la Fase 3, cierre Fase 4 (I-19), Fase 5 (I-20 a I-22), Fase 6 (I-23/I-24), panel por rol (I-26) y lista de proyectos (I-27), por API y paginas SSR.
 // Usa una base SQLite, un outbox y documentos temporales y los puertos 4100 (API) y 3100 (web); no
 // toca la base local. El frontend se compila en `frontend/.next/e2e` con el proxy hacia la API
 // temporal: nunca envia peticiones al backend de desarrollo (puerto 4000). Requiere el backend
@@ -193,9 +193,9 @@ function client() {
       return { status: response.status, body: Buffer.from(await response.arrayBuffer()), headers: response.headers };
     },
     /** Pagina del frontend renderizada en el servidor con la sesion de este cliente. */
-    async page(path) {
+    async page(path, extraCookie) {
       const response = await fetch(`${ORIGIN}${path}`, {
-        headers: { Cookie: cookies.join("; "), "X-Forwarded-For": ip },
+        headers: { Cookie: [...cookies, ...(extraCookie ? [extraCookie] : [])].join("; "), "X-Forwarded-For": ip },
         redirect: "manual",
       });
       return { status: response.status, html: await response.text() };
@@ -723,7 +723,7 @@ async function main() {
   check("I-23: paginas SSR de seguimiento respetan permisos",
     (await coord.page("/hub/seguimiento")).html.includes("Panel institucional") && (await student.page("/hub/seguimiento")).status === 404 &&
     (await student.page(`/hub/proyectos/${projectId}/seguimiento`)).html.includes("Avance de tareas") &&
-    (await outsider.page(`/hub/proyectos/${projectId}/seguimiento`)).status === 404 && (await student.page("/hub")).html.includes("Mis tareas abiertas"));
+    (await outsider.page(`/hub/proyectos/${projectId}/seguimiento`)).status === 404 && (await student.page("/hub")).html.includes("Mis tareas"));
 
   // I-24: observaciones de seguimiento y reportes filtrables.
   const observation = await coord.call("POST", `/projects/${projectId}/observations`, { kind: "progress", body: "Avance ficticio registrado por la prueba E2E." });
@@ -741,6 +741,65 @@ async function main() {
     (await coord.page("/hub/reportes?reporte=actividades")).html.includes("Actividades filtradas") &&
     (await coord.page("/hub/reportes?reporte=produccion&desde=2026-05-01&hasta=2026-04-01")).html.includes("Revisa los filtros") &&
     (await student.page("/hub/reportes")).status === 404);
+
+  // I-26 (DEC-049): /hub segun el rol sobre el entorno acumulado.
+  const overview = await coord.call("GET", "/tracking/overview");
+  check("I-26: el panel del semillero lista el proyecto con su avance y solo lo consultan autoridades", overview.status === 200 &&
+    overview.json.projects.items.some(p => p.id === projectId && p.tasks.total === projectPanel.json.tasks.total) &&
+    (await student.call("GET", "/tracking/overview")).status === 403 && (await outsider.call("GET", "/tracking/overview")).status === 403, overview);
+  const studentHub = await student.page("/hub"), coordHub = await coord.page("/hub");
+  check("I-26: /hub muestra el panel del semillero a la autoridad y el personal ampliado al estudiante",
+    coordHub.status === 200 && coordHub.html.includes("Proyectos en curso") && coordHub.html.includes("Pendientes de gestión") && coordHub.html.includes("Mi trabajo") &&
+    studentHub.status === 200 && studentHub.html.includes("Mis proyectos") && studentHub.html.includes("Avance del equipo") &&
+    studentHub.html.includes("Avance ficticio registrado por la prueba E2E.") && !studentHub.html.includes("Proyectos en curso") && !studentHub.html.includes("Pendientes de gestión"));
+
+  // I-27: vista general de proyectos con indicadores, filtros por URL y preferencia de vista.
+  const list = await coord.call("GET", "/projects?pageSize=100");
+  const own = list.json.items.find(p => p.id === projectId);
+  check("I-27: la lista de proyectos trae resumen, avance y alertas calculados en el servidor", list.status === 200 &&
+    list.json.summary.total === list.json.total && Array.isArray(own?.risks) && own.progress.total === projectPanel.json.tasks.total &&
+    (await student.call("GET", "/projects?sort=popularidad")).status === 400, list);
+  const [coordCards, coordTable, studentCards, outsiderCards, filteredEmpty] = await Promise.all([
+    coord.page("/hub/proyectos"), coord.page("/hub/proyectos", "hub-projects-view=table"), student.page("/hub/proyectos"),
+    outsider.page("/hub/proyectos"), coord.page("/hub/proyectos?q=zzz-no-existe&orden=name"),
+  ]);
+  check("I-27: /hub/proyectos muestra indicadores, pestañas y tarjetas; la autoridad puede crear",
+    coordCards.status === 200 && coordCards.html.includes("Indicadores de proyectos") && coordCards.html.includes("Solo con alertas") &&
+    coordCards.html.includes("Progreso global") && coordCards.html.includes("Proyecto E2E") && coordCards.html.includes("Nuevo proyecto"));
+  check("I-27: la preferencia de vista por cookie muestra la tabla y las tarjetas se omiten",
+    coordTable.html.includes("<table") && !coordTable.html.includes("Progreso global") && coordTable.html.includes("Proyecto E2E"));
+  check("I-27: cada persona solo ve y cuenta sus proyectos; sin permiso de crear",
+    studentCards.html.includes("Proyecto E2E") && studentCards.html.includes("Los proyectos en los que participas") && !studentCards.html.includes("Nuevo proyecto") &&
+    !outsiderCards.html.includes("Proyecto E2E") && outsiderCards.html.includes("Todavía no participas en ningún proyecto"));
+  check("I-27: los filtros de la URL sin resultados se explican sin romper la pagina",
+    filteredEmpty.status === 200 && filteredEmpty.html.includes("No hay proyectos con esos filtros."));
+
+  // I-27 (detalle): resumen del proyecto con permisos, 404 y pestañas.
+  const [detailCoord, detailStudent, detailOutsider, detailMalformed, tabsPage] = await Promise.all([
+    coord.page(`/hub/proyectos/${projectId}`), student.page(`/hub/proyectos/${projectId}`), outsider.page(`/hub/proyectos/${projectId}`),
+    coord.page("/hub/proyectos/no-es-uuid"), student.page(`/hub/proyectos/${projectId}/tareas`),
+  ]);
+  const studentCanManage = (await student.call("GET", `/projects/${projectId}`)).json.permissions.canManageMembers;
+  check("I-27: el resumen del proyecto muestra indicadores, informacion, alertas, equipo y mis tareas",
+    detailCoord.status === 200 && ["Indicadores del proyecto", "Información general", "Progreso y avance", "Alertas del proyecto", "Equipo del proyecto", "Mis tareas pendientes"].every(text => detailCoord.html.includes(text)));
+  check("I-27: las acciones del resumen solo aparecen con permiso y la persona ajena o un ID mal formado reciben 404",
+    detailCoord.html.includes("Gestionar equipo") && detailStudent.status === 200 && detailStudent.html.includes("Información general") &&
+    detailStudent.html.includes("Gestionar equipo") === studentCanManage && detailOutsider.status === 404 && detailMalformed.status === 404);
+  check("I-27: la lista enlaza al resumen y las demas vistas del proyecto tienen la pestaña Resumen",
+    coordCards.html.includes(`href="/hub/proyectos/${projectId}"`) && tabsPage.html.includes(`href="/hub/proyectos/${projectId}"`) && tabsPage.html.includes("Resumen"));
+
+  // I-27 (tablero): vista rediseñada con resumen, filtros y vista de tablero o lista por cookie.
+  const [boardCoord, boardList, boardStudent, boardOutsider] = await Promise.all([
+    coord.page(`/hub/proyectos/${projectId}/tareas`), coord.page(`/hub/proyectos/${projectId}/tareas`, "hub-tasks-view=list"),
+    student.page(`/hub/proyectos/${projectId}/tareas`), outsider.page(`/hub/proyectos/${projectId}/tareas`),
+  ]);
+  const studentManagesTasks = (await student.call("GET", `/projects/${projectId}/tasks?pageSize=1`)).json.permissions.canManageTasks;
+  check("I-27: el tablero muestra resumen, filtros, columnas por estado y la autoridad puede crear tareas",
+    boardCoord.status === 200 && ["Resumen de la vista", "Mis tareas", "Sin responsable", "Vencidas", "Nueva tarea", 'id="columna-todo"', 'id="columna-done"', "Resumen"].every(text => boardCoord.html.includes(text)));
+  check("I-27: la preferencia de lista por cookie reemplaza las columnas",
+    boardList.status === 200 && !boardList.html.includes('id="columna-todo"') && (boardList.html.includes("<table") || boardList.html.includes("Aún no hay tareas en esta vista")));
+  check("I-27: crear tareas solo aparece con permiso; la persona ajena recibe 404",
+    boardStudent.status === 200 && boardStudent.html.includes("Nueva tarea") === studentManagesTasks && boardOutsider.status === 404);
 
   await stopServer();
   const requireBackend = createRequire(join(backendDir, "package.json"));

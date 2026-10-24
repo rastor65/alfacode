@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { OverviewPanelView } from "@/features/tracking/overview-panel";
 import { PersonalPanelView } from "@/features/tracking/personal-panel";
-import type { PersonalPanel } from "@/features/tracking/types";
+import { plural, type InstitutionalPanel, type OverviewPanel, type PersonalPanel } from "@/features/tracking/types";
 import { ApiRequestError } from "@/lib/api/errors";
 import { serverApi } from "@/lib/api/server";
 import { isAuthority, roleLabel } from "@/lib/auth/roles";
@@ -15,68 +14,52 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-async function loadPanel(): Promise<PersonalPanel | null> {
+async function load<T>(path: string): Promise<T | null> {
   // Solo errores de la API: la redireccion por sesion vencida debe propagarse.
   try {
-    return await serverApi<PersonalPanel>("/tracking/me", "/hub");
+    return await serverApi<T>(path, "/hub");
   } catch (caught) {
     if (caught instanceof ApiRequestError || caught instanceof TypeError) return null;
     throw caught;
   }
 }
 
+const loadError = <Alert tone="error">No se pudieron cargar los indicadores. Recarga la página en unos minutos.</Alert>;
+
+/**
+ * I-26 (DEC-049): autoridades ven el panel del semillero y debajo "Mi trabajo"; el resto, su panel
+ * personal ampliado. El rol solo elige la vista: el backend vuelve a autorizar cada endpoint.
+ */
 export default async function PanelPage() {
   const user = await requireSessionUser("/hub");
-  const panel = await loadPanel();
+  const authority = isAuthority(user.roles);
+  const [panel, institutional, overview] = await Promise.all([
+    load<PersonalPanel>("/tracking/me"),
+    authority ? load<InstitutionalPanel>("/tracking/institutional") : null,
+    authority ? load<OverviewPanel>("/tracking/overview") : null,
+  ]);
+
+  const authorityLabel = [user.roles.includes("admin") && "Administración", user.roles.includes("coordinator") && "Coordinación"].filter(Boolean).join(" y ");
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <p className="text-sm font-medium text-hub-accent">Panel</p>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight text-hub-text text-balance sm:text-3xl">
-        Hola, {user.fullName}
-      </h1>
-
-      {isAuthority(user.roles) && (
-        <p className="mt-4 text-sm">
-          <Link href="/hub/seguimiento" className="font-medium text-hub-accent underline-offset-4 hover:underline">
-            Ver el panel institucional
-          </Link>
-        </p>
+    <div className="mx-auto w-full max-w-360">
+      {authority ? (
+        <>
+          {institutional && overview ? <OverviewPanelView institutional={institutional} overview={overview} roleLabel={authorityLabel} /> : <><h1 className="text-2xl font-semibold text-hub-text">Panel general</h1><div className="mt-6">{loadError}</div></>}
+          <details className="group mt-10 rounded-2xl border border-hub-border p-4 sm:p-5" open={Boolean(panel && panel.tasks.open > 0)}>
+            <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2">
+              <span className="text-lg font-semibold text-hub-text">Mi trabajo</span>
+              <span className="text-sm text-hub-muted">
+                {panel ? `${plural(panel.tasks.open, "tarea abierta", "tareas abiertas")} · ${plural(panel.projects.total, "proyecto", "proyectos")}` : ""}
+                <span aria-hidden="true" className="ml-2 inline-block transition-transform group-open:rotate-180">▾</span>
+              </span>
+            </summary>
+            <div className="mt-4">{panel ? <PersonalPanelView data={panel} /> : loadError}</div>
+          </details>
+        </>
+      ) : (
+        panel ? <PersonalPanelView data={panel} roleLabel={user.roles.map(roleLabel).join(" / ")} /> : <><h1 className="text-2xl font-semibold text-hub-text">Mi panel</h1><div className="mt-6">{loadError}</div></>
       )}
-
-      <div className="mt-6">
-        {panel ? <PersonalPanelView data={panel} /> : <Alert tone="error">No se pudieron cargar tus indicadores. Recarga la página en unos minutos.</Alert>}
-      </div>
-
-      <section
-        className="mt-10 rounded-2xl border border-hub-border bg-hub-subtle p-5 sm:p-6"
-        aria-labelledby="account-title"
-      >
-        <h2 id="account-title" className="text-base font-semibold text-hub-text">
-          Tu cuenta
-        </h2>
-        <dl className="mt-4 grid gap-5 sm:grid-cols-2">
-          <div className="min-w-0">
-            <dt className="text-xs font-medium uppercase tracking-wide text-hub-muted">Correo</dt>
-            <dd className="mt-1 break-all text-sm text-hub-text">{user.email}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-hub-muted">Roles</dt>
-            <dd className="mt-1.5 flex flex-wrap gap-2">
-              {user.roles.map((role) => (
-                <Badge key={role}>{roleLabel(role)}</Badge>
-              ))}
-            </dd>
-          </div>
-        </dl>
-        <p className="mt-4 text-sm text-hub-muted">
-          Puedes editar tu nombre y cambiar tu contraseña en{" "}
-          <Link href="/hub/perfil" className="font-medium text-hub-accent underline-offset-4 hover:underline">
-            Mi perfil
-          </Link>
-          .
-        </p>
-      </section>
     </div>
   );
 }

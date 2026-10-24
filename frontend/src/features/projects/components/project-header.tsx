@@ -6,20 +6,23 @@ import { cn } from "@/lib/utils";
 
 import { METHODOLOGY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS, type ProjectDetail } from "../types";
 
+export type ProjectSection = "resumen" | "tareas" | "sprints" | "investigacion" | "documentos" | "produccion" | "actividades" | "seguimiento";
+
 type ProjectHeaderProps = {
   project: ProjectDetail;
   eyebrow: string;
-  current: "tareas" | "sprints" | "investigacion" | "documentos" | "produccion" | "actividades" | "seguimiento";
+  current: Exclude<ProjectSection, "resumen">;
 };
 
 /**
- * Encabezado de las vistas de un proyecto; la pestana de sprints solo existe en modalidad agil
- * (F2-20). Las de investigacion y documentos existen en todos: la ficha es opcional (F3-03).
+ * Pestañas del proyecto; la de sprints solo existe en modalidad agil (F2-20). Las de investigacion y
+ * documentos existen en todos: la ficha es opcional (F3-03). `badges` agrega datos junto a cada pestaña.
  */
-export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps) {
-  const tabs = [
+export function ProjectTabs({ project, current, badges = {} }: { project: Pick<ProjectDetail, "id" | "methodology">; current: ProjectSection; badges?: Partial<Record<ProjectSection, React.ReactNode>> }) {
+  const tabs: { key: ProjectSection; label: string; href: string }[] = [
+    { key: "resumen", label: "Resumen", href: `/hub/proyectos/${project.id}` },
     { key: "tareas", label: project.methodology === "agile" ? "Tablero y backlog" : "Tareas", href: `/hub/proyectos/${project.id}/tareas` },
-    ...(project.methodology === "agile" ? [{ key: "sprints", label: "Sprints", href: `/hub/proyectos/${project.id}/sprints` }] : []),
+    ...(project.methodology === "agile" ? [{ key: "sprints" as const, label: "Sprints", href: `/hub/proyectos/${project.id}/sprints` }] : []),
     { key: "investigacion", label: "Investigación", href: `/hub/proyectos/${project.id}/investigacion` },
     { key: "documentos", label: "Documentos", href: `/hub/proyectos/${project.id}/documentos` },
     { key: "produccion", label: "Producción", href: `/hub/proyectos/${project.id}/produccion` },
@@ -27,6 +30,31 @@ export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps)
     { key: "seguimiento", label: "Seguimiento", href: `/hub/proyectos/${project.id}/seguimiento` },
   ];
 
+  return (
+    <nav aria-label="Secciones del proyecto" className="-mx-1 overflow-x-auto px-1">
+      <ul className="flex min-w-max gap-1 border-b border-hub-border">
+        {tabs.map((tab) => (
+          <li key={tab.key}>
+            <Link
+              href={tab.href}
+              aria-current={tab.key === current ? "page" : undefined}
+              className={cn(
+                "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                tab.key === current ? "border-cyan-500 font-medium text-hub-text" : "border-transparent text-hub-muted hover:text-hub-text",
+              )}
+            >
+              {tab.label}
+              {badges[tab.key]}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+/** Encabezado de las vistas de un proyecto que no son el resumen. */
+export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps) {
   return (
     <header>
       <Link href="/hub/proyectos" className="inline-flex items-center gap-1.5 text-sm text-hub-accent underline-offset-4 hover:underline">
@@ -40,25 +68,9 @@ export function ProjectHeader({ project, eyebrow, current }: ProjectHeaderProps)
         <Badge>{METHODOLOGY_LABELS[project.methodology]}</Badge>
         {project.myRole && <Badge>Tu rol: {PROJECT_ROLE_LABELS[project.myRole]}</Badge>}
       </div>
-      {tabs.length > 1 && (
-        <nav aria-label="Secciones del proyecto" className="mt-5 flex flex-wrap gap-1 border-b border-hub-border">
-          {tabs.map((tab) => (
-            <Link
-              key={tab.key}
-              href={tab.href}
-              aria-current={tab.key === current ? "page" : undefined}
-              className={cn(
-                "-mb-px border-b-2 px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
-                tab.key === current
-                  ? "border-cyan-500 font-medium text-hub-text"
-                  : "border-transparent text-hub-muted hover:text-hub-text",
-              )}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <div className="mt-5">
+        <ProjectTabs project={project} current={current} />
+      </div>
     </header>
   );
 }

@@ -66,6 +66,55 @@ Los indicadores de actividad (P-01 a P-09) se presentan separados de cualquier e
 
 "Acceso a proyecto" = ser miembro actual, o ser autoridad (admin/coordinator). Una persona retirada de un proyecto deja de ver sus conteos en el panel, igual que deja de ver el proyecto; sus aportes no se borran.
 
+### Ampliacion I-26 (DEC-049)
+
+Campos adicionales de `GET /api/v1/tracking/me`; los anteriores no cambian.
+
+| ID | Indicador | Definicion y consulta | Fuente |
+|---|---|---|---|
+| M-07 | Mis tareas por vencer | Mis tareas abiertas visibles (como M-02) con `hoy <= due_date <= hoy + 7` | `tasks` |
+| M-08 | Mis tareas por estado | Mis tareas visibles (como M-02/M-03) agrupadas por `status`, todas las categorias | `tasks` |
+| M-09 | Tarjeta de proyecto | Para cada proyecto de la lista M-01: tareas del proyecto por avance (P-01/P-02), vencidas (P-03), sin responsable (P-05), mis tareas abiertas en el proyecto y sprint activo (P-06) con su avance. Incluye los lideres del proyecto. La interfaz destaca vencidas y sin responsable en los proyectos que la persona lidera, y muestra el lider en los demas. Ser miembro ya da acceso a estas cifras en el panel del proyecto | `tasks`, `sprints`, `project_members` |
+| M-05b | Proyecto de la actividad | M-05 incluye el nombre del proyecto de cada actividad (o nulo si es institucional) | `events`, `projects` |
+| M-10 | Observaciones recientes | Las 5 observaciones (F6-05) mas recientes de los proyectos donde la persona es miembro actual; tipo, extracto, autor, proyecto y fecha | `project_observations` |
+
+## Lista de proyectos (I-27)
+
+**Permiso:** cada persona cuenta y ve los proyectos que ya puede consultar (autoridad: todos; resto: donde es miembro). **Endpoint:** `GET /api/v1/projects`. **Pagina:** `/hub/proyectos`.
+
+| ID | Indicador | Definicion |
+|---|---|---|
+| L-01 | Por proyecto | Mismas cifras que G-01 a G-04 y M-09 del proyecto: avance, vencidas, sin responsable, mis tareas abiertas, sprint activo, tiempo transcurrido, ultima actividad y alertas. Las alertas solo existen en proyectos `active` |
+| L-02 | Resumen | `summary`: total visible, proyectos por estado, con alertas y tareas terminadas/total del conjunto. **No cambia** con filtros ni pagina |
+| L-03 | Filtros | `q` (nombre o nombre de un lider), `status`, `methodology`, `alerts=true` (al menos una alerta). Se aplican sobre el conjunto visible; `total` cuenta el resultado filtrado |
+| L-04 | Orden | `sort`: `activity` (ultima actividad, mas reciente primero; por defecto), `name`, `progress` (mayor primero) y `end_date` (mas proxima primero). Los proyectos sin dato (sin tareas, sin fecha de fin o sin actividad) van al final; el desempate es el nombre |
+
+### Ampliacion del panel de proyecto (I-27, pagina de resumen)
+
+Campos adicionales de `GET /api/v1/tracking/projects/:id`; los anteriores no cambian. **Pagina:** `/hub/proyectos/[id]`.
+
+| ID | Indicador | Definicion |
+|---|---|---|
+| P-12 | Senales del proyecto | `signals`: tiempo transcurrido (G-02), ultima actividad (G-03) y alertas (G-04, solo proyectos activos), igual que en la lista y los paneles |
+| P-13 | Mis tareas abiertas | `myTasks`: total de mis tareas abiertas en el proyecto y las 5 de fecha limite mas proxima (sin fecha al final): titulo, estado, prioridad y fecha |
+| P-14 | Dias del periodo | La interfaz calcula dias transcurridos y totales entre `startDate` y `endDate` respecto a `today` (acotado al periodo); sin ambas fechas, "Sin fechas" |
+
+## Panel del semillero en `/hub` (I-26)
+
+**Permiso:** solo `admin` y `coordinator` (API 403). **Endpoint:** `GET /api/v1/tracking/overview`. **Pagina:** `/hub`, junto con I-01 a I-08 y el panel personal de la autoridad ("Mi trabajo").
+
+| ID | Indicador | Definicion y consulta | Fuente |
+|---|---|---|---|
+| G-01 | Proyectos en curso | Proyectos con estado `proposed`, `planning`, `active` o `paused` (los finalizados y cancelados se cuentan en I-02, no se listan). Orden: activos, pausados, en planificacion y propuestos; luego por nombre. Maximo 50, con el total. Por proyecto: estado ("fase"), metodologia, fechas, lideres, tareas terminadas/total y avance (P-01/P-02), vencidas (P-03), sprint activo (P-06), tiempo transcurrido y ultima actividad | `projects`, `project_members`, `tasks`, `sprints`, `project_observations` |
+| G-02 | Tiempo transcurrido | `(hoy - start_date) / (end_date - start_date) * 100`, acotado entre 0 y 100. Sin ambas fechas o con `end_date <= start_date`: sin dato | `projects` |
+| G-03 | Ultima actividad | El mas reciente entre `projects.updated_at`, `tasks.updated_at` del proyecto y `project_observations.created_at` del proyecto | `projects`, `tasks`, `project_observations` |
+| G-04 | Alertas de riesgo | Solo proyectos `active` de G-01. **Tareas vencidas:** P-03 > 0. **Fecha de fin superada:** `end_date < hoy`. **Sin actividad reciente:** G-03 anterior al corte menos 14 dias (o sin registro). **Atraso:** con tareas y G-02 disponible, `G-02 - P-02 >= 25` puntos. Un proyecto esta en riesgo si tiene al menos una alerta. Son alertas operativas, no una evaluacion del equipo | derivado |
+| G-05 | Pendientes de gestion | Solicitudes de ingreso `pending` (`membership_requests`) y tramites `pending` e `in_review` (`administrative_requests`) | `membership_requests`, `administrative_requests` |
+| G-06 | Agenda | Las 5 actividades `scheduled` con inicio posterior al corte, de todo el semillero, por fecha; con su proyecto si lo tienen | `events` |
+| G-07 | Actividad reciente | Las 5 observaciones mas recientes (como M-10, de todos los proyectos) y los 5 productos academicos registrados mas recientemente (titulo, estado, proyecto, fecha de registro) | `project_observations`, `academic_products` |
+
+"Fase" de un proyecto = su estado actual mas, en proyectos agiles, el sprint activo; no existe un campo de fase propio (DEC-049).
+
 ## Observaciones de seguimiento (F6-05, I-24)
 
 No son indicadores numericos: son registros cualitativos del proyecto. `GET/POST /api/v1/projects/:id/observations`, `DELETE /api/v1/projects/:id/observations/:observationId`.

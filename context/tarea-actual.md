@@ -1,9 +1,14 @@
-# Tarea actual - Fase 6, I-25 (validacion de la fase)
+# Tarea actual - I-27 (vista general de proyectos) sobre I-26
 
 ## Estado
 
-**Fase activa:** 6 - I-25, validacion de F6-01 a F6-08 (DEC-047). I-23 e I-24 implementadas y verificadas tecnicamente, sin aprobacion formal atribuida. PostgreSQL pausado: criterio F6 de compatibilidad bloqueado.
-**Trabajo actualmente autorizado:** I-25 por "continua con i 25" (DEC-047): solo pruebas, revision y correcciones de defectos comprobados. Sin funcionalidades nuevas, commit, push ni despliegue.
+**Trabajo actualmente autorizado:** I-26 (DEC-049), por solicitud directa del responsable: `/hub` muestra un panel distinto segun el rol (autoridades: panel del semillero + "Mi trabajo"; demas roles: panel personal ampliado). Indicadores G-01 a G-07 y M-07 a M-10 en `docs/catalogo-indicadores.md`. Dependencia nueva `recharts`. Sin cambios de esquema, commit, push ni despliegue.
+**Trabajo adicional autorizado:** I-27 primera parte (DEC-050): vista general `/hub/proyectos` con indicadores, pestañas, filtros, orden y vista de tarjetas o tabla. Implementada y verificada tecnicamente (verify 82 + 311, E2E 150/150); pendiente de recorrido en navegador y aprobacion. Tercera parte (tablero y backlog `/hub/proyectos/[id]/tareas`) implementada y verificada tecnicamente (verify 92 + 313, E2E 156/156). Segunda parte (pagina `/hub/proyectos/[id]`) implementada y verificada tecnicamente (verify 84 + 313, E2E 153/153); pendiente de recorrido en navegador y aprobacion.
+**Estado I-26 (2026-10-23):** implementada y verificada tecnicamente en SQLite (verify 76 + 305, E2E 145/145); pendiente de recorrido en navegador real y de aprobacion del responsable. Evidencia en `context/estado-actual.md`.
+**Iteracion anterior:** I-25 concluida y aprobada (DEC-048); su registro se conserva debajo.
+
+**Fase activa (anterior):** 6 - I-25, validacion de F6-01 a F6-08 (DEC-047). I-23 e I-24 implementadas y verificadas tecnicamente, sin aprobacion formal atribuida. PostgreSQL pausado: criterio F6 de compatibilidad bloqueado.
+**Trabajo autorizado anterior:** I-25 por "continua con i 25" (DEC-047): solo pruebas, revision y correcciones de defectos comprobados. Sin funcionalidades nuevas, commit, push ni despliegue.
 **Resultado I-25 (2026-10-22):** ejecutada; sin defectos comprobados. Verify 74 + 297, E2E 143/143, Chrome 17/17 y 22/22. Criterios F6 cumplidos en SQLite salvo PostgreSQL (bloqueado). Detalle en `docs/revision-i25.md`. I-23/I-24/I-25 aprobadas (DEC-048). No hay iteracion siguiente autorizada.
 **Aprobadas:** Fase 0 (DEC-004), I-04 (DEC-007), I-05 (DEC-008), I-06 (DEC-011), I-07 (DEC-013), I-08, I-09, I-10 y DEC-016 (DEC-020), I-11 y DEC-021 (DEC-022), I-12, DEC-023 y registro con Hoja de Vida (DEC-024), I-13 (DEC-026), I-14 y DEC-027 (DEC-028).
 **Aprobacion posterior:** I-17/DEC-034, I-18/DEC-036 e I-19/DEC-038 revisadas y aprobadas por el responsable (DEC-039); sus apartados historicos siguientes conservan la evidencia de ejecucion y los pendientes tecnicos comunicados.

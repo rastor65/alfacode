@@ -12,6 +12,7 @@ const uuid = new ParseUUIDPipe({ version: "4" });
 export class TrackingController {
   constructor(@Inject(TrackingService) private readonly service: TrackingService, @Inject(ReportsService) private readonly reports: ReportsService) {}
   @Get("institutional") institutional(@CurrentAuth() a: AuthContext) { return this.service.institutional(a.user); }
+  @Get("overview") overview(@CurrentAuth() a: AuthContext) { return this.service.overview(a.user); }
   @Get("me") me(@CurrentAuth() a: AuthContext) { return this.service.me(a.user); }
   @Get("projects/:id") project(@CurrentAuth() a: AuthContext, @Param("id", uuid) id: string) { return this.service.project(a.user, id); }
   @Get("reports/projects") projectReport(@CurrentAuth() a: AuthContext, @Query(new DtoValidationPipe(ProjectReportQuery)) q: ProjectReportQuery) { return this.reports.projects(a.user, q); }

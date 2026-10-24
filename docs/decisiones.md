@@ -480,6 +480,35 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Alcance de la aprobacion:** resultados de I-23/I-24/I-25 en SQLite. El criterio F6 de compatibilidad PostgreSQL sigue bloqueado (DEC-003); no se declara disponibilidad productiva.
 - **Solicitud asociada:** registrar el trabajo en Git (commits locales en `dev`). No autoriza push, despliegue, reactivacion de PostgreSQL ni nueva fase.
 
+### DEC-049 - I-26: panel `/hub` segun el rol
+
+- **Fecha:** 2026-10-23
+- **Estado:** autorizada por el responsable (solicitud directa: "la vista del panel (/hub) se muestre un dashboard informativo dependiendo el rol"), con el alcance acordado en preguntas de alineacion.
+- **Contexto/problema:** `/hub` mostraba a todos el mismo panel personal (M-01 a M-06); las autoridades solo tenian un enlace a `/hub/seguimiento`.
+- **Decision (alcance acordado):**
+  - `admin`/`coordinator`: en `/hub`, panel del semillero arriba (indicadores I-01 a I-08, embudo por estado, tabla de proyectos en curso con estado, sprint activo, avance y alertas, proyectos en riesgo, pendientes de gestion, agenda y actividad reciente) y "Mi trabajo" debajo.
+  - Resto de roles: panel personal ampliado (tarjeta por proyecto con avance, sprint activo y mis pendientes; vencimientos proximos; observaciones recientes; graficos). En los proyectos que la persona lidera (docente lider, investigador o estudiante lider) la tarjeta suma vencidas del equipo y tareas sin responsable.
+  - "Fase" del proyecto = su estado actual mas el sprint activo (proyectos agiles). Sin campo nuevo ni migracion.
+  - Riesgo (solo proyectos `active`): tareas vencidas, fecha de fin superada, sin actividad en 14 dias y atraso respecto al tiempo transcurrido (25 puntos o mas). Definiciones en `docs/catalogo-indicadores.md` (G-01 a G-07, M-07 a M-10).
+  - Graficos con la dependencia nueva `recharts` (eleccion del responsable sobre SVG propio). Cada grafico conserva su alternativa en texto.
+- **Restricciones que se mantienen:** permisos antes de agregar; sin puntajes ni comparaciones entre personas; `/hub/seguimiento` se conserva; sin cambios de esquema; sin commit, push ni despliegue hasta nueva instruccion.
+- **Aprobacion del responsable:** autorizacion de la iteracion confirmada; aprobacion del resultado pendiente.
+
+### DEC-050 - I-27: vista general de proyectos (`/hub/proyectos`)
+
+- **Fecha:** 2026-10-24
+- **Estado:** autorizada por el responsable (solicitud directa, con preguntas de alineacion y mockup HTML). Primera parte: lista. Segunda parte (2026-10-24, nuevo mockup): pagina de resumen `/hub/proyectos/[id]`.
+- **Decision (alcance acordado):**
+  - Lista con indicadores (total, en ejecucion, en riesgo, avance de tareas) calculados sobre el conjunto visible completo; pestañas por estado con conteo; busqueda por nombre o lider, orden (actividad, nombre, avance, fecha de fin), interruptor "Solo con alertas" y filtro de metodologia, todos en la URL y aplicados al escribir; vista de tarjetas o tabla elegida por la persona (cookie `hub-projects-view`).
+  - Cada proyecto expone las mismas cifras que los paneles (G-01 a G-04, M-09): vencidas, sprint activo, tiempo transcurrido, ultima actividad y alertas. Los calculos se extraen a `tracking/project-metrics.ts` y los usan paneles y lista.
+  - `GET /projects` acepta `sort` y `alerts`; filtra, ordena y pagina sobre el conjunto autorizado ya calculado (en memoria). Suficiente para el tamaño del semillero; si hubiera miles de proyectos habria que llevarlo a SQL.
+  - Segunda parte: `/hub/proyectos/[id]` (Resumen) con indicadores, informacion general, progreso por estado, sprint activo (solo agiles), resultados/productos/actividades, alertas con su explicacion, equipo, mis tareas pendientes y ultima actividad con observaciones. Las acciones (editar, estado y modalidad, gestionar equipo) pasan del modal a dialogos de esa pagina, con los mismos permisos; la lista enlaza a la pagina y el modal se elimina. Pestaña "Resumen" nueva en todas las vistas del proyecto.
+  - Tercera parte (2026-10-24, prototipo del tablero): `/hub/proyectos/[id]/tareas` rediseñada con el encabezado comun (`ProjectPageHeader`), resumen de lo visible (sprint con fechas y meta, backlog o todas; avance y conteo por estado, vencidas y sin responsable), barra de busqueda y filtros (responsable, "Mis tareas", "Sin responsable", "Vencidas", orden por prioridad, fecha limite o recientes), vista de tablero o lista (cookie `hub-tasks-view`), columnas con el color de cada estado y tarjetas con prioridad (icono y texto), vencimiento relativo y responsable. Se conservan mover por selector o arrastre, el alcance por sprint/backlog, crear tareas en el sprint visible y los permisos. Sin cambios de backend.
+  - `GET /tracking/projects/:id` agrega `signals` (tiempo, ultima actividad, alertas) y `myTasks` (mis tareas abiertas, maximo 5); aditivo, sin migraciones.
+- **No incluido:** codigos de proyecto, ID/convocatoria/linea/tutor del proyecto, puntos de historia (SP), codigos de tarea (ALFA-201), etiquetas, adjuntos, comentarios y revisor de tareas, estado "bloqueada", rol descriptivo, simulador de rol, alternador de tema, exportar ficha, descargar bitacora, archivar y pestañas "Equipo" y "Configuracion" propias del mockup (no existen en el sistema); acciones rapidas, filtro por lider y "Mis proyectos" para autoridades.
+- **Restricciones que se mantienen:** permisos antes de agregar, sin puntajes ni comparacion entre personas, sin cambios de esquema, sin commit, push ni despliegue.
+- **Aprobacion del responsable:** autorizacion de la iteracion confirmada; aprobacion del resultado pendiente.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`

@@ -167,7 +167,7 @@ describe("I-23: panel personal (F6-04)", () => {
     const d = r.json;
     assert.deepEqual(d.projects.byStatus, { proposed: 0, planning: 0, active: 1, paused: 0, completed: 0, cancelled: 0 });
     assert.equal(d.projects.leading, 0);
-    assert.deepEqual(d.projects.items, [{ id: ids.alfa, name: "Alfa", status: "active", role: "collaborator" }]);
+    assert.deepEqual(d.projects.items.map(({ id, name, status, role }: Record<string, string>) => ({ id, name, status, role })), [{ id: ids.alfa, name: "Alfa", status: "active", role: "collaborator" }]);
     assert.equal(d.tasks.open, 2); assert.equal(d.tasks.overdue, 1); assert.equal(d.tasks.done, 2);
     assert.deepEqual(d.tasks.items.map((t: { title: string }) => t.title), ["T3 vencida", "T4 proxima"]);
     assert.equal(d.tasks.items[0].projectName, "Alfa");

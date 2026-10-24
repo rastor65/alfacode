@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
-import { ProjectHeader } from "@/features/projects/components/project-header";
+import { ProjectPageHeader } from "@/features/projects/components/project-page-header";
 import { loadProjectData } from "@/features/projects/load-project";
 import type { ProjectDetail } from "@/features/projects/types";
-import type { SprintList } from "@/features/sprints/types";
+import { activeSprint, type SprintList } from "@/features/sprints/types";
 import { TaskBoard } from "@/features/tasks/components/task-board";
-import type { TaskList } from "@/features/tasks/types";
+import { TASKS_VIEW_COOKIE, type TaskList, parseTasksView } from "@/features/tasks/types";
+import { chip, neutralChip } from "@/features/tracking/components/dashboard-ui";
 import { requireSessionUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -22,30 +24,39 @@ export default async function ProjectTasksPage({ params }: { params: Promise<{ i
   const currentPath = `/hub/proyectos/${encodeURIComponent(id)}/tareas`;
   const user = await requireSessionUser(currentPath);
   // En proyectos tradicionales la lista de sprints llega vacia y no se usa.
-  const [project, tasks, sprints] = await loadProjectData<[ProjectDetail, TaskList, SprintList]>(
-    [projectPath, `${projectPath}/tasks?pageSize=${BOARD_PAGE_SIZE}`, `${projectPath}/sprints`],
-    currentPath,
-  );
+  const [[project, tasks, sprints], cookieStore] = await Promise.all([
+    loadProjectData<[ProjectDetail, TaskList, SprintList]>([projectPath, `${projectPath}/tasks?pageSize=${BOARD_PAGE_SIZE}`, `${projectPath}/sprints`], currentPath),
+    cookies(),
+  ]);
 
   const agile = project.methodology === "agile";
   const assignees = project.members
     .filter((member) => member.accountStatus === "active")
     .map((member) => ({ userId: member.userId, fullName: member.fullName }));
   const finished = project.status === "completed" || project.status === "cancelled";
+  const running = agile ? activeSprint(sprints.items) : null;
 
   return (
-    // El tablero necesita mas ancho que las demas vistas (cuatro columnas).
-    <div className="mx-auto w-full max-w-6xl">
-      <ProjectHeader project={project} eyebrow={agile ? "Backlog y tablero" : "Tareas del proyecto"} current="tareas" />
-      <p className="mt-4 text-sm text-hub-muted">
-        {finished
-          ? "El proyecto está finalizado: las tareas se pueden consultar, pero no cambiar."
-          : tasks.permissions.canManageTasks
-            ? "Crea y asigna tareas; mueve cada tarjeta entre columnas con su selector de estado o arrastrándola."
-            : "Puedes mover entre columnas las tareas que tienes asignadas."}
-      </p>
-
-      <div className="mt-6">
+    <div className="mx-auto w-full max-w-430">
+      <div className="flex flex-col gap-6">
+        <ProjectPageHeader
+          project={project}
+          current="tareas"
+          crumb={agile ? "Backlog y tablero" : "Tareas"}
+          meta={
+            <span className="text-hub-muted">
+              {finished
+                ? "El proyecto está finalizado: las tareas se pueden consultar, pero no cambiar."
+                : tasks.permissions.canManageTasks
+                  ? "Crea y asigna tareas; mueve cada tarjeta entre columnas con su selector de estado o arrastrándola."
+                  : "Puedes mover entre columnas las tareas que tienes asignadas."}
+            </span>
+          }
+          badges={{
+            tareas: <span className={`${neutralChip} rounded-full font-mono`}>{tasks.total}</span>,
+            sprints: running ? <span className={`${chip} rounded-full bg-hub-accent-soft text-hub-accent`}>{running.name}</span> : undefined,
+          }}
+        />
         <TaskBoard
           projectId={project.id}
           initialTasks={tasks.items}
@@ -54,6 +65,7 @@ export default async function ProjectTasksPage({ params }: { params: Promise<{ i
           currentUserId={user.id}
           canManageTasks={tasks.permissions.canManageTasks}
           sprints={agile ? sprints.items : undefined}
+          initialView={parseTasksView(cookieStore.get(TASKS_VIEW_COOKIE)?.value)}
         />
       </div>
     </div>

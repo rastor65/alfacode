@@ -50,6 +50,11 @@
   --hub-accent: #67e8f9;
   /* Barras de graficos (F6-08): validadas con el validador dataviz contra --hub-bg de cada tema. */
   --hub-chart: #12a4c2;
+  /* Series categoricas (I-26): tareas por estado; validadas para daltonismo contra cada --hub-bg. */
+  --hub-series-1: #3987e5;
+  --hub-series-2: #d95926;
+  --hub-series-3: #199e70;
+  --hub-series-4: #c98500;
   --hub-accent-soft: rgba(6, 182, 212, 0.15);
   --hub-hover: rgba(255, 255, 255, 0.05);
   --hub-subtle: rgba(255, 255, 255, 0.03);
@@ -88,6 +93,10 @@
   --hub-muted: #5b6b75;
   --hub-accent: #0e7490;
   --hub-chart: #0891b2;
+  --hub-series-1: #2a78d6;
+  --hub-series-2: #eb6834;
+  --hub-series-3: #1baf7a;
+  --hub-series-4: #eda100;
   --hub-accent-soft: #e0f4f8;
   --hub-hover: #f1f5f8;
   --hub-subtle: #f6f9fb;
@@ -120,6 +129,10 @@
     --hub-muted: #5b6b75;
     --hub-accent: #0e7490;
     --hub-chart: #0891b2;
+    --hub-series-1: #2a78d6;
+    --hub-series-2: #eb6834;
+    --hub-series-3: #1baf7a;
+    --hub-series-4: #eda100;
     --hub-accent-soft: #e0f4f8;
     --hub-hover: #f1f5f8;
     --hub-subtle: #f6f9fb;
@@ -235,6 +248,10 @@
   --color-hub-muted: var(--hub-muted);
   --color-hub-accent: var(--hub-accent);
   --color-hub-chart: var(--hub-chart);
+  --color-hub-series-1: var(--hub-series-1);
+  --color-hub-series-2: var(--hub-series-2);
+  --color-hub-series-3: var(--hub-series-3);
+  --color-hub-series-4: var(--hub-series-4);
   --color-hub-accent-soft: var(--hub-accent-soft);
   --color-hub-hover: var(--hub-hover);
   --color-hub-subtle: var(--hub-subtle);
