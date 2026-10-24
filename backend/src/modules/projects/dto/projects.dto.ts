@@ -25,6 +25,9 @@ import {
   type ProjectType,
 } from "../project.entity";
 
+export const PROJECT_SORTS = ["activity", "name", "progress", "end_date"] as const;
+export type ProjectSort = (typeof PROJECT_SORTS)[number];
+
 const trim = Transform(({ value }) => (typeof value === "string" ? value.trim() : value));
 const toInt = Transform(({ value }) => (typeof value === "string" && /^\d+$/.test(value) ? Number(value) : value));
 /** Fecha de calendario `YYYY-MM-DD`; la validez real (p. ej. 2026-02-30) se comprueba en el servicio. */
@@ -112,6 +115,17 @@ export class ListProjectsQuery {
   @IsOptional()
   @IsIn(PROJECT_METHODOLOGIES)
   methodology?: ProjectMethodology;
+
+  /** I-27: orden de la lista; por defecto, la actividad mas reciente primero. */
+  @IsOptional()
+  @IsIn(PROJECT_SORTS)
+  sort?: ProjectSort;
+
+  /** I-27: solo proyectos con al menos una alerta de riesgo (catalogo G-04). */
+  @Transform(({ value }) => (value === "true" || value === "1" ? true : value === "false" || value === "0" ? false : value))
+  @IsOptional()
+  @IsBoolean()
+  alerts?: boolean;
 
   @toInt
   @IsOptional()

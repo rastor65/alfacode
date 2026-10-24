@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  Award, Calendar, Check, CheckSquare, ChevronLeft, ChevronRight,
-  FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard,
-  Repeat, Shield, Trash2, Upload, UserPlus, UserRound, Users, X,
+  Award, Calendar, ChartColumn, Check, CheckSquare, ChevronLeft, ChevronRight,
+  FileText, FlaskConical, FolderKanban, Inbox, LayoutDashboard, Menu,
+  Repeat, Shield, Table2, Trash2, Upload, UserPlus, UserRound, Users, X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -47,6 +47,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   shield: Shield,
   flask: FlaskConical,
   user: UserRound,
+  chart: ChartColumn,
+  table: Table2,
+  seguimiento: ChartColumn,
+  reportes: Table2,
 };
 
 function getResourceIcon(iconName: string | null): LucideIcon {
@@ -57,6 +61,8 @@ function getResourceIcon(iconName: string | null): LucideIcon {
 /** Menú de respaldo si aún no se ha cargado el RBAC dinámico del backend. */
 const NAVIGATION: NavigationItem[] = [
   { href: "/hub", label: "Panel", description: "Tu cuenta y accesos al semillero", icon: LayoutDashboard, exact: true },
+  { href: "/hub/seguimiento", label: "Seguimiento", description: "Monitoreo integral y métricas del semillero", icon: ChartColumn, roles: ["admin", "coordinator"] },
+  { href: "/hub/reportes", label: "Reportes", description: "Generación y consulta de reportes institucionales", icon: Table2, roles: ["admin", "coordinator"] },
   { href: "/hub/proyectos", label: "Proyectos", description: "Gestión de proyectos tradicionales y tableros ágiles", icon: FolderKanban },
   { href: "/hub/investigacion", label: "Investigación", description: "Líneas de investigación y semilleros vinculados", icon: FlaskConical },
   { href: "/hub/documentos", label: "Documentos", description: "Repositorio institucional de archivos y actas", icon: FileText },

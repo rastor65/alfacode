@@ -129,3 +129,58 @@ export function isOverdue(task: Pick<TaskItem, "dueDate" | "status">, today: str
 export function todayInBogota(now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(now);
 }
+
+/** I-27 (tablero): busqueda, responsable, vencidas y orden combinados; reemplazan al filtro unico anterior. */
+export type TaskSort = "priority" | "due" | "recent";
+export const TASK_SORT_LABELS: Record<TaskSort, string> = { priority: "Prioridad", due: "Fecha límite", recent: "Más recientes" };
+export type TaskQuery = {
+  text: string;
+  /** `all`, `none` (sin responsable) o el ID de un integrante. */
+  assignee: string;
+  overdue: boolean;
+  sort: TaskSort;
+};
+export const DEFAULT_TASK_QUERY: TaskQuery = { text: "", assignee: "all", overdue: false, sort: "priority" };
+
+const normalize = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+/** Aplica la consulta y ordena; con orden por prioridad conserva el orden del backend. */
+export function queryTasks(tasks: readonly TaskItem[], query: TaskQuery, today: string) {
+  const needle = normalize(query.text.trim());
+  const found = tasks.filter(
+    (task) =>
+      (query.assignee === "all" || (query.assignee === "none" ? task.assignee === null : task.assignee?.userId === query.assignee)) &&
+      (!query.overdue || isOverdue(task, today)) &&
+      (!needle || normalize(`${task.title} ${task.description ?? ""} ${task.assignee?.fullName ?? ""}`).includes(needle)),
+  );
+
+  if (query.sort === "due") {
+    return sortTasks(found).sort((a, b) => (a.dueDate === b.dueDate ? 0 : a.dueDate === null ? 1 : b.dueDate === null ? -1 : a.dueDate < b.dueDate ? -1 : 1));
+  }
+
+  if (query.sort === "recent") {
+    return [...found].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id));
+  }
+
+  return sortTasks(found);
+}
+
+/** Conteos de las tareas abiertas para los atajos de la barra de filtros. */
+export function quickCounts(tasks: readonly TaskItem[], userId: string, today: string) {
+  const open = tasks.filter((task) => task.status !== "done");
+  return {
+    mine: open.filter((task) => task.assignee?.userId === userId).length,
+    unassigned: open.filter((task) => task.assignee === null).length,
+    overdue: open.filter((task) => isOverdue(task, today)).length,
+  };
+}
+
+/** Preferencia de vista (tablero o lista), en una cookie para renderizarla sin parpadeo. */
+export const TASKS_VIEW_COOKIE = "hub-tasks-view";
+export type TasksView = "board" | "list";
+export function parseTasksView(value: string | undefined): TasksView {
+  return value === "list" ? "list" : "board";
+}
+export function saveTasksView(view: TasksView) {
+  document.cookie = `${TASKS_VIEW_COOKIE}=${view}; path=/; max-age=31536000; samesite=lax`;
+}

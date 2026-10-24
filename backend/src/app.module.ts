@@ -8,6 +8,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { AcademicModule } from "./modules/academic/academic.module";
 import { EventsModule } from "./modules/events/events.module";
 import { AdministrationModule } from "./modules/administration/administration.module";
+import { TrackingModule } from "./modules/tracking/tracking.module";
 import { DocumentsModule } from "./modules/documents/documents.module";
 import { MailModule } from "./modules/mail/mail.module";
 import { MembershipModule } from "./modules/membership/membership.module";
@@ -42,6 +43,7 @@ import { UsersModule } from "./modules/users/users.module";
     AcademicModule,
     EventsModule,
     AdministrationModule,
+    TrackingModule,
   ],
 })
 export class AppModule {}

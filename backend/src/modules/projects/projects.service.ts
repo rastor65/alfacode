@@ -6,6 +6,7 @@ import { ApiError } from "../../common/api-error";
 import { recordAudit } from "../audit/audit";
 import { Sprint } from "../sprints/sprint.entity";
 import { TASK_STATUSES, Task, type TaskStatus } from "../tasks/task.entity";
+import { percent, projectSignals } from "../tracking/project-metrics";
 import { User } from "../users/user.entity";
 import type {
   AddProjectMemberDto,
@@ -34,7 +35,7 @@ import {
   canTransitionProject,
   projectAccess,
 } from "./project-policy";
-import { Project, type ProjectStatus } from "./project.entity";
+import { PROJECT_STATUSES, Project, type ProjectStatus } from "./project.entity";
 
 /** Estados en los que un proyecto debe conservar al menos un lider activo (F2-04). */
 const LEADER_REQUIRED_STATUSES: ProjectStatus[] = ["active", "paused"];
@@ -59,10 +60,6 @@ function validateDates(startDate: string | null, endDate: string | null) {
   if (invalid.length > 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "Las fechas del proyecto no son validas", invalid);
   }
-}
-
-function likePattern(value: string) {
-  return `%${value.toLowerCase().replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
 
 export type ProjectProgress = { total: number; done: number; byStatus: Record<TaskStatus, number> };
@@ -120,63 +117,85 @@ export class ProjectsService {
     private readonly dataSource: DataSource,
   ) {}
 
+  /**
+   * F2-05 e I-27. Las autoridades ven todos los proyectos; el resto, solo donde participa. El resumen y
+   * las pestañas cuentan siempre el conjunto visible completo; los filtros, el orden y la pagina se
+   * aplican despues, porque alertas, avance y actividad se calculan sobre los datos ya autorizados.
+   */
   async list(actor: Actor, query: ListProjectsQuery) {
     const roles = actorRoles(actor);
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
-    const builder = this.dataSource
-      .getRepository(Project)
-      .createQueryBuilder("project")
-      .orderBy("project.updatedAt", "DESC")
-      .addOrderBy("project.id", "ASC")
-      .skip((page - 1) * pageSize)
-      .take(pageSize);
+    const manager = this.dataSource.manager;
+    const builder = this.dataSource.getRepository(Project).createQueryBuilder("project");
 
-    // F2-05: las autoridades ven todos; el resto, solo los proyectos donde participa.
     if (projectAccess(roles, null) !== "authority") {
-      builder.innerJoin(ProjectMember, "mine", "mine.project_id = project.id AND mine.user_id = :actorId", {
-        actorId: actor.id,
-      });
+      builder.innerJoin(ProjectMember, "mine", "mine.project_id = project.id AND mine.user_id = :actorId", { actorId: actor.id });
     }
 
-    if (query.status) {
-      builder.andWhere("project.status = :status", { status: query.status });
+    const visible = await builder.getMany();
+    const ids = visible.map((project) => project.id);
+    const [members, signals] = await Promise.all([
+      ids.length ? manager.find(ProjectMember, { where: { projectId: In(ids) }, relations: { user: true } }) : [],
+      projectSignals(manager, visible, new Date(), actor.id),
+    ]);
+    const teamOf = new Map<string, ProjectMember[]>();
+    for (const member of members) teamOf.set(member.projectId, [...(teamOf.get(member.projectId) ?? []), member]);
+    const leadersOf = (project: Project) => (teamOf.get(project.id) ?? []).filter((member) => member.role === "leader")
+      .map((member) => ({ userId: member.userId, fullName: member.user.fullName }));
+
+    const byStatus = Object.fromEntries(PROJECT_STATUSES.map((status) => [status, 0])) as Record<ProjectStatus, number>;
+    let tasksTotal = 0, tasksDone = 0, atRisk = 0;
+    for (const project of visible) {
+      const signal = signals.get(project.id)!;
+      byStatus[project.status] += 1;
+      tasksTotal += signal.tasks.total;
+      tasksDone += signal.tasks.done;
+      if (signal.risks.length) atRisk += 1;
     }
 
-    if (query.methodology) {
-      builder.andWhere("project.methodology = :methodology", { methodology: query.methodology });
-    }
+    const needle = query.q?.toLowerCase();
+    const matching = visible.filter((project) => {
+      const signal = signals.get(project.id)!;
+      return (!query.status || project.status === query.status)
+        && (!query.methodology || project.methodology === query.methodology)
+        && (!query.alerts || signal.risks.length > 0)
+        && (!needle || project.name.toLowerCase().includes(needle) || leadersOf(project).some((leader) => leader.fullName.toLowerCase().includes(needle)));
+    });
 
-    if (query.q) {
-      builder.andWhere("LOWER(project.name) LIKE :q ESCAPE '\\'", { q: likePattern(query.q) });
-    }
+    // Los proyectos sin dato (sin tareas, sin fecha de fin) van siempre al final.
+    const sorted = [...matching].sort((a, b) => {
+      const sa = signals.get(a.id)!, sb = signals.get(b.id)!;
+      const compare = (x: number | string | null, y: number | string | null, direction: 1 | -1) =>
+        x === y ? 0 : x === null ? 1 : y === null ? -1 : (x < y ? -1 : 1) * direction;
+      const sort = query.sort ?? "activity";
+      const primary = sort === "name" ? a.name.localeCompare(b.name, "es")
+        : sort === "progress" ? compare(sa.tasks.progress, sb.tasks.progress, -1)
+        : sort === "end_date" ? compare(a.endDate, b.endDate, 1)
+        : compare(sa.lastActivityAt, sb.lastActivityAt, -1);
+      return primary || a.name.localeCompare(b.name, "es") || (a.id < b.id ? -1 : 1);
+    });
 
-    const [projects, total] = await builder.getManyAndCount();
-    const members = projects.length
-      ? await this.dataSource.getRepository(ProjectMember).find({
-          where: { projectId: In(projects.map((project) => project.id)) },
-          relations: { user: true },
-        })
-      : [];
-
-    const progress = await projectProgress(this.dataSource.manager, projects.map((project) => project.id));
+    const pageItems = sorted.slice((page - 1) * pageSize, page * pageSize);
+    const progress = await projectProgress(manager, pageItems.map((project) => project.id));
 
     return {
-      items: projects.map((project) => {
-        const team = members.filter((member) => member.projectId === project.id);
+      items: pageItems.map((project) => {
+        const { tasks, ...signal } = signals.get(project.id)!;
+        const team = teamOf.get(project.id) ?? [];
         return {
           ...this.projectView(project),
           progress: progress.get(project.id)!,
           myRole: team.find((member) => member.userId === actor.id)?.role ?? null,
           memberCount: team.length,
-          leaders: team
-            .filter((member) => member.role === "leader")
-            .map((member) => ({ userId: member.userId, fullName: member.user.fullName })),
+          leaders: leadersOf(project),
+          ...signal,
         };
       }),
       page,
       pageSize,
-      total,
+      total: sorted.length,
+      summary: { total: visible.length, byStatus, atRisk, tasks: { total: tasksTotal, done: tasksDone, progress: percent(tasksDone, tasksTotal) } },
     };
   }
 
