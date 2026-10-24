@@ -93,10 +93,14 @@ export function AppShell({ user, children }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const {
+    sidebarContainerRef,
     sidebarDeckRef,
     navListRef,
     activePillRef,
+    emitterRef,
     beamRef,
+    ambientConeRef,
+    sheenRef,
     contentRef,
     syncActivePill,
   } = useHubSidebarMotion();
@@ -240,15 +244,35 @@ export function AppShell({ user, children }: AppShellProps) {
   const renderSidebar = (isCollapsed: boolean, isMobile = false) => (
     <div className="flex h-full flex-col min-h-0">
       <span className="hub-sidebar-edge-highlight" aria-hidden="true" />
-      <svg className="hub-sidebar-network" viewBox="0 0 240 600" fill="none" aria-hidden="true" focusable="false">
-        <path d="M20 0v80l24 24v120l-16 16v90m150-330v140l-28 28v160l20 20v90M80 0v160l32 32v180l-20 20v208" />
-        <circle cx="20" cy="80" r="3" />
-        <circle cx="44" cy="224" r="3" />
-        <circle cx="28" cy="330" r="3" />
-        <circle cx="194" cy="140" r="3" />
-        <circle cx="166" cy="328" r="3" />
-        <circle cx="112" cy="192" r="3" />
-        <circle cx="92" cy="392" r="3" />
+      <svg className="hub-sidebar-network" viewBox="0 0 240 850" fill="none" aria-hidden="true" focusable="false">
+        {/* Pista bus principal izquierda */}
+        <path className="hub-network-trace" d="M16 0v110l20 20v140l-16 16v180l24 24v220l-14 14v126" />
+        {/* Pista bus secundaria centro */}
+        <path className="hub-network-trace" d="M84 0v170l32 32v200l-28 28v190l24 24v206" />
+        {/* Pista bus derecha con ramificaciones */}
+        <path className="hub-network-trace" d="M196 0v90l-32 32v150l26 26v180l-22 22v210l16 16v124" />
+        {/* Ramificaciones cruzadas en 45 grados */}
+        <path className="hub-network-trace" d="M36 270l48-48h28m52 232l-32 32h-48m110 160l-30 30v70" />
+
+        {/* Pistas dinámicas con pulsos de energía (animación de flujo eléctrico) */}
+        <path className="hub-network-pulse" d="M16 0v110l20 20v140l-16 16v180l24 24v220l-14 14v126" />
+        <path className="hub-network-pulse hub-network-pulse-delay-1" d="M84 0v170l32 32v200l-28 28v190l24 24v206" />
+        <path className="hub-network-pulse hub-network-pulse-delay-2" d="M196 0v90l-32 32v150l26 26v180l-22 22v210l16 16v124" />
+
+        {/* Nodos de circuito y vías de interconexión */}
+        <circle className="hub-network-node" cx="16" cy="110" r="3" />
+        <circle className="hub-network-node" cx="36" cy="130" r="2.5" />
+        <circle className="hub-network-node" cx="20" cy="286" r="3" />
+        <circle className="hub-network-node" cx="44" cy="490" r="3" />
+        <circle className="hub-network-node" cx="84" cy="170" r="3" />
+        <circle className="hub-network-node" cx="116" cy="202" r="3.5" />
+        <circle className="hub-network-node" cx="88" cy="430" r="2.5" />
+        <circle className="hub-network-node" cx="112" cy="644" r="3" />
+        <circle className="hub-network-node" cx="196" cy="90" r="3" />
+        <circle className="hub-network-node" cx="164" cy="122" r="3.5" />
+        <circle className="hub-network-node" cx="190" cy="298" r="2.5" />
+        <circle className="hub-network-node" cx="168" cy="504" r="3" />
+        <circle className="hub-network-node" cx="184" cy="736" r="3" />
       </svg>
 
       {/* Cabecera del sidebar */}
@@ -268,12 +292,17 @@ export function AppShell({ user, children }: AppShellProps) {
           </button>
         </div>
       ) : isCollapsed ? (
-        <div className="hub-sidebar-header-collapsed" title="Espacio AlfaCode">
-          <span className="hub-sidebar-status-dot" aria-hidden="true" />
+        <div className="hub-sidebar-header-collapsed" title="AlfaCode HUB (Ctrl+B para expandir)">
+          <div className="hub-sidebar-collapsed-beacon">
+            <span className="hub-sidebar-pulse-dot" aria-hidden="true" />
+          </div>
         </div>
       ) : (
         <div className="hub-sidebar-header">
-          <span className="hub-sidebar-eyebrow">Navegación</span>
+          <div className="hub-sidebar-header-title">
+            <span className="hub-sidebar-pulse-dot" aria-hidden="true" />
+            <span className="hub-sidebar-eyebrow">Navegación</span>
+          </div>
           <span className="hub-sidebar-counter">{dynamicNavItems.length} vistas</span>
         </div>
       )}
@@ -307,7 +336,15 @@ export function AppShell({ user, children }: AppShellProps) {
                       <Icon size={isCollapsed ? 18 : 17} aria-hidden="true" />
                     </span>
                     {!isCollapsed && <span className="hub-sidebar-item-label">{item.label}</span>}
-                    {!isCollapsed && active && <span className="hub-sidebar-active-indicator" aria-hidden="true" />}
+                    {!isCollapsed && (
+                      active ? (
+                        <span className="hub-sidebar-active-indicator" aria-hidden="true" />
+                      ) : (
+                        <span className="hub-sidebar-item-arrow" aria-hidden="true">
+                          <ChevronRight size={12} />
+                        </span>
+                      )
+                    )}
                   </Link>
                 </li>
               );
@@ -320,17 +357,35 @@ export function AppShell({ user, children }: AppShellProps) {
       {!isMobile && (
         isCollapsed ? (
           <div className="hub-sidebar-footer-collapsed" title="AlfaCode HUB (Ctrl+B para expandir)">
-            <span className="hub-sidebar-status-dot" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(false)}
+              aria-label="Expandir menú lateral"
+              className="hub-sidebar-footer-toggle-btn"
+            >
+              <span className="hub-sidebar-status-dot" aria-hidden="true" />
+            </button>
           </div>
         ) : (
           <div className="hub-sidebar-footer">
             <span className="hub-sidebar-status-pill">
               <span className="hub-sidebar-status-dot" aria-hidden="true" />
-              AlfaCode HUB
+              <span className="hub-sidebar-status-name">AlfaCode HUB</span>
+              <span className="hub-sidebar-status-version">v0.2</span>
             </span>
-            <kbd className="hub-sidebar-keycap" title="Atajo para comprimir o expandir el menú lateral">
-              {isMac ? "⌘" : "Ctrl"}<span>B</span>
-            </kbd>
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+              className="hub-sidebar-keycap-button"
+              title="Atajo para comprimir o expandir el menú lateral"
+              aria-label="Comprimir menú lateral (Ctrl+B)"
+            >
+              <kbd className="hub-sidebar-keycap">
+                <span>{isMac ? "⌘" : "Ctrl"}</span>
+                <span className="hub-sidebar-keycap-plus">+</span>
+                <span>B</span>
+              </kbd>
+            </button>
           </div>
         )
       )}
@@ -417,13 +472,24 @@ export function AppShell({ user, children }: AppShellProps) {
       <div className="flex relative">
         {hasSidebar && (
           <aside
+            ref={sidebarContainerRef}
             className={cn(
               "hub-sidebar-container hidden lg:block",
               sidebarCollapsed ? "w-[76px]" : "w-64",
             )}
           >
-            {/* Haz de luz direccional emitido desde el aside hacia el contenido */}
-            <div ref={beamRef} className="hub-sidebar-beam" aria-hidden="true" />
+            {/* Portal cinemático de fotones y haz láser Aside -> Contenido */}
+            <div className="hub-motion-portal" aria-hidden="true">
+              <div ref={emitterRef} className="hub-motion-emitter">
+                <span className="hub-motion-emitter-spark" />
+                <span className="hub-motion-emitter-ring" />
+              </div>
+              <div ref={beamRef} className="hub-motion-beam">
+                <span className="hub-motion-beam-glow" />
+                <span className="hub-motion-beam-core" />
+              </div>
+              <div ref={ambientConeRef} className="hub-motion-ambient-cone" />
+            </div>
 
             <div ref={sidebarDeckRef} className="hub-sidebar-deck">
               {renderSidebar(sidebarCollapsed, false)}
@@ -452,6 +518,7 @@ export function AppShell({ user, children }: AppShellProps) {
           className={cn("min-w-0 flex-1 bg-hub-bg px-4 py-8 focus:outline-none sm:px-8 lg:px-10", !hasSidebar && "w-full")}
         >
           <div ref={contentRef} className="hub-content-view">
+            <div ref={sheenRef} className="hub-content-sheen" aria-hidden="true" />
             {children}
           </div>
         </main>

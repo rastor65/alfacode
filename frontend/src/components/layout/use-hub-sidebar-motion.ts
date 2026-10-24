@@ -6,38 +6,45 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 
 const EASE = "hub-out";
-const DURATION = 0.26;
+const DURATION = 0.3;
 
 /**
- * Hook de animación fluida para el Aside y la transición hacia el Contenido principal.
- * Diseñado bajo los principios de consistencia espacial y rendimiento GPU de Emil Kowalski:
- * - Movimiento direccional que emerge desde el aside hacia el contenido.
- * - Haz de pulso luminoso (energy beam) en el límite del enlace activo.
- * - Deslizamiento físico de la píldora activa dentro del aside.
- * - Stagger sutil en las secciones de entrada del contenido.
- * - Respeta estrictamente prefers-reduced-motion.
+ * Hook de animación cuántica y cinemática para la transición Aside -> Contenido.
+ * Implementa una arquitectura visual completa inspirada en interfaces holográficas de alta fidelidad:
+ * 1. Nodo emisor de fotones en el borde del enlace activo (Spark + Ring pulse).
+ * 2. Haz láser de alta velocidad con núcleo hiperbrillante y aura difusa (Laser Waveguide).
+ * 3. Cono de iluminación volumétrica ambiental que baña el lienzo del contenido.
+ * 4. Píldora activa deslizante con estiramiento elástico en el aside.
+ * 5. Reacción lumínica en la red de circuitos SVG del aside.
+ * 6. Síntesis direccional del contenido con enfoque óptico dinámico (Blur-to-Clear).
+ * 7. Escaneo holográfico superficial (Sheen) y micro-stagger en cascada.
+ * 8. Respeto absoluto de accesibilidad (prefers-reduced-motion).
  */
 export function useHubSidebarMotion() {
   const pathname = usePathname();
+  const sidebarContainerRef = useRef<HTMLElement | null>(null);
   const sidebarDeckRef = useRef<HTMLDivElement | null>(null);
   const navListRef = useRef<HTMLUListElement | null>(null);
   const activePillRef = useRef<HTMLSpanElement | null>(null);
+  const emitterRef = useRef<HTMLDivElement | null>(null);
   const beamRef = useRef<HTMLDivElement | null>(null);
+  const ambientConeRef = useRef<HTMLDivElement | null>(null);
+  const sheenRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const previousPathRef = useRef<string>(pathname);
   const isFirstRender = useRef(true);
 
-  // Registro del ease una sola vez
+  // Registro del ease CustomEase optimizado para interfaces cinemáticas
   useEffect(() => {
     gsap.registerPlugin(CustomEase);
     try {
       CustomEase.create(EASE, "0.23,1,0.32,1");
     } catch {
-      // Ya registrado por el topbar u otra llamada
+      // Ya registrado previamente
     }
   }, []);
 
-  // Sincroniza la posición de la píldora activa dentro del aside
+  // Sincroniza la posición de la píldora activa con estiramiento elástico y ancho dinámico
   const syncActivePill = useCallback((instant = false) => {
     const list = navListRef.current;
     const pill = activePillRef.current;
@@ -51,114 +58,202 @@ export function useHubSidebarMotion() {
 
     const itemTop = activeItem.offsetTop;
     const itemHeight = activeItem.offsetHeight;
+    const itemLeft = activeItem.offsetLeft;
+    const itemWidth = activeItem.offsetWidth;
 
     if (instant || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       gsap.killTweensOf(pill);
       gsap.set(pill, {
         y: itemTop,
+        x: itemLeft,
+        width: itemWidth,
         height: itemHeight,
         opacity: 1,
       });
       return;
     }
 
-    gsap.to(pill, {
-      y: itemTop,
-      height: itemHeight,
-      opacity: 1,
-      duration: 0.22,
-      ease: EASE,
-      overwrite: true,
-    });
+    const currentTop = (gsap.getProperty(pill, "y") as number) || itemTop;
+    const distance = Math.abs(itemTop - currentTop);
+
+    gsap.killTweensOf(pill);
+
+    // Si hay una distancia apreciable entre items, aplica micro-estiramiento táctil (Squash & Stretch)
+    if (distance > 24) {
+      const isMovingDown = itemTop > currentTop;
+      const stretch = Math.min(8, Math.round(distance * 0.08));
+      const tl = gsap.timeline({ defaults: { ease: EASE, overwrite: true } });
+      tl.to(pill, {
+        y: isMovingDown ? currentTop + distance * 0.45 : itemTop + stretch,
+        height: itemHeight + stretch,
+        x: itemLeft,
+        width: itemWidth,
+        duration: 0.12,
+        opacity: 1,
+      }).to(pill, {
+        y: itemTop,
+        height: itemHeight,
+        x: itemLeft,
+        width: itemWidth,
+        duration: 0.16,
+        ease: EASE,
+      });
+    } else {
+      gsap.to(pill, {
+        y: itemTop,
+        x: itemLeft,
+        width: itemWidth,
+        height: itemHeight,
+        opacity: 1,
+        duration: 0.22,
+        ease: EASE,
+        overwrite: true,
+      });
+    }
   }, []);
 
-  // Dispara la animación que viaja desde el aside hasta el contenido
+  // Dispara el sistema integral de animación cuántica Aside -> Contenido
   const triggerTransition = useCallback(() => {
     const content = contentRef.current;
     const list = navListRef.current;
+    const emitter = emitterRef.current;
     const beam = beamRef.current;
+    const cone = ambientConeRef.current;
+    const sheen = sheenRef.current;
+    const sidebar = sidebarContainerRef.current || sidebarDeckRef.current;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // 1. Haz de luz electromagnético que brota desde el enlace activo hacia el contenido
-    if (beam && list && !reducedMotion) {
+    if (reducedMotion) {
+      if (content) {
+        gsap.killTweensOf(content);
+        gsap.fromTo(content, { opacity: 0.4 }, { opacity: 1, duration: 0.16, ease: "power1.out", clearProps: "all" });
+      }
+      return;
+    }
+
+    // 1. Detección visual y física milimétrica de la altura del enlace activo
+    let relativeY = 80;
+    if (list && sidebar) {
       const activeItem = list.querySelector<HTMLElement>(".hub-sidebar-item-active");
       if (activeItem) {
         const itemRect = activeItem.getBoundingClientRect();
-        const sidebarRect = sidebarDeckRef.current?.getBoundingClientRect();
-        if (sidebarRect) {
-          const relativeY = itemRect.top - sidebarRect.top + itemRect.height / 2;
-          gsap.killTweensOf(beam);
-          gsap.set(beam, {
-            top: relativeY,
-            scaleX: 0,
-            opacity: 1,
-            transformOrigin: "left center",
-          });
+        const sidebarRect = sidebar.getBoundingClientRect();
+        relativeY = itemRect.top - sidebarRect.top + itemRect.height / 2;
 
-          gsap.to(beam, {
-            scaleX: 1,
-            opacity: 0,
-            x: 90,
-            duration: 0.34,
-            ease: EASE,
-            overwrite: true,
-          });
+        // Pulso electromagnético en la red de circuitos SVG del aside
+        const svg = sidebar.querySelector<SVGElement>(".hub-sidebar-network");
+        if (svg) {
+          svg.classList.add("hub-network-active");
+          setTimeout(() => svg.classList.remove("hub-network-active"), 360);
         }
       }
     }
 
-    // 2. Animación direccional del contenido
+    // 2. Chispazo cuántico del emisor (Spark flare + Ring expansion)
+    if (emitter) {
+      gsap.killTweensOf(emitter);
+      gsap.set(emitter, { top: relativeY, opacity: 1 });
+      const spark = emitter.querySelector(".hub-motion-emitter-spark");
+      const ring = emitter.querySelector(".hub-motion-emitter-ring");
+
+      if (spark) {
+        gsap.killTweensOf(spark);
+        gsap.fromTo(
+          spark,
+          { scale: 0.2, opacity: 1 },
+          { scale: 2.2, opacity: 0, duration: 0.32, ease: EASE, clearProps: "transform" }
+        );
+      }
+      if (ring) {
+        gsap.killTweensOf(ring);
+        gsap.fromTo(
+          ring,
+          { scale: 0.25, opacity: 1 },
+          { scale: 3.0, opacity: 0, duration: 0.40, ease: "power2.out", clearProps: "transform" }
+        );
+      }
+    }
+
+    // 3. Proyección del Haz Láser de alta velocidad (Laser Waveguide)
+    if (beam) {
+      gsap.killTweensOf(beam);
+      gsap.set(beam, { top: relativeY, opacity: 1, scaleX: 0.1, x: 0 });
+      gsap.fromTo(
+        beam,
+        { scaleX: 0.1, x: 0, opacity: 1 },
+        { scaleX: 1.35, x: 180, opacity: 0, duration: 0.38, ease: EASE, overwrite: true }
+      );
+    }
+
+    // 4. Cono de iluminación volumétrica ambiental proyectado sobre el contenido
+    if (cone) {
+      gsap.killTweensOf(cone);
+      gsap.set(cone, { top: relativeY, opacity: 0, scaleX: 0.4, scaleY: 0.4 });
+      gsap.fromTo(
+        cone,
+        { opacity: 0.85, scaleX: 0.4, scaleY: 0.4 },
+        { opacity: 0, scaleX: 1.35, scaleY: 1.25, duration: 0.46, ease: "power2.out", overwrite: true }
+      );
+    }
+
+    // 5. Escaneo holográfico superficial en el contenido (Sheen Scanline)
+    if (sheen) {
+      gsap.killTweensOf(sheen);
+      gsap.fromTo(
+        sheen,
+        { xPercent: -100, opacity: 0.85 },
+        { xPercent: 240, opacity: 0, duration: 0.48, ease: "power2.out", overwrite: true }
+      );
+    }
+
+    // 6. Síntesis y revelado dimensional del contenido con Blur-to-Clear
     if (content) {
       gsap.killTweensOf(content);
+      gsap.fromTo(
+        content,
+        {
+          opacity: 0.15,
+          x: -24,
+          filter: "blur(8px)",
+          scale: 0.993,
+          transformOrigin: "left center",
+        },
+        {
+          opacity: 1,
+          x: 0,
+          filter: "blur(0px)",
+          scale: 1,
+          duration: DURATION,
+          ease: EASE,
+          clearProps: "all",
+        }
+      );
 
-      if (reducedMotion) {
+      // Micro-stagger orquestado en los elementos directos del contenido
+      const firstContainer = content.firstElementChild as HTMLElement | null;
+      const targetElements = (firstContainer && firstContainer.children.length > 0
+        ? Array.from(firstContainer.children)
+        : Array.from(content.children)
+      )
+        .filter((el) => !el.classList.contains("hub-content-sheen"))
+        .slice(0, 5) as HTMLElement[];
+
+      if (targetElements.length > 0) {
+        gsap.killTweensOf(targetElements);
         gsap.fromTo(
-          content,
-          { opacity: 0.5 },
-          { opacity: 1, duration: 0.16, ease: "power1.out", clearProps: "opacity" }
-        );
-      } else {
-        // El contenido emerge deslizándose desde el aside hacia la derecha
-        gsap.fromTo(
-          content,
-          {
-            opacity: 0,
-            x: -18,
-            scale: 0.995,
-          },
+          targetElements,
+          { opacity: 0, y: 10, filter: "blur(4px)" },
           {
             opacity: 1,
-            x: 0,
-            scale: 1,
-            duration: DURATION,
+            y: 0,
+            filter: "blur(0px)",
+            duration: 0.28,
             ease: EASE,
-            clearProps: "transform,opacity",
+            stagger: 0.034,
+            delay: 0.03,
+            clearProps: "all",
           }
         );
-
-        // Micro-stagger de entrada en las secciones directas del contenido
-        const firstContainer = content.firstElementChild as HTMLElement | null;
-        const targetElements = (firstContainer && firstContainer.children.length > 0
-          ? Array.from(firstContainer.children)
-          : Array.from(content.children)
-        ).slice(0, 4) as HTMLElement[];
-
-        if (targetElements.length > 0) {
-          gsap.killTweensOf(targetElements);
-          gsap.fromTo(
-            targetElements,
-            { opacity: 0, y: 7 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.22,
-              ease: EASE,
-              stagger: 0.035,
-              delay: 0.04,
-              clearProps: "transform,opacity",
-            }
-          );
-        }
       }
     }
   }, []);
@@ -173,7 +268,6 @@ export function useHubSidebarMotion() {
 
     if (previousPathRef.current !== pathname) {
       previousPathRef.current = pathname;
-      // Pequeño microtask para permitir que el DOM renderice el nuevo estado activo
       requestAnimationFrame(() => {
         syncActivePill();
         triggerTransition();
@@ -189,10 +283,14 @@ export function useHubSidebarMotion() {
   }, [syncActivePill]);
 
   return {
+    sidebarContainerRef,
     sidebarDeckRef,
     navListRef,
     activePillRef,
+    emitterRef,
     beamRef,
+    ambientConeRef,
+    sheenRef,
     contentRef,
     syncActivePill,
     triggerTransition,

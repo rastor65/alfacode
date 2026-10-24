@@ -125,11 +125,27 @@
 .hub-bar-topbar > button:focus-visible { outline-color: #94eefe; }
 .hub-bar-topbar .hub-bar-popover :is(button, a):focus-visible { outline-color: var(--bar-accent); }
 
-.hub-bar-brand-area { display: flex; align-items: center; flex-shrink: 0; width: 200px; }
-.hub-bar-brand { display: flex; align-items: center; gap: 6px; border-radius: 8px; }
-.hub-bar-logo { width: 166px; height: auto; flex-shrink: 0; }
+.hub-bar-brand-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 228px;
+}
+.hub-bar-brand-area::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 38px;
+  background: var(--chrome-line);
+}
+.hub-bar-brand { display: flex; align-items: center; gap: 8px; border-radius: 8px; }
+.hub-bar-logo { width: 156px; height: auto; flex-shrink: 0; }
 .hub-bar-hub-label {
-  padding: 4px 6px;
+  padding: 4px 7px;
   border: 1px solid rgb(148 238 254 / 38%);
   border-radius: 5px;
   background: rgb(148 238 254 / 10%);
@@ -138,7 +154,7 @@
   font-weight: 700;
   letter-spacing: .1em;
 }
-.hub-bar-location { min-width: 156px; max-width: 320px; flex: 1 1 200px; padding-left: 16px; border-left: 1px solid var(--chrome-line); }
+.hub-bar-location { min-width: 156px; max-width: 320px; flex: 1 1 200px; padding-left: 16px; }
 .hub-bar-location-button {
   display: flex;
   align-items: center;
@@ -230,7 +246,7 @@
 .hub-bar-account-chevron { flex-shrink: 0; margin-left: 6px; color: #94eefe; }
 
 .hub-bar-popover { position: absolute; top: calc(100% + 8px); z-index: 60; width: 340px; max-width: calc(100vw - 24px); max-height: calc(100dvh - var(--hub-topbar-height) - 24px); overflow-y: auto; overscroll-behavior: contain; padding: 8px; border: 1px solid var(--bar-line); border-radius: 16px; background: var(--bar-raised); color: var(--bar-ink); box-shadow: var(--bar-shadow); scrollbar-width: thin; scrollbar-color: var(--bar-line) transparent; }
-.hub-bar-modules-popover { left: 220px; width: 520px; }
+.hub-bar-modules-popover { left: 244px; width: 520px; }
 .hub-bar-quick-popover { right: 220px; width: 400px; }
 .hub-bar-account-popover { right: 24px; width: 340px; }
 .hub-bar-popover-heading { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -8px -8px 8px; padding: 20px; border-bottom: 1px solid var(--bar-line); border-radius: 15px 15px 0 0; background: linear-gradient(125deg, var(--bar-soft), var(--bar-subtle)); color: var(--bar-muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; }
@@ -340,9 +356,8 @@
   .hub-bar-search-trigger { flex-grow: 2; max-width: 540px; }
 }
 @media (max-width: 1399px) {
-  .hub-bar-deck { gap: 16px; padding-right: 12px; }
-  .hub-bar-brand-area { width: 188px; }
-  .hub-bar-logo { width: 150px; }
+  .hub-bar-deck { gap: 12px; padding-right: 12px; }
+  .hub-bar-logo { width: 156px; }
   .hub-bar-location { padding-left: 16px; }
   .hub-bar-route-detail, .hub-bar-route-separator { display: none; }
   .hub-bar-account-text { display: none; }
@@ -362,6 +377,7 @@
 }
 @media (max-width: 1023px) {
   .hub-bar-brand-area { width: auto; }
+  .hub-bar-brand-area::after { display: none; }
   .hub-bar-mobile-toggle { display: inline-flex; margin-left: -4px; }
   .hub-bar-location { display: none; }
   .hub-bar-modules-popover { left: 16px; }
