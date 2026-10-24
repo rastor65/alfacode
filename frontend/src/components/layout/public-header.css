@@ -1,0 +1,408 @@
+/*
+ * AlfaCode HUB — Estilos del Header / Topbar de las Vistas Públicas
+ * Armonizado al 100% con el diseño cyber-tech oceánico del Topbar y Aside de las vistas privadas
+ * (Azules del SVG oficial: #0382a1 y #94eefe, cromado #041926-#06283c en dark, #06394f-#036f8c en light).
+ */
+
+.public-bar-deck {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  max-width: 72rem; /* max-w-6xl */
+  margin: 0 auto;
+  padding: 0 18px;
+  border-radius: 9999px;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  overflow: hidden;
+  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Dark mode por defecto */
+  border: 1px solid rgb(148 238 254 / 28%);
+  background:
+    radial-gradient(ellipse at 66% -90%, rgb(148 238 254 / 20%), transparent 64%),
+    linear-gradient(112deg, #041926 0%, #06283c 52%, #02121d 100%);
+  box-shadow:
+    0 16px 48px rgb(0 19 36 / 38%),
+    0 0 24px rgb(148 238 254 / 12%),
+    inset 0 1px 0 rgb(225 254 255 / 18%);
+  color: #effdff;
+}
+
+/* Modo claro (armonizado con el azul oceánico del topbar y aside privados) */
+.public-site[data-theme="light"] .public-bar-deck,
+.hub-theme[data-theme="light"] .public-bar-deck {
+  border: 1px solid rgb(148 238 254 / 35%);
+  background:
+    radial-gradient(ellipse at 66% -90%, rgb(148 238 254 / 24%), transparent 64%),
+    linear-gradient(112deg, #06394f 0%, #036f8c 52%, #07546e 100%);
+  box-shadow:
+    0 16px 48px rgb(3 84 116 / 24%),
+    0 0 24px rgb(148 238 254 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 25%);
+  color: #effdff;
+}
+
+@media (prefers-color-scheme: light) {
+  .public-site[data-theme="system"] .public-bar-deck,
+  .hub-theme[data-theme="system"] .public-bar-deck {
+    border: 1px solid rgb(148 238 254 / 35%);
+    background:
+      radial-gradient(ellipse at 66% -90%, rgb(148 238 254 / 24%), transparent 64%),
+      linear-gradient(112deg, #06394f 0%, #036f8c 52%, #07546e 100%);
+    box-shadow:
+      0 16px 48px rgb(3 84 116 / 24%),
+      0 0 24px rgb(148 238 254 / 20%),
+      inset 0 1px 0 rgb(255 255 255 / 25%);
+    color: #effdff;
+  }
+}
+
+/* Línea especular superior (resplandor de borde cian) */
+.public-bar-edge-highlight {
+  position: absolute;
+  inset: 0 32px auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #94eefe, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Línea especular inferior */
+.public-bar-deck::after {
+  content: "";
+  position: absolute;
+  inset: auto 32px -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(148 238 254 / 50%), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Patrón circuito cyber-tech de fondo (SVG network) */
+.public-bar-network {
+  position: absolute;
+  inset: 0 10% 0 auto;
+  z-index: 0;
+  width: min(50%, 650px);
+  height: 100%;
+  stroke: #94eefe;
+  stroke-width: 0.8;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Marca / Logotipo */
+.public-bar-brand {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 9999px;
+  padding: 4px 6px;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-bar-symbol-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  padding: 6px;
+  border: 1px solid rgb(148 238 254 / 45%);
+  background: linear-gradient(135deg, #06283c 0%, #041926 100%);
+  box-shadow: 0 0 14px rgb(148 238 254 / 35%), inset 0 1px 0 rgb(255 255 255 / 15%);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-bar-brand:hover .public-bar-symbol-wrap {
+  border-color: #94eefe;
+  box-shadow: 0 0 20px rgb(148 238 254 / 60%), inset 0 1px 0 #ffffff;
+  transform: scale(1.08);
+}
+
+.public-bar-logo-text {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+}
+
+.public-bar-logo-gradient {
+  background: linear-gradient(90deg, #94eefe 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgb(148 238 254 / 45%));
+}
+
+.public-bar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgb(148 238 254 / 38%);
+  background: rgb(0 36 57 / 45%);
+  color: #94eefe;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+.public-bar-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #94eefe;
+  box-shadow: 0 0 8px #94eefe;
+}
+
+/* Cápsula de navegación central */
+.public-bar-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 9999px;
+  border: 1px solid rgb(148 238 254 / 24%);
+  background: rgb(0 31 51 / 35%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 2px 8px rgb(0 16 28 / 20%);
+}
+
+.public-site[data-theme="light"] .public-bar-nav,
+.hub-theme[data-theme="light"] .public-bar-nav {
+  border-color: rgb(148 238 254 / 32%);
+  background: rgb(4 38 54 / 52%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 16%), 0 2px 8px rgb(3 50 70 / 25%);
+}
+
+@media (prefers-color-scheme: light) {
+  .public-site[data-theme="system"] .public-bar-nav,
+  .hub-theme[data-theme="system"] .public-bar-nav {
+    border-color: rgb(148 238 254 / 32%);
+    background: rgb(4 38 54 / 52%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 16%), 0 2px 8px rgb(3 50 70 / 25%);
+  }
+}
+
+.public-bar-nav-item {
+  position: relative;
+  border-radius: 9999px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #c4edf8;
+  border: 1px solid transparent;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.public-bar-nav-item-active {
+  border-color: #94eefe;
+  background: linear-gradient(135deg, rgb(148 238 254 / 28%) 0%, rgb(3 111 140 / 52%) 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 14px rgb(148 238 254 / 40%), inset 0 1px 0 rgb(255 255 255 / 35%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-bar-nav-item:not(.public-bar-nav-item-active):hover {
+    border-color: rgb(148 238 254 / 65%);
+    background: linear-gradient(135deg, rgb(148 238 254 / 20%) 0%, rgb(3 111 140 / 35%) 100%);
+    color: #ffffff;
+    box-shadow: 0 0 14px rgb(148 238 254 / 35%), inset 0 1px 0 rgb(255 255 255 / 25%);
+    transform: translateY(-1px);
+  }
+
+  .public-bar-nav-item-active:hover {
+    box-shadow: 0 0 18px rgb(148 238 254 / 55%), inset 0 1px 0 #ffffff;
+    transform: translateY(-1px);
+  }
+}
+
+/* Área de acciones (derecha) */
+.public-bar-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botón de tema circular idéntico a hub-bar-icon-button */
+.public-bar-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  border: 1px solid rgb(148 238 254 / 28%);
+  background: rgb(0 31 51 / 25%);
+  color: #effdff;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-site[data-theme="light"] .public-bar-icon-button,
+.hub-theme[data-theme="light"] .public-bar-icon-button {
+  border-color: rgb(148 238 254 / 32%);
+  background: rgb(4 38 54 / 45%);
+}
+
+@media (prefers-color-scheme: light) {
+  .public-site[data-theme="system"] .public-bar-icon-button,
+  .hub-theme[data-theme="system"] .public-bar-icon-button {
+    border-color: rgb(148 238 254 / 32%);
+    background: rgb(4 38 54 / 45%);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-bar-icon-button:hover {
+    border-color: rgb(148 238 254 / 75%) !important;
+    background: linear-gradient(135deg, rgb(148 238 254 / 32%), rgb(6 68 93 / 58%)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 14px rgb(148 238 254 / 45%), inset 0 1px 0 #ffffff;
+    transform: scale(1.08);
+  }
+}
+
+.public-bar-icon-button:active {
+  transform: scale(0.96);
+}
+
+/* Botón "Ingresar" con estilo idéntico a hub-bar-quick-trigger */
+.public-bar-btn-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid rgb(148 238 254 / 54%);
+  background: linear-gradient(135deg, rgb(148 238 254 / 16%) 0%, rgb(3 111 140 / 32%) 100%);
+  color: #effdff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 2px 10px rgb(0 16 28 / 25%);
+  cursor: pointer;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-site[data-theme="light"] .public-bar-btn-login,
+.hub-theme[data-theme="light"] .public-bar-btn-login {
+  border-color: rgb(148 238 254 / 62%);
+  background: linear-gradient(135deg, rgb(148 238 254 / 24%) 0%, rgb(3 111 140 / 42%) 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 24%), 0 2px 10px rgb(3 50 70 / 30%);
+}
+
+@media (prefers-color-scheme: light) {
+  .public-site[data-theme="system"] .public-bar-btn-login,
+  .hub-theme[data-theme="system"] .public-bar-btn-login {
+    border-color: rgb(148 238 254 / 62%);
+    background: linear-gradient(135deg, rgb(148 238 254 / 24%) 0%, rgb(3 111 140 / 42%) 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 24%), 0 2px 10px rgb(3 50 70 / 30%);
+  }
+}
+
+.public-bar-btn-login > svg {
+  color: #94eefe;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), color 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-bar-btn-login:hover {
+    border-color: #94eefe;
+    background: linear-gradient(135deg, rgb(148 238 254 / 38%) 0%, rgb(6 68 93 / 68%) 100%);
+    color: #ffffff;
+    box-shadow: 0 0 16px rgb(148 238 254 / 55%), inset 0 1px 0 #ffffff;
+    transform: scale(1.04);
+  }
+
+  .public-bar-btn-login:hover > svg {
+    color: #ffffff;
+    transform: translateX(2px);
+  }
+}
+
+.public-bar-btn-login:active {
+  transform: scale(0.97);
+}
+
+/* Menú móvil desplegable */
+.public-bar-drawer {
+  position: relative;
+  z-index: 50;
+  max-width: 72rem;
+  margin: 8px auto 0;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgb(148 238 254 / 30%);
+  background:
+    radial-gradient(ellipse at 66% -90%, rgb(148 238 254 / 20%), transparent 64%),
+    linear-gradient(112deg, #041926 0%, #06283c 52%, #02121d 100%);
+  box-shadow: 0 24px 60px -12px rgb(0 14 25 / 75%), 0 0 24px rgb(148 238 254 / 15%), inset 0 1px 0 rgb(225 254 255 / 16%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+.public-site[data-theme="light"] .public-bar-drawer,
+.hub-theme[data-theme="light"] .public-bar-drawer {
+  border-color: rgb(148 238 254 / 38%);
+  background:
+    radial-gradient(ellipse at 66% -90%, rgb(148 238 254 / 24%), transparent 64%),
+    linear-gradient(112deg, #06394f 0%, #036f8c 52%, #07546e 100%);
+  box-shadow: 0 24px 60px -12px rgb(3 40 56 / 45%), 0 0 24px rgb(148 238 254 / 20%), inset 0 1px 0 rgb(255 255 255 / 25%);
+}
+
+@media (prefers-color-scheme: light) {
+  .public-site[data-theme="system"] .public-bar-drawer,
+  .hub-theme[data-theme="system"] .public-bar-drawer {
+    border-color: rgb(148 238 254 / 38%);
+    background:
+      radial-gradient(ellipse at 66% -90%, rgb(148 238 254 / 24%), transparent 64%),
+      linear-gradient(112deg, #06394f 0%, #036f8c 52%, #07546e 100%);
+    box-shadow: 0 24px 60px -12px rgb(3 40 56 / 45%), 0 0 24px rgb(148 238 254 / 20%), inset 0 1px 0 rgb(255 255 255 / 25%);
+  }
+}
+
+.public-bar-drawer-item {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #c4edf8;
+  border: 1px solid transparent;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-bar-drawer-item-active {
+  border-color: #94eefe;
+  background: linear-gradient(90deg, rgb(148 238 254 / 24%) 0%, rgb(3 111 140 / 38%) 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 14px rgb(148 238 254 / 35%), inset 0 1px 0 rgb(255 255 255 / 25%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-bar-drawer-item:not(.public-bar-drawer-item-active):hover {
+    border-color: rgb(148 238 254 / 45%);
+    background: linear-gradient(90deg, rgb(148 238 254 / 16%) 0%, rgb(3 111 140 / 25%) 100%);
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+}

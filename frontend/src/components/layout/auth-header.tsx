@@ -6,13 +6,14 @@ import { ArrowLeft, LogIn, UserPlus } from "lucide-react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeMenu } from "@/components/theme/theme-menu";
+import "./public-header.css";
 
 /**
  * Navbar limpia y minimalista exclusiva para los módulos de autenticación y postulación:
- * - Botón para volver a Home.
- * - Botón de navegación entre Ingreso y Registro (y viceversa).
+ * - Diseñada con la estética cyber-tech del HUB (idéntica a PublicHeader, HubTopbar y Aside).
+ * - Botón para volver a Home con micro-interacciones pulidas.
+ * - Cápsula de alternador entre Ingreso y Registro.
  * - Selector de tema claro / oscuro.
- * - Sin botones de interacción con la landing page (sin anclas ni enlaces de secciones).
  */
 export function AuthHeader() {
   const pathname = usePathname();
@@ -21,56 +22,58 @@ export function AuthHeader() {
 
   return (
     <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6 lg:px-8">
-      <div
-        className="relative mx-auto flex h-14 max-w-5xl items-center justify-between rounded-full px-3 backdrop-blur-2xl transition-all duration-300 hover:border-cyan-500/40 sm:h-15 sm:px-6 lg:max-w-6xl"
-        style={{
-          background: "var(--site-header-bg)",
-          borderColor: "var(--site-header-border)",
-          borderWidth: "1px",
-          borderStyle: "solid",
-          boxShadow: "var(--site-header-shadow-glow)",
-        }}
-      >
+      <div className="public-bar-deck">
         {/* Specular highlight on top edge */}
-        <div
-          className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
+        <span className="public-bar-edge-highlight" aria-hidden="true" />
+
+        {/* Patrón circuito cyber-tech de fondo */}
+        <svg
+          className="public-bar-network"
+          viewBox="0 0 800 100"
+          fill="none"
           aria-hidden="true"
-        />
+          focusable="false"
+        >
+          <path d="M0 76h126l30-30h136l32-32h106m-220 62h160l32-32h156l28-28h214M464 100l28-28h148l26-26h134" />
+          <circle cx="126" cy="76" r="3" />
+          <circle cx="292" cy="46" r="3" />
+          <circle cx="430" cy="14" r="3" />
+          <circle cx="558" cy="44" r="3" />
+          <circle cx="640" cy="72" r="3" />
+        </svg>
 
         {/* Brand / Logo */}
         <Link
           href="/"
-          className="group flex items-center gap-2 rounded-full py-1 pr-1.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+          className="group public-bar-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           title="Ir a página principal de AlfaCode HUB"
         >
-          <span className="flex size-8 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-950/70 p-1.5 shadow-[0_0_12px_rgba(70,158,180,0.25)] transition-all duration-300 group-hover:scale-105 group-hover:border-cyan-400/60 sm:size-8.5">
+          <span className="public-bar-symbol-wrap">
             <AlfaCodeSymbol className="size-full text-cyan-300" />
           </span>
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="text-sm font-bold tracking-tight text-white">
+            <span className="public-bar-logo-text">
               Alfa
-              <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                Code
-              </span>
+              <span className="public-bar-logo-gradient">Code</span>
             </span>
-            <span className="hidden items-center gap-1 rounded-full border border-cyan-400/25 bg-cyan-950/40 px-1.5 py-0.5 font-mono text-[10px] font-medium text-cyan-300 md:inline-flex">
-              <span className="size-1 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+            <span className="hidden sm:inline-flex public-bar-badge">
+              <span className="public-bar-badge-dot animate-pulse" aria-hidden="true" />
               HUB
             </span>
           </div>
         </Link>
 
         {/* Acciones de Navegación: Volver a Home, Alternador Ingreso <-> Registro y Modo Oscuro/Claro */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
+        <div className="public-bar-actions">
           {/* Botón Volver a Home */}
           <Link
             href="/"
-            className="group inline-flex items-center gap-1.5 rounded-full border border-slate-300/70 bg-slate-900/5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-900/10 hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:px-3.5"
+            className="group public-bar-btn-login text-xs px-3 sm:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             title="Volver a la página principal"
           >
             <ArrowLeft
               size={14}
-              className="transition-transform duration-200 group-hover:-translate-x-0.5"
+              className="text-[#94eefe] transition-transform duration-200 group-hover:-translate-x-1"
               aria-hidden="true"
             />
             <span className="hidden sm:inline">Volver a Home</span>
@@ -82,55 +85,43 @@ export function AuthHeader() {
             {isIngresar ? (
               <Link
                 href="/registro"
-                className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-500/25 dark:text-cyan-200"
+                className="public-bar-btn-login text-xs px-3"
                 title="Ir a formulario de registro"
               >
-                <UserPlus size={13} aria-hidden="true" />
+                <UserPlus size={14} aria-hidden="true" />
                 <span>Registro</span>
               </Link>
             ) : (
               <Link
                 href="/ingresar"
-                className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-500/25 dark:text-cyan-200"
+                className="public-bar-btn-login text-xs px-3"
                 title="Ir a ingreso"
               >
-                <LogIn size={13} aria-hidden="true" />
+                <LogIn size={14} aria-hidden="true" />
                 <span>Ingresar</span>
               </Link>
             )}
           </div>
 
           {/* En desktop (sm y superior): cápsula integrada con ambos accesos */}
-          <div
-            className="hidden sm:inline-flex items-center rounded-full p-0.5"
-            style={{
-              background: "var(--site-header-nav-bg)",
-              borderColor: "var(--site-header-nav-border)",
-              borderWidth: "1px",
-              borderStyle: "solid",
-            }}
-          >
+          <div className="hidden sm:flex public-bar-nav" aria-label="Cambio de formulario">
             <Link
               href="/ingresar"
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:px-3.5 ${
-                isIngresar
-                  ? "border border-cyan-500/50 bg-cyan-500/20 text-cyan-800 shadow-[0_0_12px_rgba(70,158,180,0.25)] dark:text-cyan-100"
-                  : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
+              className={`public-bar-nav-item flex items-center gap-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                isIngresar ? "public-bar-nav-item-active" : ""
               }`}
             >
-              <LogIn size={13} aria-hidden="true" />
+              <LogIn size={14} aria-hidden="true" />
               <span>Ingresar</span>
             </Link>
 
             <Link
               href="/registro"
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:px-3.5 ${
-                isRegistro
-                  ? "border border-cyan-500/50 bg-cyan-500/20 text-cyan-800 shadow-[0_0_12px_rgba(70,158,180,0.25)] dark:text-cyan-100"
-                  : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
+              className={`public-bar-nav-item flex items-center gap-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                isRegistro ? "public-bar-nav-item-active" : ""
               }`}
             >
-              <UserPlus size={13} aria-hidden="true" />
+              <UserPlus size={14} aria-hidden="true" />
               <span>Registro</span>
             </Link>
           </div>
@@ -140,7 +131,7 @@ export function AuthHeader() {
             variant="icon"
             placement="bottom"
             align="end"
-            triggerClassName="size-8 rounded-full border border-slate-300/70 bg-slate-900/5 text-slate-700 hover:bg-slate-900/10 hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white focus-visible:ring-cyan-400"
+            triggerClassName="public-bar-icon-button focus-visible:ring-2 focus-visible:ring-cyan-400"
           />
         </div>
       </div>
