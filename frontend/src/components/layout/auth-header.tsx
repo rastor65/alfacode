@@ -23,24 +23,23 @@ export function AuthHeader() {
   return (
     <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6 lg:px-8">
       <div className="public-bar-deck">
-        {/* Specular highlight on top edge */}
-        <span className="public-bar-edge-highlight" aria-hidden="true" />
-
-        {/* Patrón circuito cyber-tech de fondo */}
-        <svg
-          className="public-bar-network"
-          viewBox="0 0 800 100"
-          fill="none"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d="M0 76h126l30-30h136l32-32h106m-220 62h160l32-32h156l28-28h214M464 100l28-28h148l26-26h134" />
-          <circle cx="126" cy="76" r="3" />
-          <circle cx="292" cy="46" r="3" />
-          <circle cx="430" cy="14" r="3" />
-          <circle cx="558" cy="44" r="3" />
-          <circle cx="640" cy="72" r="3" />
-        </svg>
+        {/* Fondo de red y resplandores recortados al óvalo */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
+          <span className="public-bar-edge-highlight" />
+          <svg
+            className="public-bar-network"
+            viewBox="0 0 800 100"
+            fill="none"
+            focusable="false"
+          >
+            <path d="M0 76h126l30-30h136l32-32h106m-220 62h160l32-32h156l28-28h214M464 100l28-28h148l26-26h134" />
+            <circle cx="126" cy="76" r="3" />
+            <circle cx="292" cy="46" r="3" />
+            <circle cx="430" cy="14" r="3" />
+            <circle cx="558" cy="44" r="3" />
+            <circle cx="640" cy="72" r="3" />
+          </svg>
+        </div>
 
         {/* Brand / Logo */}
         <Link
