@@ -57,7 +57,7 @@
 .hub-bar-topbar {
   position: sticky;
   top: 0;
-  z-index: 45;
+  z-index: 80;
   height: var(--hub-topbar-height, 100px);
   padding: 12px;
   background: var(--hub-bg);
@@ -199,12 +199,17 @@
 
 .hub-bar-search-container {
   position: relative;
+  z-index: 50;
   display: flex;
   flex: 1 1 340px;
   min-width: 200px;
   max-width: 480px;
   height: 48px;
   margin: 0 auto;
+}
+.hub-bar-search-container:focus-within,
+.hub-bar-search-container:has(.hub-bar-search-box-active) {
+  z-index: 105;
 }
 .hub-bar-search-box {
   display: flex;
@@ -397,7 +402,7 @@
 .hub-bar-popover {
   position: absolute;
   top: calc(100% + 8px);
-  z-index: 60;
+  z-index: 100;
   width: 340px;
   max-width: calc(100vw - 24px);
   max-height: calc(100dvh - var(--hub-topbar-height) - 24px);
@@ -949,7 +954,7 @@
   transform: translateX(-50%);
   width: min(560px, calc(100vw - 32px));
   max-height: min(500px, calc(100dvh - var(--hub-topbar-height, 100px) - 24px));
-  z-index: 70;
+  z-index: 110;
   display: flex;
   flex-direction: column;
   overflow: hidden;

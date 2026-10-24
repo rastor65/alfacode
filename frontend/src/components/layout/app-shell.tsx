@@ -398,7 +398,7 @@ export function AppShell({ user, children }: AppShellProps) {
       <div className={cn("hub-bar-workspace", "min-h-screen bg-hub-bg")}>
       <a
         href="#contenido"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-hub-panel focus:px-3 focus:py-2 focus:text-sm focus:text-hub-text focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[140] focus:rounded-lg focus:bg-hub-panel focus:px-3 focus:py-2 focus:text-sm focus:text-hub-text focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
       >
         Saltar al contenido
       </a>

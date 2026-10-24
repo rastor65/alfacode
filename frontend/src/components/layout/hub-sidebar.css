@@ -840,7 +840,7 @@
 .hub-sidebar-mobile-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 120;
   background: rgb(5 17 26 / 60%);
   backdrop-filter: blur(4px);
   border: 0;
@@ -853,7 +853,7 @@
   position: fixed;
   inset-block: 0;
   left: 0;
-  z-index: 70;
+  z-index: 130;
   width: 290px;
   max-width: calc(100vw - 32px);
   padding: 12px;
