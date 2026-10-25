@@ -16,10 +16,11 @@ type ProjectPageHeaderProps = {
   meta?: React.ReactNode;
   actions?: React.ReactNode;
   badges?: Partial<Record<ProjectSection, React.ReactNode>>;
+  onTabChange?: (key: ProjectSection) => void;
 };
 
 /** Encabezado comun de las vistas de un proyecto (I-27): ruta, titulo con chips, datos, acciones y pestañas. */
-export function ProjectPageHeader({ project, current, crumb, meta, actions, badges }: ProjectPageHeaderProps) {
+export function ProjectPageHeader({ project, current, crumb, meta, actions, badges, onTabChange }: ProjectPageHeaderProps) {
   return (
     <>
       <header className="flex flex-col gap-4">
@@ -30,7 +31,17 @@ export function ProjectPageHeader({ project, current, crumb, meta, actions, badg
           <span aria-hidden="true" className="text-hub-muted">/</span>
           {crumb ? (
             <>
-              <Link href={`/hub/proyectos/${project.id}`} className="max-w-60 truncate text-hub-muted underline-offset-4 hover:underline">{project.name}</Link>
+              {onTabChange ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange("resumen")}
+                  className="max-w-60 truncate text-hub-muted underline-offset-4 hover:underline"
+                >
+                  {project.name}
+                </button>
+              ) : (
+                <Link href={`/hub/proyectos/${project.id}`} className="max-w-60 truncate text-hub-muted underline-offset-4 hover:underline">{project.name}</Link>
+              )}
               <span aria-hidden="true" className="text-hub-muted">/</span>
               <span className="font-semibold text-hub-text" aria-current="page">{crumb}</span>
             </>
@@ -51,7 +62,7 @@ export function ProjectPageHeader({ project, current, crumb, meta, actions, badg
           {actions}
         </div>
       </header>
-      <ProjectTabs project={project} current={current} badges={badges} />
+      <ProjectTabs project={project} current={current} badges={badges} onTabChange={onTabChange} />
     </>
   );
 }

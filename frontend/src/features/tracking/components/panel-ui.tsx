@@ -5,7 +5,19 @@ import { formatDateTime } from "@/lib/format";
 import { plural, progressLabel, type TaskSummary } from "../types";
 
 /** Indicador numerico con etiqueta; las cifras vienen del backend ya filtradas por permisos. */
-export function Stat({ label, value, hint, href }: { label: string; value: number | string; hint?: string; href?: string }) {
+export function Stat({
+  label,
+  value,
+  hint,
+  href,
+  onClick,
+}: {
+  label: string;
+  value: number | string;
+  hint?: string;
+  href?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}) {
   return (
     <div className="flex min-w-0 flex-col rounded-2xl border border-hub-border bg-hub-subtle p-4">
       <dt className="text-sm text-hub-muted">{label}</dt>
@@ -13,7 +25,11 @@ export function Stat({ label, value, hint, href }: { label: string; value: numbe
       {hint && <dd className="mt-1 text-xs text-hub-muted">{hint}</dd>}
       {href && (
         <dd className="mt-auto pt-2 text-sm">
-          <Link href={href} className="text-hub-accent underline-offset-4 hover:underline">
+          <Link
+            href={href}
+            onClick={onClick}
+            className="text-hub-accent underline-offset-4 hover:underline"
+          >
             Ver detalle<span className="sr-only">: {label}</span>
           </Link>
         </dd>

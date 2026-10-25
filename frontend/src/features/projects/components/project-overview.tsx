@@ -19,9 +19,10 @@ import {
   type ProjectDetail,
 } from "../types";
 import { ProjectActions } from "./project-actions";
+import { type ProjectSection } from "./project-header";
 import { ProjectPageHeader } from "./project-page-header";
 
-const linkClass = "font-medium text-hub-accent underline-offset-4 hover:underline";
+const linkClass = "font-medium text-hub-accent underline-offset-4 hover:underline cursor-pointer";
 
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]!.toUpperCase()).join("");
 
@@ -30,13 +31,8 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
  * G-02 a G-04). Los permisos ya los aplico el servidor; las acciones solo aparecen si estan permitidas.
  */
 export function ProjectOverview({ project, panel, observations }: { project: ProjectDetail; panel: ProjectPanel; observations: ObservationList }) {
-  const { tasks, signals, team, deliverables, events, sprints } = panel;
-  const base = `/hub/proyectos/${project.id}`;
+  const { tasks, signals, sprints } = panel;
   const alerts = signals.risks.length > 0;
-  const span = daysSpan(project.startDate, project.endDate, panel.today);
-  const pastEnd = signals.risks.includes("past_end_date"), behind = signals.risks.includes("behind_schedule");
-  const leaders = project.members.filter((member) => member.role === "leader");
-  const members = [...project.members].sort((a, b) => Number(b.role === "leader") - Number(a.role === "leader") || a.fullName.localeCompare(b.fullName, "es"));
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,6 +54,32 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
           sprints: sprints?.active ? <span className={`${chip} rounded-full bg-hub-accent-soft text-hub-accent`}>{sprints.active.name}</span> : undefined,
         }}
       />
+      <ProjectOverviewContent project={project} panel={panel} observations={observations} />
+    </div>
+  );
+}
+
+export function ProjectOverviewContent({
+  project,
+  panel,
+  observations,
+  onNavigateTab,
+}: {
+  project: ProjectDetail;
+  panel: ProjectPanel;
+  observations: ObservationList;
+  onNavigateTab?: (tab: ProjectSection) => void;
+}) {
+  const { tasks, signals, team, deliverables, events, sprints } = panel;
+  const base = `/hub/proyectos/${project.id}`;
+  const alerts = signals.risks.length > 0;
+  const span = daysSpan(project.startDate, project.endDate, panel.today);
+  const pastEnd = signals.risks.includes("past_end_date"), behind = signals.risks.includes("behind_schedule");
+  const leaders = project.members.filter((member) => member.role === "leader");
+  const members = [...project.members].sort((a, b) => Number(b.role === "leader") - Number(a.role === "leader") || a.fullName.localeCompare(b.fullName, "es"));
+
+  return (
+    <div className="flex flex-col gap-6">
 
       <dl aria-label="Indicadores del proyecto" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi
@@ -159,9 +181,36 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
                   <div className="h-2 w-full overflow-hidden rounded-full bg-hub-border" aria-hidden="true">
                     {sprints.active.tasks.progress !== null && <div className="h-full rounded-full bg-hub-chart" style={{ width: `${sprints.active.tasks.progress}%` }} />}
                   </div>
-                  <Link href={`${base}/sprints`} className={`self-end text-sm ${linkClass}`}>Ver tablero del sprint →</Link>
+                  <Link
+                    href={`${base}?tab=sprints`}
+                    onClick={(e) => {
+                      if (onNavigateTab) {
+                        e.preventDefault();
+                        onNavigateTab("sprints");
+                      }
+                    }}
+                    className={`self-end text-sm ${linkClass}`}
+                  >
+                    Ver tablero del sprint →
+                  </Link>
                 </div>
-              ) : <p className="text-sm text-hub-muted">No hay un sprint activo. <Link href={`${base}/sprints`} className={linkClass}>Planificar o iniciar un sprint</Link></p>}
+              ) : (
+                <p className="text-sm text-hub-muted">
+                  No hay un sprint activo.{" "}
+                  <Link
+                    href={`${base}?tab=sprints`}
+                    onClick={(e) => {
+                      if (onNavigateTab) {
+                        e.preventDefault();
+                        onNavigateTab("sprints");
+                      }
+                    }}
+                    className={linkClass}
+                  >
+                    Planificar o iniciar un sprint
+                  </Link>
+                </p>
+              )}
               {sprints?.lastCompleted && (
                 <p className="text-xs text-hub-muted">
                   Último sprint cerrado: <strong className="text-hub-soft">{sprints.lastCompleted.name}</strong> · {sprints.lastCompleted.tasks.done} de {plural(sprints.lastCompleted.tasks.total, "tarea terminada", "tareas terminadas")} al cierre.
@@ -173,9 +222,27 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
           <section aria-labelledby="deliverables-title" className={`${panelCard} flex flex-col gap-3 p-6`}>
             <h2 id="deliverables-title" className="flex items-center gap-2 text-lg font-semibold text-hub-text"><BookOpen aria-hidden="true" className="size-5 text-hub-accent" />Resultados, productos y actividades</h2>
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <Shortcut icon={FlaskConical} label="Resultados de investigación" value={deliverables.researchResults} href={`${base}/investigacion`} />
-              <Shortcut icon={BookOpen} label="Productos académicos" value={deliverables.products.total} href={`${base}/produccion`} />
-              <Shortcut icon={CalendarDays} label="Actividades" value={events.total} href={`${base}/actividades`} />
+              <Shortcut
+                icon={FlaskConical}
+                label="Resultados de investigación"
+                value={deliverables.researchResults}
+                href={`${base}?tab=investigacion`}
+                onNavigate={onNavigateTab ? () => onNavigateTab("investigacion") : undefined}
+              />
+              <Shortcut
+                icon={BookOpen}
+                label="Productos académicos"
+                value={deliverables.products.total}
+                href={`${base}?tab=produccion`}
+                onNavigate={onNavigateTab ? () => onNavigateTab("produccion") : undefined}
+              />
+              <Shortcut
+                icon={CalendarDays}
+                label="Actividades"
+                value={events.total}
+                href={`${base}?tab=actividades`}
+                onNavigate={onNavigateTab ? () => onNavigateTab("actividades") : undefined}
+              />
             </ul>
           </section>
         </div>
@@ -242,7 +309,18 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
                   const late = task.dueDate !== null && task.dueDate < panel.today;
                   return (
                     <li key={task.id} className="flex flex-col gap-1 rounded-lg bg-hub-subtle p-2.5 transition-colors hover:bg-hub-hover">
-                      <Link href={`${base}/tareas`} className="break-words text-sm font-medium leading-tight text-hub-text hover:underline">{task.title}</Link>
+                      <Link
+                        href={`${base}?tab=tareas`}
+                        onClick={(e) => {
+                          if (onNavigateTab) {
+                            e.preventDefault();
+                            onNavigateTab("tareas");
+                          }
+                        }}
+                        className="break-words text-sm font-medium leading-tight text-hub-text hover:underline"
+                      >
+                        {task.title}
+                      </Link>
                       <div className="flex flex-wrap items-center gap-2 text-[11px]">
                         <span className={late ? "font-medium text-hub-field-error" : "text-hub-muted"}>
                           {task.dueDate ? (late ? `Venció: ${overdueLabel(task.dueDate, panel.today).toLowerCase()}` : `Para ${formatShortDay(task.dueDate)}`) : "Sin fecha límite"}
@@ -256,7 +334,18 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
               </ul>
             ) : <p className="text-sm text-hub-muted">No tienes tareas abiertas en este proyecto.</p>}
             {panel.myTasks.open > panel.myTasks.items.length && <p className="text-[11px] text-hub-muted">Se muestran {panel.myTasks.items.length} de {panel.myTasks.open}, las de fecha límite más próxima.</p>}
-            <Link href={`${base}/tareas`} className={`text-sm ${linkClass}`}>Ir al tablero de tareas →</Link>
+            <Link
+              href={`${base}?tab=tareas`}
+              onClick={(e) => {
+                if (onNavigateTab) {
+                  e.preventDefault();
+                  onNavigateTab("tareas");
+                }
+              }}
+              className={`text-sm ${linkClass}`}
+            >
+              Ir al tablero de tareas →
+            </Link>
           </section>
 
           <section aria-labelledby="activity-title" className={`${panelCard} flex flex-col gap-3 p-6`}>
@@ -280,7 +369,18 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
                 ))}
               </ul>
             ) : <p className="text-sm text-hub-muted">Aún no hay observaciones de seguimiento.</p>}
-            <Link href={`${base}/seguimiento`} className={`inline-flex items-center gap-1 text-sm ${linkClass}`}>Ver seguimiento y observaciones<ArrowRight aria-hidden="true" className="size-4" /></Link>
+            <Link
+              href={`${base}?tab=seguimiento`}
+              onClick={(e) => {
+                if (onNavigateTab) {
+                  e.preventDefault();
+                  onNavigateTab("seguimiento");
+                }
+              }}
+              className={`inline-flex items-center gap-1 text-sm ${linkClass}`}
+            >
+              Ver seguimiento y observaciones<ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
           </section>
         </div>
       </div>
@@ -332,12 +432,35 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Shortcut({ icon: Icon, label, value, href }: { icon: LucideIcon; label: string; value: number; href: string }) {
+function Shortcut({
+  icon: Icon,
+  label,
+  value,
+  href,
+  onNavigate,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  href: string;
+  onNavigate?: () => void;
+}) {
   return (
     <li className="relative flex items-center gap-3 rounded-lg bg-hub-subtle p-3 transition-colors hover:bg-hub-hover">
       <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-hub-accent-soft text-hub-accent"><Icon className="size-4.5" /></span>
       <div className="min-w-0">
-        <Link href={href} className="block truncate text-[13px] font-medium text-hub-text after:absolute after:inset-0">{label}</Link>
+        <Link
+          href={href}
+          onClick={(e) => {
+            if (onNavigate) {
+              e.preventDefault();
+              onNavigate();
+            }
+          }}
+          className="block truncate text-[13px] font-medium text-hub-text after:absolute after:inset-0"
+        >
+          {label}
+        </Link>
         <p className="font-mono text-lg font-bold text-hub-text">{value}</p>
       </div>
     </li>

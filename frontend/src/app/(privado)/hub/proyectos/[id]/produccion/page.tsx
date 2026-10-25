@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
-import { AcademicPageContent, type AcademicSearch } from "@/features/academic/academic-page";
-export const metadata: Metadata = { title: "Producción del proyecto", robots: { index: false } };
-export default async function Page({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<AcademicSearch> }) {
+import { redirect } from "next/navigation";
+
+export default async function ProjectProductionRedirectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <AcademicPageContent projectId={id} searchParams={searchParams} />;
+  redirect(`/hub/proyectos/${encodeURIComponent(id)}?tab=produccion`);
 }

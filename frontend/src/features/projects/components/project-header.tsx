@@ -18,7 +18,17 @@ type ProjectHeaderProps = {
  * Pestañas del proyecto; la de sprints solo existe en modalidad agil (F2-20). Las de investigacion y
  * documentos existen en todos: la ficha es opcional (F3-03). `badges` agrega datos junto a cada pestaña.
  */
-export function ProjectTabs({ project, current, badges = {} }: { project: Pick<ProjectDetail, "id" | "methodology">; current: ProjectSection; badges?: Partial<Record<ProjectSection, React.ReactNode>> }) {
+export function ProjectTabs({
+  project,
+  current,
+  badges = {},
+  onTabChange,
+}: {
+  project: Pick<ProjectDetail, "id" | "methodology">;
+  current: ProjectSection;
+  badges?: Partial<Record<ProjectSection, React.ReactNode>>;
+  onTabChange?: (key: ProjectSection) => void;
+}) {
   const tabs: { key: ProjectSection; label: string; href: string }[] = [
     { key: "resumen", label: "Resumen", href: `/hub/proyectos/${project.id}` },
     { key: "tareas", label: project.methodology === "agile" ? "Tablero y backlog" : "Tareas", href: `/hub/proyectos/${project.id}/tareas` },
@@ -32,22 +42,45 @@ export function ProjectTabs({ project, current, badges = {} }: { project: Pick<P
 
   return (
     <nav aria-label="Secciones del proyecto" className="-mx-1 overflow-x-auto px-1">
-      <ul className="flex min-w-max gap-1 border-b border-hub-border">
-        {tabs.map((tab) => (
-          <li key={tab.key}>
-            <Link
-              href={tab.href}
-              aria-current={tab.key === current ? "page" : undefined}
-              className={cn(
-                "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
-                tab.key === current ? "border-cyan-500 font-medium text-hub-text" : "border-transparent text-hub-muted hover:text-hub-text",
+      <ul role={onTabChange ? "tablist" : undefined} className="flex min-w-max gap-1 border-b border-hub-border">
+        {tabs.map((tab) => {
+          const isActive = tab.key === current;
+          return (
+            <li key={tab.key} role={onTabChange ? "presentation" : undefined}>
+              {onTabChange ? (
+                <button
+                  type="button"
+                  role="tab"
+                  id={`tab-${tab.key}`}
+                  aria-controls={`panel-${tab.key}`}
+                  aria-selected={isActive}
+                  onClick={() => onTabChange(tab.key)}
+                  className={cn(
+                    "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                    isActive
+                      ? "border-cyan-500 font-semibold text-hub-text shadow-[0_1px_0_0_rgb(6,182,212)]"
+                      : "border-transparent text-hub-muted hover:border-hub-border hover:text-hub-text",
+                  )}
+                >
+                  {tab.label}
+                  {badges[tab.key]}
+                </button>
+              ) : (
+                <Link
+                  href={tab.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                    isActive ? "border-cyan-500 font-medium text-hub-text" : "border-transparent text-hub-muted hover:text-hub-text",
+                  )}
+                >
+                  {tab.label}
+                  {badges[tab.key]}
+                </Link>
               )}
-            >
-              {tab.label}
-              {badges[tab.key]}
-            </Link>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
