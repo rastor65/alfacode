@@ -197,6 +197,8 @@
 .hub-bar-location-button .hub-bar-chevron { flex-shrink: 0; margin-left: 4px; color: #94eefe; transition: transform 150ms var(--hub-motion-ease-out), color 150ms var(--hub-motion-ease-out); }
 .hub-bar-location-button[aria-expanded="true"] { border-color: var(--chrome-line); background: var(--chrome-soft); }
 
+.hub-bar-mobile-search { display: none; }
+
 .hub-bar-search-container {
   position: relative;
   z-index: 50;
@@ -1574,4 +1576,57 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .hub-bar-topbar * { transition: none; scroll-behavior: auto; }
+}
+
+/* La búsqueda integrada conserva un disparador real y un campo legible en móvil. */
+@media (min-width: 640px) and (max-width: 899px) {
+  .hub-bar-quick-trigger,
+  .hub-bar-utilities,
+  .hub-bar-tool-divider,
+  .hub-bar-account-text,
+  .hub-bar-account-chevron { display: none; }
+  .hub-bar-tools { gap: 0; }
+  .hub-bar-account-trigger { justify-content: center; width: 44px; min-height: 44px; padding: 4px; }
+  .hub-bar-search-container { min-width: 180px; }
+}
+
+@media (pointer: coarse) {
+  .hub-bar-search-input { font-size: 16px; }
+}
+
+@media (max-width: 639px) {
+  .hub-bar-mobile-search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgb(148 238 254 / 28%);
+    border-radius: 11px;
+    background: rgb(148 238 254 / 8%);
+    color: #d8f8ff;
+    cursor: pointer;
+  }
+  .hub-bar-search-container .hub-bar-search-box { display: none; }
+  .hub-bar-search-is-open .hub-bar-search-box {
+    position: fixed;
+    top: calc(var(--hub-topbar-height, 80px) + 8px);
+    left: 12px;
+    right: 12px;
+    z-index: 120;
+    display: flex;
+    gap: 8px;
+    width: auto;
+    height: 48px;
+    padding: 0 10px;
+  }
+  .hub-bar-search-is-open .hub-bar-search-input { display: block; font-size: 16px; }
+  .hub-bar-search-is-open .hub-bar-search-clear { display: inline-flex; width: 44px; height: 44px; }
+  .hub-bar-search-is-open .hub-bar-search-dropdown {
+    top: calc(var(--hub-topbar-height, 80px) + 64px);
+    max-height: calc(100dvh - var(--hub-topbar-height, 80px) - 80px);
+  }
+  .hub-bar-search-dropdown .hub-bar-results { min-height: 0; max-height: none; }
+  .hub-bar-search-dropdown :is(.hub-bar-search-filters, .hub-bar-search-footer) { flex-shrink: 0; }
 }

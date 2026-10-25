@@ -523,6 +523,94 @@
   box-shadow: 0 0 14px rgb(148 238 254 / 35%), inset 0 1px 0 rgb(255 255 255 / 25%);
 }
 
+/* La visibilidad se resuelve aquí: las reglas globales de flex prevalecen sobre
+   las utilidades hidden de Tailwind. Las consultas usan el espacio real disponible. */
+.public-bar-header {
+  container: public-header / inline-size;
+}
+
+.public-bar-deck {
+  width: 100%;
+  min-width: 0;
+  gap: 12px;
+}
+
+.public-bar-brand,
+.public-bar-actions,
+.public-bar-symbol-wrap {
+  flex-shrink: 0;
+}
+
+.public-bar-menu-toggle,
+.auth-bar-context-link {
+  display: none;
+}
+
+.public-bar-mobile-nav {
+  display: grid;
+  gap: 4px;
+  max-height: calc(100dvh - 104px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.public-bar-mobile-nav .public-bar-drawer-item {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+.public-bar-header :is(button, a) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.public-bar-header :is(button, a):focus-visible {
+  outline: 2px solid #94eefe;
+  outline-offset: 3px;
+}
+
+@container public-header (max-width: 60rem) {
+  .public-bar-desktop-nav { display: none; }
+  .public-bar-menu-toggle { display: inline-flex; }
+}
+
+@container public-header (max-width: 40rem) {
+  .auth-bar-switcher,
+  .auth-bar-back-control { display: none; }
+  .auth-bar-context-link { display: block; }
+  .public-bar-deck { padding-inline: 12px; }
+  .public-bar-actions { gap: 6px; }
+  .public-bar-brand { min-height: 44px; }
+  .public-bar-icon-button { width: 44px; height: 44px; }
+  .public-bar-btn-login { min-height: 44px; }
+  .public-bar-theme-menu [role="menuitemradio"] { min-height: 44px; }
+}
+
+@container public-header (max-width: 36rem) {
+  .public-bar-badge { display: none; }
+  .public-bar-brand { gap: 6px; padding-inline: 0; }
+  .public-bar-symbol-wrap { width: 32px; height: 32px; padding: 5px; }
+  .public-bar-logo-text { font-size: 14px; }
+  .public-bar-mobile-nav { padding: 10px; border-radius: 16px; }
+}
+
+@container public-header (max-width: 21rem) {
+  .public-bar-login-label,
+  .auth-bar-context-label { display: none; }
+  .public-bar-login,
+  .auth-bar-context-link .public-bar-btn-login { width: 44px; padding-inline: 0; justify-content: center; }
+  .public-bar-deck { gap: 8px; padding-inline: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-bar-header *, .public-bar-header *::before, .public-bar-header *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .public-bar-drawer-item:not(.public-bar-drawer-item-active):hover {
     border-color: rgb(148 238 254 / 45%);

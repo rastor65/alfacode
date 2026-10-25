@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { LogIn, Menu, X } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
 import { ThemeMenu } from "@/components/theme/theme-menu";
@@ -12,9 +13,46 @@ import "./public-header.css";
 export function PublicHeader() {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [previousPath, setPreviousPath] = useState(pathname);
+  const headerRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const navigationRef = useRef<HTMLElement>(null);
+  const navigationId = useId();
+
+  if (previousPath !== pathname) {
+    setPreviousPath(pathname);
+    setMenuOpen(false);
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    navigationRef.current?.querySelector<HTMLAnchorElement>("a")?.focus();
+    const onPointerDown = (event: PointerEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.defaultPrevented) {
+        setMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    // Mismo umbral que la container query: el menú depende del espacio real del header.
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width > 960) setMenuOpen(false);
+    });
+    if (headerRef.current) observer.observe(headerRef.current);
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   return (
-    <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6 lg:px-8">
+    <header ref={headerRef} aria-label="Barra del portal público" className="public-bar-header fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6 lg:px-8">
       <div className="public-bar-deck">
         {/* Fondo de red y resplandores recortados al óvalo */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
@@ -41,6 +79,7 @@ export function PublicHeader() {
             isHome ? "scale-[1.02]" : ""
           }`}
           title="AlfaCode HUB · Ir al inicio"
+          onClick={() => setMenuOpen(false)}
         >
           <span className="public-bar-symbol-wrap">
             <AlfaCodeSymbol className="size-full text-cyan-300" />
@@ -50,7 +89,7 @@ export function PublicHeader() {
               Alfa
               <span className="public-bar-logo-gradient">Code</span>
             </span>
-            <span className="hidden sm:inline-flex public-bar-badge">
+            <span className="public-bar-badge">
               <span className="public-bar-badge-dot animate-pulse" aria-hidden="true" />
               Lab
             </span>
@@ -58,7 +97,7 @@ export function PublicHeader() {
         </Link>
 
         {/* Desktop Navigation Capsule */}
-        <nav className="hidden md:flex public-bar-nav" aria-label="Navegación Principal">
+        <nav className="public-bar-nav public-bar-desktop-nav" aria-label="Navegación Principal">
           {publicNavigation.map((item) => {
             const isActive =
               item.href === "/"
@@ -69,6 +108,7 @@ export function PublicHeader() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={`public-bar-nav-item focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                   isActive ? "public-bar-nav-item-active" : ""
                 }`}
@@ -91,16 +131,34 @@ export function PublicHeader() {
 
           <Link
             href="/ingresar"
-            className={`inline-flex public-bar-btn-login focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+            className={`public-bar-btn-login public-bar-login focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               pathname === "/ingresar" ? "border-cyan-400 shadow-[0_0_18px_rgba(148,238,254,0.5)]" : ""
             }`}
             title="Ingresar a AlfaCode HUB"
+            aria-label="Ingresar a AlfaCode HUB"
+            onClick={() => setMenuOpen(false)}
           >
             <LogIn size={15} aria-hidden="true" />
-            <span>Ingresar</span>
+            <span className="public-bar-login-label">Ingresar</span>
           </Link>
+          <button ref={triggerRef} type="button" className="public-bar-icon-button public-bar-menu-toggle"
+            aria-label={menuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
+            aria-expanded={menuOpen} aria-controls={navigationId}
+            onClick={() => setMenuOpen((open) => !open)}>
+            {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+          </button>
         </div>
       </div>
+      {menuOpen && (
+        <nav ref={navigationRef} id={navigationId} className="public-bar-drawer public-bar-mobile-nav" aria-label="Navegación móvil del portal">
+          {publicNavigation.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}
+              className={`public-bar-drawer-item${active ? " public-bar-drawer-item-active" : ""}`}
+              onClick={() => setMenuOpen(false)}>{item.label}</Link>;
+          })}
+        </nav>
+      )}
     </header>
   );
 }

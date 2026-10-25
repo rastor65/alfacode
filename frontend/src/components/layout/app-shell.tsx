@@ -516,10 +516,12 @@ export function AppShell({ user, children }: AppShellProps) {
         <main
           id="contenido"
           tabIndex={-1}
-          className={cn("min-w-0 flex-1 bg-hub-bg px-4 py-8 focus:outline-none sm:px-8 lg:px-10", !hasSidebar && "w-full")}
+          className={cn("relative min-w-0 flex-1 bg-hub-bg px-4 py-8 focus:outline-none sm:px-8 lg:px-10", !hasSidebar && "w-full")}
         >
+          <div className="hub-content-sheen-clip pointer-events-none absolute inset-x-4 top-5 z-30 h-[70px] overflow-hidden sm:inset-x-8 lg:inset-x-10" aria-hidden="true">
+            <div ref={sheenRef} className="hub-content-sheen" />
+          </div>
           <div ref={contentRef} className="hub-content-view">
-            <div ref={sheenRef} className="hub-content-sheen" aria-hidden="true" />
             {children}
           </div>
         </main>

@@ -72,6 +72,8 @@ export function HubTopbar({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
+  const selectQueryOnOpen = useRef(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const { source, reveal, dismiss, cancel, position, syncAppearance } = useHubTopbarMotion(headerRef, panelRef);
   const [popover, setPopover] = useState<Popover>(null);
@@ -137,14 +139,25 @@ export function HubTopbar({
   ].map((group) => ({ ...group, entries: results.map((item, index) => ({ item, index })).filter(({ item }) => item.kind === group.kind) }))
     .filter((group) => group.entries.length > 0);
 
-  function openSearch() {
+  const openSearch = useCallback(() => {
     setPopover(null);
+    selectQueryOnOpen.current = true;
     setSearchOpen(true);
-    setTimeout(() => {
+    if (searchOpen) {
       searchInputRef.current?.focus();
       searchInputRef.current?.select();
-    }, 30);
-  }
+      selectQueryOnOpen.current = false;
+    }
+  }, [searchOpen]);
+
+  useLayoutEffect(() => {
+    if (!searchOpen) return;
+    searchInputRef.current?.focus();
+    if (selectQueryOnOpen.current) {
+      searchInputRef.current?.select();
+      selectQueryOnOpen.current = false;
+    }
+  }, [searchOpen]);
 
   const togglePopover = useCallback((next: Exclude<Popover, null>, trigger: HTMLButtonElement) => {
     triggerRef.current = trigger;
@@ -234,6 +247,7 @@ export function HubTopbar({
       event.preventDefault();
       setSearchOpen(false);
       searchInputRef.current?.blur();
+      if (window.matchMedia("(max-width: 639px)").matches) mobileSearchTriggerRef.current?.focus();
     }
   };
 
@@ -263,7 +277,7 @@ export function HubTopbar({
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onToggleSidebar, onOpenShortcuts, hasSidebar, togglePopover, searchOpen]);
+  }, [onToggleSidebar, onOpenShortcuts, hasSidebar, togglePopover, searchOpen, openSearch]);
 
   const avatarContent = avatar ? (
     // El avatar es un data URL privado del dispositivo, no un recurso remoto optimizable.
@@ -316,8 +330,14 @@ export function HubTopbar({
           </button>
         </div>
 
-        <div ref={searchContainerRef} className="hub-bar-search-container">
-          <div className={cn("hub-bar-search-box", searchOpen && "hub-bar-search-box-active")}>
+        <div ref={searchContainerRef} className={cn("hub-bar-search-container", searchOpen && "hub-bar-search-is-open")}>
+          <button ref={mobileSearchTriggerRef} type="button" className="hub-bar-mobile-search"
+            aria-label={searchOpen ? "Cerrar búsqueda" : "Buscar en AlfaCode HUB"}
+            aria-expanded={searchOpen} aria-controls={`${id}-mobile-search`}
+            onClick={() => { if (searchOpen) setSearchOpen(false); else openSearch(); }}>
+            {searchOpen ? <X size={20} aria-hidden="true" /> : <Search size={20} aria-hidden="true" />}
+          </button>
+          <div id={`${id}-mobile-search`} className={cn("hub-bar-search-box", searchOpen && "hub-bar-search-box-active")}>
             <span className="hub-bar-search-icon" aria-hidden="true"><Search size={18} /></span>
             <input
               ref={searchInputRef}

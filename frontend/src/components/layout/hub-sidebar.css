@@ -615,6 +615,12 @@
   transform: translateX(-100%);
 }
 
+/* El reflejo se recorta en su propia capa; no amplía el viewport ni recorta el contenido. */
+.hub-content-sheen-clip > .hub-content-sheen {
+  inset: 0;
+  height: 100%;
+}
+
 /* Adaptación al tema claro */
 .hub-theme[data-theme="light"] .hub-motion-emitter-spark {
   background: radial-gradient(circle, #ffffff 15%, #037795 60%, transparent 100%);

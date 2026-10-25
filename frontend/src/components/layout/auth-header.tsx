@@ -21,7 +21,7 @@ export function AuthHeader() {
   const isRegistro = pathname === "/registro";
 
   return (
-    <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6 lg:px-8">
+    <header aria-label="Barra de acceso" className="public-bar-header auth-bar-header fixed inset-x-0 top-3 z-50 px-3 sm:top-4 sm:px-6 lg:px-8">
       <div className="public-bar-deck">
         {/* Fondo de red y resplandores recortados al óvalo */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true">
@@ -55,7 +55,7 @@ export function AuthHeader() {
               Alfa
               <span className="public-bar-logo-gradient">Code</span>
             </span>
-            <span className="hidden sm:inline-flex public-bar-badge">
+            <span className="public-bar-badge">
               <span className="public-bar-badge-dot animate-pulse" aria-hidden="true" />
               HUB
             </span>
@@ -67,7 +67,7 @@ export function AuthHeader() {
           {/* Botón Volver a Home */}
           <Link
             href="/"
-            className="group public-bar-btn-login text-xs px-3 sm:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            className="group public-bar-btn-login auth-bar-back-control text-xs px-3 sm:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             title="Volver a la página principal"
           >
             <ArrowLeft
@@ -75,35 +75,36 @@ export function AuthHeader() {
               className="text-[#94eefe] transition-transform duration-200 group-hover:-translate-x-1"
               aria-hidden="true"
             />
-            <span className="hidden sm:inline">Volver a Home</span>
-            <span className="sm:hidden">Inicio</span>
+            <span>Volver al inicio</span>
           </Link>
 
           {/* En móvil (< sm): botón contextual directo hacia el módulo opuesto */}
-          <div className="sm:hidden">
+          <div className="auth-bar-context-link">
             {isIngresar ? (
               <Link
                 href="/registro"
                 className="public-bar-btn-login text-xs px-3"
+                aria-label="Ir al registro"
                 title="Ir a formulario de registro"
               >
                 <UserPlus size={14} aria-hidden="true" />
-                <span>Registro</span>
+                <span className="auth-bar-context-label">Registro</span>
               </Link>
             ) : (
               <Link
                 href="/ingresar"
                 className="public-bar-btn-login text-xs px-3"
+                aria-label="Ir a ingresar"
                 title="Ir a ingreso"
               >
                 <LogIn size={14} aria-hidden="true" />
-                <span>Ingresar</span>
+                <span className="auth-bar-context-label">Ingresar</span>
               </Link>
             )}
           </div>
 
           {/* En desktop (sm y superior): cápsula integrada con ambos accesos */}
-          <div className="hidden sm:flex public-bar-nav" aria-label="Cambio de formulario">
+          <nav className="public-bar-nav auth-bar-switcher" aria-label="Cambio de formulario">
             <Link
               href="/ingresar"
               className={`public-bar-nav-item flex items-center gap-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
@@ -123,7 +124,7 @@ export function AuthHeader() {
               <UserPlus size={14} aria-hidden="true" />
               <span>Registro</span>
             </Link>
-          </div>
+          </nav>
 
           {/* Selector de modo oscuro / claro */}
           <ThemeMenu
