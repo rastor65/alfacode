@@ -509,7 +509,7 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Restricciones que se mantienen:** permisos antes de agregar, sin puntajes ni comparacion entre personas, sin cambios de esquema, sin commit, push ni despliegue.
 - **Aprobacion del responsable:** autorizacion de la iteracion confirmada; aprobacion del resultado pendiente.
 
-### DEC-051 — Renombrar la migracion RbacResources por marca de tiempo duplicada
+### DEC-051 - Renombrar la migracion RbacResources por marca de tiempo duplicada
 
 - **Fecha:** 2026-10-25
 - **Estado:** propuesta
@@ -518,6 +518,39 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Decision propuesta:** renombrar a `1728840000000-rbac-resources.ts` (clase y `name` `RbacResources1728840000000`) y actualizar `database.options.ts`. No habia sido aplicada en ninguna base conocida; si `main` ya la aplico en algun entorno, ese entorno la vera como nueva.
 - **Archivos afectados:** `backend/src/database/migrations/1728840000000-rbac-resources.ts`, `backend/src/database/database.options.ts`.
 - **Aprobacion del responsable:** instruccion "hazlo todo" (2026-10-25) cubre la ejecucion; la decision queda pendiente de confirmacion formal.
+
+### DEC-052 - Integracion de `origin/main` en `dev`: rediseño visual del frontend
+
+- **Fecha:** 2026-10-25
+- **Estado:** propuesta (registro retroactivo; el trabajo ya estaba en `main`)
+- **Contexto/problema:** `main` recibio 29 commits no incluidos en `dev` que cambian la interfaz sin pasar por una iteracion del plan: rediseño de `/ingresar` y `/registro` (layout `auth-shell`, toasts, validacion numerica estricta), topbar y aside del HUB (`hub-topbar`, `hub-sidebar`, busqueda con Ctrl+K, transiciones entre rutas), landing y paginas publicas del portafolio, y topbar publico. Segun `context/estado-actual.md` cada cambio fue pedido por el responsable.
+- **Decision propuesta:** conservar los cambios visuales tal como llegaron en `main`; no alteran el modelo de datos ni los permisos. Nuevas dependencias de frontend: `gsap` (3.15.0), `sonner` (^2.0.8) y `playwright` (^1.64.1, usado para revision en navegador). Se ignoran `repomix-output.md` y artefactos de Python en Git. La prueba del frontend pasa a `--test-concurrency=1`.
+- **Verificacion tecnica (2026-10-25):** `npm run verify` salida 0 (104 frontend + 313 backend) y `npm run e2e` salida 0 (156 comprobaciones). Lint: 0 errores y 27 advertencias de variables sin usar en archivos ajenos a los cambios recientes.
+- **Riesgos:** la landing y el HUB usan Three.js y GSAP, con mayor coste de carga; la prueba tactil en hardware real sigue pendiente (consta en el estado). El bloqueo institucional temporal del registro descrito en el estado fue retirado despues por `da267c1` (ver DEC-054).
+- **Archivos afectados:** `frontend/src/components/layout/*`, `frontend/src/features/{auth,home,team,...}`, `frontend/package.json`, `.gitignore`.
+- **Aprobacion del responsable:** pendiente.
+
+### DEC-053 - RBAC por recursos (`resources` y `role_resources`)
+
+- **Fecha:** 2026-10-25
+- **Estado:** propuesta (registro retroactivo; el codigo ya estaba en `main`)
+- **Contexto/problema:** `main` agrego un modulo de roles y recursos: tablas `resources` (12 recursos del HUB sembrados) y `role_resources` (permisos `can_read/create/update/delete/export` por rol), columnas `description` e `is_active` en `roles`, endpoints `/api/v1/roles` y `/api/v1/resources` (CRUD, matriz por rol, asignacion de usuarios), pagina `/hub/roles-recursos` y contexto de permisos en el frontend. `/auth/me` devuelve los recursos del rol. El diseño tecnico v0.2 no lo describe.
+- **Hallazgo:** la autorizacion efectiva de los endpoints sigue basada en `@RequireRoles(...)`. Ningun guard del backend consulta `role_resources`; la matriz solo alimenta el menu y los controles del frontend. Los endpoints de roles y recursos quedan protegidos: lectura para `admin` y `coordinator`, escritura solo para `admin`. Segun las restricciones invariables, los controles visuales no sustituyen la autorizacion en backend.
+- **Decision propuesta:** aceptar el modulo como configuracion de navegacion y de interfaz, sin presentarlo como mecanismo de autorizacion. Antes de que la matriz gobierne acciones reales hace falta un guard de backend que la aplique, con pruebas, en una iteracion autorizada. Hasta entonces, un cambio en la matriz no concede ni retira acceso a la API.
+- **Opciones analizadas:** (a) dejar la matriz solo visual, como esta; (b) enlazarla a un guard de backend; (c) retirar el modulo. Se propone (a) de forma provisional, con (b) como siguiente paso a decidir.
+- **Pendientes:** migracion `RbacResources1728840000000` solo para SQLite (en PostgreSQL lanza error, coherente con DEC-003); sin prueba de revert; los permisos de la semilla deben revisarse contra el plan, que define roles pero no un catalogo de recursos.
+- **Archivos afectados:** `backend/src/modules/roles/*`, `backend/src/database/migrations/1728840000000-rbac-resources.ts`, `backend/src/modules/auth/auth.controller.ts`, `frontend/src/lib/auth/permissions*.ts`, `frontend/src/features/roles-recursos/*`.
+- **Aprobacion del responsable:** pendiente.
+
+### DEC-054 - Registro publico habilitado y origenes de produccion por defecto
+
+- **Fecha:** 2026-10-25
+- **Estado:** propuesta (registro retroactivo del commit `da267c1`)
+- **Contexto/problema:** el plan (seccion 2.3) y DEC-016 mantenian deshabilitado el auto-registro sin correo real. El commit `da267c1` permite saltarlo con `ENABLE_PUBLIC_REGISTRATION=true`, habilita el registro y la postulacion en el frontend, y agrega `https://alfacode.app` y `https://www.alfacode.app` a los origenes CORS por defecto (se completa el par con y sin `www`).
+- **Riesgos:** los origenes de produccion quedan permitidos aun sin definir `CORS_ORIGINS`, mientras el despliegue en Railway sigue sin autorizar; el registro sin correo real queda disponible solo si se activa la variable. No hay evidencia de despliegue ni de variables de entorno reales en el repositorio.
+- **Decision propuesta:** mantener la bandera apagada por defecto y no desplegar. El responsable debe confirmar si los origenes de produccion por defecto son deseados o si deben exigirse solo por `CORS_ORIGINS`.
+- **Archivos afectados:** `backend/src/common/security.config.ts`, `backend/src/modules/auth/registration.service.ts`, `frontend/src/features/auth/components/register-form.tsx`.
+- **Aprobacion del responsable:** pendiente.
 
 ## Referencias vigentes
 
