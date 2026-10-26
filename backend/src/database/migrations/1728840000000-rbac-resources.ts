@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { MigrationInterface, QueryRunner } from "typeorm";
 
-export class RbacResources1728830000000 implements MigrationInterface {
-  name = "RbacResources1728830000000";
+export class RbacResources1728840000000 implements MigrationInterface {
+  name = "RbacResources1728840000000";
 
   async up(q: QueryRunner): Promise<void> {
     if (!["sqlite", "better-sqlite3"].includes(q.connection.options.type)) {

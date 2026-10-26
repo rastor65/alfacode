@@ -37,7 +37,7 @@ import { Events1728800000000 } from "./migrations/1728800000000-events";
 import { AdministrativeRequests1728810000000 } from "./migrations/1728810000000-administrative-requests";
 import { RequestAttachments1728820000000 } from "./migrations/1728820000000-request-attachments";
 import { ProjectObservations1728830000000 } from "./migrations/1728830000000-project-observations";
-import { RbacResources1728830000000 } from "./migrations/1728830000000-rbac-resources";
+import { RbacResources1728840000000 } from "./migrations/1728840000000-rbac-resources";
 import { ResearchLinesResource1728840000000 } from "./migrations/1728840000000-research-lines-resource";
 import { ProjectObservation } from "../modules/tracking/project-observation.entity";
 import { RequestAttachment } from "../modules/documents/request-attachment.entity";
@@ -92,7 +92,7 @@ export const migrations = [
   AdministrativeRequests1728810000000,
   RequestAttachments1728820000000,
   ProjectObservations1728830000000,
-  RbacResources1728830000000,
+  RbacResources1728840000000,
   ResearchLinesResource1728840000000,
 ];
 
