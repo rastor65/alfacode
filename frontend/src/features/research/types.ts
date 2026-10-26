@@ -1,4 +1,5 @@
 import type { ProjectStatus, ProjectType } from "@/features/projects/types";
+import { normalizeSearch } from "@/lib/text";
 
 export type ResearchLineStatus = "active" | "inactive";
 export type ResearchResultType = "finding" | "prototype" | "methodological" | "other";
@@ -112,4 +113,51 @@ export function participantOptions(team: readonly PersonRef[], current: readonly
   }
 
   return [...byId.values()].sort((a, b) => a.fullName.localeCompare(b.fullName, "es"));
+}
+
+/** Campos de la ficha con texto, sobre el total de campos. */
+export function profileProgress(profile: ResearchProfile | null) {
+  return { filled: profile ? PROFILE_FIELDS.filter((field) => profile[field]).length : 0, total: PROFILE_FIELDS.length };
+}
+
+export const RESULT_TYPES = Object.keys(RESULT_TYPE_LABELS) as ResearchResultType[];
+
+export function resultTypeCounts(results: readonly Pick<ResearchResult, "type">[]) {
+  const counts = Object.fromEntries(RESULT_TYPES.map((type) => [type, 0])) as Record<ResearchResultType, number>;
+
+  for (const result of results) {
+    counts[result.type] += 1;
+  }
+
+  return counts;
+}
+
+/** Dia calendario del resultado: su fecha, o el dia en que se registro si no tiene. */
+export function resultDay(result: Pick<ResearchResult, "resultDate" | "createdAt">) {
+  return result.resultDate ?? result.createdAt.slice(0, 10);
+}
+
+export type ResultSort = "recent" | "oldest" | "title";
+
+export const RESULT_SORT_LABELS: Record<ResultSort, string> = {
+  recent: "Más recientes",
+  oldest: "Más antiguos",
+  title: "Título (A-Z)",
+};
+
+/** Filtra por tipo y por texto (titulo, descripcion, referencias o participantes, sin tildes ni mayusculas) y ordena. */
+export function filterResults<T extends ResearchResult>(results: readonly T[], filter: { type: ResearchResultType | "all"; text: string; sort: ResultSort }) {
+  const needle = normalizeSearch(filter.text.trim());
+  const matches = results.filter(
+    (result) =>
+      (filter.type === "all" || result.type === filter.type) &&
+      (needle === "" ||
+        normalizeSearch([result.title, result.description ?? "", result.references ?? "", ...result.participants.map((person) => person.fullName)].join(" ")).includes(needle)),
+  );
+
+  return matches.sort((a, b) => {
+    if (filter.sort === "title") return a.title.localeCompare(b.title, "es");
+    const byDay = resultDay(a).localeCompare(resultDay(b)) || a.createdAt.localeCompare(b.createdAt);
+    return filter.sort === "oldest" ? byDay : -byDay;
+  });
 }

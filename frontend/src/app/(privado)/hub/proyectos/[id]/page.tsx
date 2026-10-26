@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { ProjectOverview } from "@/features/projects/components/project-overview";
-import { loadProjectData } from "@/features/projects/load-project";
+import { loadProjectData, loadTabCounts } from "@/features/projects/load-project";
 import type { ProjectDetail } from "@/features/projects/types";
 import type { ObservationList, ProjectPanel } from "@/features/tracking/types";
 import { requireSessionUser } from "@/lib/auth/session";
@@ -17,14 +17,14 @@ export default async function ProjectOverviewPage({ params }: { params: Promise<
   const slug = encodeURIComponent(id);
   const currentPath = `/hub/proyectos/${slug}`;
   await requireSessionUser(currentPath);
-  const [project, panel, observations] = await loadProjectData<[ProjectDetail, ProjectPanel, ObservationList]>(
-    [`/projects/${slug}`, `/tracking/projects/${slug}`, `/projects/${slug}/observations?pageSize=3`],
-    currentPath,
-  );
+  const [[project, panel, observations], counts] = await Promise.all([
+    loadProjectData<[ProjectDetail, ProjectPanel, ObservationList]>([`/projects/${slug}`, `/tracking/projects/${slug}`, `/projects/${slug}/observations?pageSize=3`], currentPath),
+    loadTabCounts(id, currentPath),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-430">
-      <ProjectOverview project={project} panel={panel} observations={observations} />
+      <ProjectOverview project={project} panel={panel} observations={observations} counts={counts} />
     </div>
   );
 }

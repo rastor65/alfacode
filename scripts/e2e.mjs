@@ -448,6 +448,12 @@ async function main() {
   const tooLarge = await coord.upload(`/projects/${projectId}/documents`, pdf(20 * 1024 * 1024 + 1, "excesivo"), "Excesivo.pdf", {}, true);
   check("un archivo de mas de 20 MiB se rechaza con 413", tooLarge.status === 413, tooLarge.status);
 
+  const sprintsPage = (await coord.page(`/hub/proyectos/${projectId}/sprints`)).html;
+  check(
+    "la vista de sprints muestra el historial del sprint cerrado y el backlog",
+    sprintsPage.includes("Historial") && sprintsPage.includes("Sprint 1") && sprintsPage.includes("Backlog") && sprintsPage.includes("Ninguno"),
+  );
+
   const catalog = await student.page("/hub/investigacion");
   check("la pagina de lineas muestra la linea", catalog.status === 200 && catalog.html.includes(lineName), catalog.status);
   const researchPage = await student.page(`/hub/proyectos/${projectId}/investigacion`);

@@ -78,3 +78,24 @@ export function parseScope(value: string, sprints: readonly Pick<SprintSummary, 
 
   return sprints.some((sprint) => sprint.id === value) ? { kind: "sprint", sprintId: value } : null;
 }
+
+const DAY_MS = 86_400_000;
+const dayNumber = (day: string) => Math.round(Date.parse(`${day}T00:00:00Z`) / DAY_MS);
+
+/**
+ * Plazo de un sprint respecto de `today` (dia calendario `YYYY-MM-DD`): dias totales y transcurridos
+ * (inclusivos) y dias que faltan para el fin; negativo si el plazo ya vencio.
+ */
+export function sprintTiming(sprint: Pick<SprintSummary, "startDate" | "endDate">, today: string) {
+  const total = Math.max(1, dayNumber(sprint.endDate) - dayNumber(sprint.startDate) + 1);
+  const elapsed = Math.min(total, Math.max(0, dayNumber(today) - dayNumber(sprint.startDate) + 1));
+  return { total, elapsed, remaining: dayNumber(sprint.endDate) - dayNumber(today) };
+}
+
+/** Tareas hechas sobre el total de los sprints completados (segun el registro de cierre); `null` si no hay ninguno. */
+export function deliveredRate(sprints: readonly Pick<SprintSummary, "status" | "progress">[]) {
+  const closed = sprints.filter((sprint) => sprint.status === "completed");
+  const total = closed.reduce((sum, sprint) => sum + sprint.progress.total, 0);
+  const done = closed.reduce((sum, sprint) => sum + sprint.progress.done, 0);
+  return { closed: closed.length, percent: total === 0 ? null : Math.floor((done * 100) / total) };
+}

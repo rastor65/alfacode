@@ -20,3 +20,28 @@ export function safeExternalUrl(value: string | null | undefined) {
   try { const url = new URL(value ?? ""); return ["http:", "https:"].includes(url.protocol) ? url.href : null; }
   catch { return null; }
 }
+
+export type ProductType = keyof typeof PRODUCT_TYPES;
+export type ProductStatus = keyof typeof PRODUCT_STATUSES;
+export const PRODUCT_STATUS_KEYS = Object.keys(PRODUCT_STATUSES) as ProductStatus[];
+export const PRODUCT_TYPE_KEYS = Object.keys(PRODUCT_TYPES) as ProductType[];
+
+/** Maximo de registros que lee la vista para los indicadores (el limite de pagina del backend). */
+export const STATS_SAMPLE = 100;
+
+/** Cifras de los productos cargados: conteo por estado y por tipo, y la ultima publicacion con fecha. */
+export function productStats(items: readonly Pick<AcademicItem, "type" | "status" | "title" | "productDate" | "source">[]) {
+  const byStatus = Object.fromEntries(PRODUCT_STATUS_KEYS.map((key) => [key, 0])) as Record<ProductStatus, number>;
+  const byType = Object.fromEntries(PRODUCT_TYPE_KEYS.map((key) => [key, 0])) as Record<ProductType, number>;
+  let latestPublished: (typeof items)[number] | null = null;
+
+  for (const item of items) {
+    if (item.status) byStatus[item.status] += 1;
+    if (item.type) byType[item.type] += 1;
+    if (item.status === "published" && item.productDate && (!latestPublished?.productDate || item.productDate > latestPublished.productDate)) {
+      latestPublished = item;
+    }
+  }
+
+  return { byStatus, byType, latestPublished };
+}

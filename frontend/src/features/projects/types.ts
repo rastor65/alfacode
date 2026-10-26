@@ -122,6 +122,19 @@ export function parseMethodology(value: string | string[] | undefined): ProjectM
 }
 
 /** Fecha de calendario `YYYY-MM-DD` en formato legible, sin conversion de zona horaria. */
+/** Cifras que muestran las pestañas de un proyecto; una ausente no se muestra (por ejemplo, si no se pudo leer). */
+export type ProjectTabCounts = {
+  tasks?: number;
+  /** Nombre del sprint activo (proyectos agiles). */
+  activeSprint?: string;
+  research?: number;
+  documents?: number;
+  production?: number;
+  /** Actividades programadas desde hoy. */
+  upcoming?: number;
+  alerts?: number;
+};
+
 export function formatCalendarDate(value: string | null) {
   if (!value) {
     return null;

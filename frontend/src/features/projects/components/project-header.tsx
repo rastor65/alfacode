@@ -1,10 +1,11 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bell } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { chip, dangerChip, neutralChip } from "@/features/tracking/components/dashboard-ui";
 import { cn } from "@/lib/utils";
 
-import { METHODOLOGY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS, type ProjectDetail } from "../types";
+import { METHODOLOGY_LABELS, PROJECT_ROLE_LABELS, PROJECT_STATUS_LABELS, type ProjectDetail, type ProjectTabCounts } from "../types";
 
 export type ProjectSection = "resumen" | "tareas" | "sprints" | "investigacion" | "documentos" | "produccion" | "actividades" | "seguimiento";
 
@@ -16,9 +17,27 @@ type ProjectHeaderProps = {
 
 /**
  * Pestañas del proyecto; la de sprints solo existe en modalidad agil (F2-20). Las de investigacion y
- * documentos existen en todos: la ficha es opcional (F3-03). `badges` agrega datos junto a cada pestaña.
+ * documentos existen en todos: la ficha es opcional (F3-03). `counts` agrega la cifra de cada pestaña
+ * (conteos, sprint activo, alertas), se vea o no la pestaña activa.
  */
-export function ProjectTabs({ project, current, badges = {} }: { project: Pick<ProjectDetail, "id" | "methodology">; current: ProjectSection; badges?: Partial<Record<ProjectSection, React.ReactNode>> }) {
+export function ProjectTabs({ project, current, counts = {} }: { project: Pick<ProjectDetail, "id" | "methodology">; current: ProjectSection; counts?: ProjectTabCounts }) {
+  const count = (value: number | undefined) => (value ? <span className={`${neutralChip} rounded-full font-mono`}>{value}</span> : undefined);
+  const badges: Partial<Record<ProjectSection, React.ReactNode>> = {
+    tareas: count(counts.tasks),
+    sprints: counts.activeSprint ? <span className={`${chip} max-w-32 truncate rounded-full bg-hub-accent-soft text-hub-accent`}>{counts.activeSprint}</span> : undefined,
+    investigacion: count(counts.research),
+    documentos: count(counts.documents),
+    produccion: count(counts.production),
+    actividades: counts.upcoming ? <span className={`${chip} rounded-full bg-hub-accent-soft text-hub-accent`}>{counts.upcoming} próx.</span> : undefined,
+    seguimiento: counts.alerts ? (
+      <span className={`${dangerChip} gap-1 rounded-full font-mono`}>
+        <Bell aria-hidden="true" className="size-3" />
+        {counts.alerts}
+        <span className="sr-only"> {counts.alerts === 1 ? "alerta activa" : "alertas activas"}</span>
+      </span>
+    ) : undefined,
+  };
+
   const tabs: { key: ProjectSection; label: string; href: string }[] = [
     { key: "resumen", label: "Resumen", href: `/hub/proyectos/${project.id}` },
     { key: "tareas", label: project.methodology === "agile" ? "Tablero y backlog" : "Tareas", href: `/hub/proyectos/${project.id}/tareas` },
@@ -31,7 +50,7 @@ export function ProjectTabs({ project, current, badges = {} }: { project: Pick<P
   ];
 
   return (
-    <nav aria-label="Secciones del proyecto" className="-mx-1 overflow-x-auto px-1">
+    <nav aria-label="Secciones del proyecto" className="relative -mx-1 overflow-x-auto px-1">
       <ul className="flex min-w-max gap-1 border-b border-hub-border">
         {tabs.map((tab) => (
           <li key={tab.key}>

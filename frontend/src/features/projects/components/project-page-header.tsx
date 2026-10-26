@@ -4,7 +4,7 @@ import Link from "next/link";
 import { neutralChip, STATUS_CHIP } from "@/features/tracking/components/dashboard-ui";
 import { cn } from "@/lib/utils";
 
-import { METHODOLOGY_LABELS, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, type ProjectDetail } from "../types";
+import { METHODOLOGY_LABELS, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, type ProjectDetail, type ProjectTabCounts } from "../types";
 import { ProjectTabs, type ProjectSection } from "./project-header";
 
 type ProjectPageHeaderProps = {
@@ -15,11 +15,12 @@ type ProjectPageHeaderProps = {
   /** Datos junto al titulo (alertas, rol, corte...). */
   meta?: React.ReactNode;
   actions?: React.ReactNode;
-  badges?: Partial<Record<ProjectSection, React.ReactNode>>;
+  /** Cifras de las pestañas; se muestran en todas, este o no activa. */
+  counts?: ProjectTabCounts;
 };
 
 /** Encabezado comun de las vistas de un proyecto (I-27): ruta, titulo con chips, datos, acciones y pestañas. */
-export function ProjectPageHeader({ project, current, crumb, meta, actions, badges }: ProjectPageHeaderProps) {
+export function ProjectPageHeader({ project, current, crumb, meta, actions, counts }: ProjectPageHeaderProps) {
   return (
     <>
       <header className="flex flex-col gap-4">
@@ -51,7 +52,7 @@ export function ProjectPageHeader({ project, current, crumb, meta, actions, badg
           {actions}
         </div>
       </header>
-      <ProjectTabs project={project} current={current} badges={badges} />
+      <ProjectTabs project={project} current={current} counts={counts} />
     </>
   );
 }

@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { ProjectPageHeader } from "@/features/projects/components/project-page-header";
-import { loadProjectData } from "@/features/projects/load-project";
+import { loadProjectData, loadTabCounts } from "@/features/projects/load-project";
 import type { ProjectDetail } from "@/features/projects/types";
-import { activeSprint, type SprintList } from "@/features/sprints/types";
+import type { SprintList } from "@/features/sprints/types";
 import { TaskBoard } from "@/features/tasks/components/task-board";
 import { TASKS_VIEW_COOKIE, type TaskList, parseTasksView } from "@/features/tasks/types";
-import { chip, neutralChip } from "@/features/tracking/components/dashboard-ui";
 import { requireSessionUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -24,9 +23,10 @@ export default async function ProjectTasksPage({ params }: { params: Promise<{ i
   const currentPath = `/hub/proyectos/${encodeURIComponent(id)}/tareas`;
   const user = await requireSessionUser(currentPath);
   // En proyectos tradicionales la lista de sprints llega vacia y no se usa.
-  const [[project, tasks, sprints], cookieStore] = await Promise.all([
+  const [[project, tasks, sprints], cookieStore, counts] = await Promise.all([
     loadProjectData<[ProjectDetail, TaskList, SprintList]>([projectPath, `${projectPath}/tasks?pageSize=${BOARD_PAGE_SIZE}`, `${projectPath}/sprints`], currentPath),
     cookies(),
+    loadTabCounts(id, currentPath),
   ]);
 
   const agile = project.methodology === "agile";
@@ -34,7 +34,6 @@ export default async function ProjectTasksPage({ params }: { params: Promise<{ i
     .filter((member) => member.accountStatus === "active")
     .map((member) => ({ userId: member.userId, fullName: member.fullName }));
   const finished = project.status === "completed" || project.status === "cancelled";
-  const running = agile ? activeSprint(sprints.items) : null;
 
   return (
     <div className="mx-auto w-full max-w-430">
@@ -52,10 +51,7 @@ export default async function ProjectTasksPage({ params }: { params: Promise<{ i
                   : "Puedes mover entre columnas las tareas que tienes asignadas."}
             </span>
           }
-          badges={{
-            tareas: <span className={`${neutralChip} rounded-full font-mono`}>{tasks.total}</span>,
-            sprints: running ? <span className={`${chip} rounded-full bg-hub-accent-soft text-hub-accent`}>{running.name}</span> : undefined,
-          }}
+          counts={counts}
         />
         <TaskBoard
           projectId={project.id}

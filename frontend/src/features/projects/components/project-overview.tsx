@@ -17,6 +17,7 @@ import {
   daysSpan,
   formatCalendarDate,
   type ProjectDetail,
+  type ProjectTabCounts,
 } from "../types";
 import { ProjectActions } from "./project-actions";
 import { ProjectPageHeader } from "./project-page-header";
@@ -29,7 +30,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
  * I-27 (detalle): resumen del proyecto con las mismas cifras que los paneles (catalogo P-01 a P-11 y
  * G-02 a G-04). Los permisos ya los aplico el servidor; las acciones solo aparecen si estan permitidas.
  */
-export function ProjectOverview({ project, panel, observations }: { project: ProjectDetail; panel: ProjectPanel; observations: ObservationList }) {
+export function ProjectOverview({ project, panel, observations, counts }: { project: ProjectDetail; panel: ProjectPanel; observations: ObservationList; counts: ProjectTabCounts }) {
   const { tasks, signals, team, deliverables, events, sprints } = panel;
   const base = `/hub/proyectos/${project.id}`;
   const alerts = signals.risks.length > 0;
@@ -53,10 +54,7 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
           </>
         }
         actions={<ProjectActions project={project} />}
-        badges={{
-          tareas: <span className={`${neutralChip} rounded-full font-mono`}>{tasks.total}</span>,
-          sprints: sprints?.active ? <span className={`${chip} rounded-full bg-hub-accent-soft text-hub-accent`}>{sprints.active.name}</span> : undefined,
-        }}
+        counts={counts}
       />
 
       <dl aria-label="Indicadores del proyecto" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -288,7 +286,7 @@ export function ProjectOverview({ project, panel, observations }: { project: Pro
   );
 }
 
-function riskCopy(risk: ProjectPanel["signals"]["risks"][number], panel: ProjectPanel, project: ProjectDetail): [string, string] {
+export function riskCopy(risk: ProjectPanel["signals"]["risks"][number], panel: ProjectPanel, project: ProjectDetail): [string, string] {
   switch (risk) {
     case "overdue_tasks":
       return [plural(panel.tasks.overdue, "tarea vencida", "tareas vencidas"), "Tareas abiertas con fecha límite anterior a hoy."];
