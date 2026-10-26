@@ -44,23 +44,22 @@ async function rasterize(source: string, signal: AbortSignal) {
 }
 
 export async function createParticleForms(count: number, signal: AbortSignal) {
-  const response = await fetch("/AlfaCode_logos/SVG/AlfaCode_logo_horizontal.svg", { signal });
+  const [response, cortexResponse] = await Promise.all([
+    fetch("/AlfaCode_logos/SVG/AlfaCode_logo_horizontal.svg", { signal }),
+    fetch("/visuals/alfacode-cortex.bin", { signal }),
+  ]);
+  if (!cortexResponse.ok) throw new Error("Cortex unavailable");
+  const cortex = new DataView(await cortexResponse.arrayBuffer());
+  if (cortex.byteLength < 8 || cortex.getUint32(0, false) !== 0x41434232) throw new Error("Invalid cortex");
+  const cortexCount = cortex.getUint32(4, true);
+  if (cortex.byteLength !== 8 + cortexCount * 10 || !cortexCount) throw new Error("Invalid cortex size");
   if (!response.ok) throw new Error("Logo unavailable");
   const xml = new DOMParser().parseFromString(await response.text(), "image/svg+xml");
   const symbol = xml.querySelector('[id="isotipo"]');
   if (!symbol) throw new Error("Symbol unavailable");
-  const brain = document.querySelector<SVGSVGElement>(".alfa-brain-fallback")?.cloneNode(true) as SVGSVGElement | undefined;
-  if (!brain) throw new Error("Brain unavailable");
-  brain.setAttribute("stroke", "white");
-  brain.setAttribute("stroke-width", "0.5");
-  brain.setAttribute("preserveAspectRatio", "none");
-  brain.removeAttribute("class");
-  const folds = '<path d="M8 5c-2 0-3 2-1 3s3 0 3 2-3 2-3 4M5 10c-2 1-2 4 0 4s3-1 4 1-1 4-3 3"/>';
-  const brainSource = brain.outerHTML.replace("</svg>", `${folds}<g transform="translate(24 0) scale(-1 1)">${folds}</g></svg>`);
   const masks = await Promise.all([
     rasterize(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="215 163 824 618">${symbol.outerHTML}</svg>`, signal),
     ...Object.values(symbols).map((paths) => rasterize(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -2 128 104" fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`, signal)),
-    rasterize(brainSource, signal),
   ]);
   signal.throwIfAborted();
   const random = seededRandom();
@@ -68,6 +67,8 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
   const seeds = new Float32Array(count);
   const sizes = new Float32Array(count);
   const alphas = new Float32Array(count);
+  const brainNormals = new Float32Array(count * 3);
+  const brainShades = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
     seeds[i] = random();
@@ -79,6 +80,8 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       const radius = 3.1 + random() * 1.1;
       const point = [Math.cos(angle) * radius, Math.sin(angle) * radius * 0.78, (random() - 0.5) * 2];
       for (const key of PARTICLE_FORMS) forms[key].set(point, i * 3);
+      brainNormals.set([0, 0, 1], i * 3);
+      brainShades[i] = 0.25;
       continue;
     }
     for (const [key, mask] of [["logo", masks[0]], ["software", masks[1]], ["ai", masks[2]], ["research", masks[3]]] as const) {
@@ -86,26 +89,14 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       forms[key].set([point[0], point[1], (random() - 0.5) * (key === "logo" ? 1 : 0.35)], i * 3);
     }
 
-    // Two cortical hemispheres, a medial fissure and folded surface; a small brain stem.
-    const side = random() < 0.5 ? -1 : 1;
-    const u = random();
-    const angle = random() * Math.PI * 2;
-    const radius = Math.sqrt(1 - u * u);
-    const fold = Math.sin(angle * 11 + u * 12) * Math.sin(u * 23 - angle * 3) * 0.09;
-    let x = side * (0.1 + u * 2.05);
-    let y = Math.sin(angle) * radius * (1.75 + fold);
-    let z = Math.cos(angle) * radius * (1.35 + fold * 2);
-    x += side * fold;
-    if (i % 13 === 0) { x = (random() - 0.5) * 0.58; y = -1.25 - random() * 1.05; z = -0.2 + random() * 0.55; }
-    if (i % 3 !== 0) {
-      // Denser particles trace the folds of the existing Lucide brain, curved over the volume.
-      const foldPoint = masks[4][Math.floor(random() * masks[4].length)];
-      x = foldPoint[0] * 1.02;
-      y = foldPoint[1];
-      z = Math.sqrt(Math.max(0.04, 1 - (x / 2.9) ** 2 - (y / 2.35) ** 2)) * 1.25;
-      z += Math.sin(x * 9 + y * 5) * 0.08;
+    // A compact surface sample from fsaverage5; real sulci, normals and curvature.
+    const sample = Math.min(cortexCount - 1, Math.floor(i / (count * 0.91) * cortexCount));
+    const offset = 8 + sample * 10;
+    for (let axis = 0; axis < 3; axis++) {
+      forms.brain[i * 3 + axis] = cortex.getInt16(offset + axis * 2, true) / 32767 * 3;
+      brainNormals[i * 3 + axis] = cortex.getInt8(offset + 6 + axis) / 127;
     }
-    forms.brain.set([x, y, z], i * 3);
+    brainShades[i] = cortex.getUint8(offset + 9) / 255;
 
     // A globe with meridians, latitude rings, three data orbits and satellite nodes.
     const t = random() * Math.PI * 2;
@@ -136,5 +127,30 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
     }
     forms.iot.set([gx, gy, gz], i * 3);
   }
-  return { forms, seeds, sizes, alphas };
+  // Match spatial neighborhoods across forms, preserving a particle's sense of place.
+  const bodyCount = Math.ceil(count * 0.91);
+  const expand = (value: number) => {
+    let n = value & 1023;
+    n = (n | n << 16) & 0x030000ff;
+    n = (n | n << 8) & 0x0300f00f;
+    n = (n | n << 4) & 0x030c30c3;
+    return (n | n << 2) & 0x09249249;
+  };
+  for (const key of PARTICLE_FORMS) {
+    const source = forms[key].slice();
+    const ranks = Array.from({ length: bodyCount }, (_, index) => {
+      const q = (axis: number) => Math.max(0, Math.min(1023, Math.floor((source[index * 3 + axis] + 4) / 8 * 1023)));
+      return { index, code: (expand(q(0)) | expand(q(1)) << 1 | expand(q(2)) << 2) >>> 0 };
+    }).sort((a, b) => a.code - b.code);
+    const normals = key === "brain" ? brainNormals.slice() : null;
+    const shades = key === "brain" ? brainShades.slice() : null;
+    ranks.forEach(({ index }, target) => {
+      forms[key].set(source.subarray(index * 3, index * 3 + 3), target * 3);
+      if (normals && shades) {
+        brainNormals.set(normals.subarray(index * 3, index * 3 + 3), target * 3);
+        brainShades[target] = shades[index];
+      }
+    });
+  }
+  return { forms, seeds, sizes, alphas, brainNormals, brainShades };
 }

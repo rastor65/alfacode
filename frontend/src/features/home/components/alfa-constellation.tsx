@@ -15,6 +15,8 @@ const VERTEX = `
   attribute vec3 aIot;
   attribute vec3 aResearch;
   attribute vec3 aBarycentric;
+  attribute vec3 aBrainNormal;
+  attribute float aBrainShade;
   attribute vec3 aColor;
   attribute float aSeed;
   attribute float aSize;
@@ -34,6 +36,7 @@ const VERTEX = `
   varying vec3 vBarycentric;
   varying vec3 vColor;
   varying float vAlpha;
+  varying float vCortex;
   vec3 form(float index) {
     if (index < 0.5) return aLogo;
     if (index < 1.5) return aBrain;
@@ -43,20 +46,25 @@ const VERTEX = `
     return aResearch;
   }
   void main() {
-    vec3 p = mix(form(uFormA), form(uFormB), uMorph);
-    float transition = sin(uMorph * 3.14159);
+    float morph = clamp(uMorph * 1.1 - aSeed * 0.1, 0.0, 1.0);
+    vec3 p = mix(form(uFormA), form(uFormB), morph);
+    float transition = sin(morph * 3.14159);
     vec3 scatter = vec3(sin(aSeed * 113.0), cos(aSeed * 67.0), sin(aSeed * 91.0));
-    p += scatter * (transition * 0.65 + uSpread * 0.32);
+    p += scatter * (transition * 0.22 + uSpread * 0.15);
     float cortex = (1.0 - step(0.1, abs(uFormA - 1.0))) * (1.0 - uMorph) + (1.0 - step(0.1, abs(uFormB - 1.0))) * uMorph;
-    float turn = cortex * 0.2 + uRotation.y + sin(uTime * 0.12) * 0.055;
+    float turn = uRotation.y + sin(uTime * 0.10) * 0.035;
+    vec3 normal = aBrainNormal;
+    normal.yz = mat2(cos(uRotation.x), -sin(uRotation.x), sin(uRotation.x), cos(uRotation.x)) * normal.yz;
+    normal.xz = mat2(cos(turn), -sin(turn), sin(turn), cos(turn)) * normal.xz;
+    normal.xy = mat2(cos(uRotation.z), -sin(uRotation.z), sin(uRotation.z), cos(uRotation.z)) * normal.xy;
     p.yz = mat2(cos(uRotation.x), -sin(uRotation.x), sin(uRotation.x), cos(uRotation.x)) * p.yz;
     p.xz = mat2(cos(turn), -sin(turn), sin(turn), cos(turn)) * p.xz;
     p.xy = mat2(cos(uRotation.z), -sin(uRotation.z), sin(uRotation.z), cos(uRotation.z)) * p.xy;
     p.xy += vec2(sin(uTime * 0.24 + aSeed * 71.0), cos(uTime * 0.18 + aSeed * 43.0)) * 0.025;
-    p.x += sin(aSeed * 71.0 + p.y * 2.0) * uEnergy * 0.1;
+    p.xy += vec2(sin(p.y * 1.8 + uTime * 0.2), cos(p.x * 1.6)) * uEnergy * 0.045;
     vec2 cursorDelta = p.xy - uPointer;
     float influence = exp(-dot(cursorDelta, cursorDelta) * 1.1) * uPointerInfluence;
-    p.xy += normalize(cursorDelta + vec2(0.001)) * influence * 0.36;
+    p.xy += normalize(cursorDelta + vec2(0.001)) * influence * 0.25;
     p.z += influence * 0.35;
     float perspective = 1.0 / max(0.7, 1.0 - p.z * 0.075);
     p.xy *= perspective;
@@ -65,21 +73,28 @@ const VERTEX = `
     float angle = aSeed * 6.28318 + uTime * 0.018;
     vec2 glyph = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * position.xy;
     glyph.y *= 1.0 + abs(uEnergy) * 0.4;
-    viewPosition.xy += glyph * aSize * uScale * perspective;
+    viewPosition.xy += glyph * aSize * uScale * perspective * mix(0.70, 0.85, cortex);
     gl_Position = projectionMatrix * viewPosition;
     vBarycentric = aBarycentric;
-    vColor = aColor * (0.65 + 0.35 * smoothstep(-1.5, 1.5, p.z));
-    vAlpha = aAlpha * uOpacity * (0.86 + 0.14 * sin(uTime * 0.6 + aSeed * 91.0));
+    float light = max(0.0, dot(normal, normalize(vec3(-0.55 + uPointer.x * uPointerInfluence * 0.12, 0.8 + uPointer.y * uPointerInfluence * 0.08, 1.1))));
+    float rim = pow(1.0 - max(0.0, normal.z), 2.5);
+    vec3 corticalColor = mix(vec3(0.004, 0.085, 0.13), vec3(0.30, 0.85, 0.98), clamp(pow(light, 0.65) * 0.87 + rim * 0.13, 0.0, 1.0));
+    corticalColor *= 0.72 + aBrainShade * 0.4;
+    vColor = mix(aColor * (0.65 + 0.35 * smoothstep(-1.5, 1.5, p.z)), corticalColor, cortex);
+    float facing = mix(1.0, 0.03 + 0.97 * smoothstep(-0.1, 0.15, normal.z), cortex);
+    vCortex = cortex;
+    vAlpha = aAlpha * uOpacity * facing * (0.92 + 0.08 * sin(uTime * 0.45 + aSeed * 91.0));
   }
 `;
 const FRAGMENT = `
   varying vec3 vBarycentric;
   varying vec3 vColor;
   varying float vAlpha;
+  varying float vCortex;
   void main() {
     float distanceToEdge = min(vBarycentric.x, min(vBarycentric.y, vBarycentric.z));
     float edge = 1.0 - smoothstep(0.0, fwidth(distanceToEdge) * 1.15, distanceToEdge);
-    float alpha = edge * vAlpha;
+    float alpha = mix(edge, 0.34 + edge * 0.66, vCortex) * vAlpha;
     if (alpha < 0.015) discard;
     gl_FragColor = vec4(vColor, alpha);
     #include <colorspace_fragment>
@@ -122,7 +137,7 @@ export default function AlfaConstellation() {
     let release = () => {};
     const abort = new AbortController();
     void (async () => {
-      const count = window.matchMedia("(max-width: 700px)").matches ? 3400 : 7400;
+      const count = window.matchMedia("(max-width: 700px)").matches ? 6200 : 16000;
       const [THREE, particles] = await Promise.all([import("three"), createParticleForms(count, abort.signal)]);
       if (disposed) return;
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
@@ -140,6 +155,8 @@ export default function AlfaConstellation() {
       for (const [index, name] of ["aLogo", "aBrain", "aSoftware", "aAi", "aIot", "aResearch"].entries()) {
         geometry.setAttribute(name, new THREE.InstancedBufferAttribute(particles.forms[PARTICLE_FORMS[index]], 3));
       }
+      geometry.setAttribute("aBrainNormal", new THREE.InstancedBufferAttribute(particles.brainNormals, 3));
+      geometry.setAttribute("aBrainShade", new THREE.InstancedBufferAttribute(particles.brainShades, 1));
       geometry.setAttribute("aSeed", new THREE.InstancedBufferAttribute(particles.seeds, 1));
       geometry.setAttribute("aSize", new THREE.InstancedBufferAttribute(particles.sizes, 1));
       geometry.setAttribute("aAlpha", new THREE.InstancedBufferAttribute(particles.alphas, 1));
@@ -192,7 +209,8 @@ export default function AlfaConstellation() {
         if (storytelling) {
           const captionWidth = Math.min(420, window.innerWidth - 48);
           const x = Math.max(24, Math.min(window.innerWidth - captionWidth - 24, scene.x - captionWidth / 2));
-          const y = Math.max(8, Math.min(height - 110, scene.y + scene.size * 0.39));
+          const captionOffset = window.innerWidth < 700 ? 0.29 : 0.39;
+          const y = Math.max(8, Math.min(height - 110, scene.y + scene.size * captionOffset));
           const opacity = scene.opacity * scene.captionOpacity;
           caption.style.transform = `translate3d(${x}px, ${y}px, 0)`;
           caption.style.opacity = String(opacity);

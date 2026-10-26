@@ -12,9 +12,13 @@ type Pose = Omit<ParticleScene, "formA" | "formB" | "morph" | "energy"> & { form
 type Frame = Pose & { scroll: number };
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
-// Catmull–Rom keeps velocity continuous through the spatial waypoints.
-function curve(a: number, b: number, c: number, d: number, t: number) {
-  return 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
+// Time-aware Hermite tangents: irregular scroll intervals keep the same velocity at a join.
+function curve(a: Frame, b: Frame, c: Frame, d: Frame, key: keyof Pose, t: number) {
+  const span = c.scroll - b.scroll;
+  const first = (c[key] - a[key]) / Math.max(1, c.scroll - a.scroll) * span;
+  const second = (d[key] - b[key]) / Math.max(1, d.scroll - b.scroll) * span;
+  return (2 * t ** 3 - 3 * t ** 2 + 1) * b[key] + (t ** 3 - 2 * t ** 2 + t) * first
+    + (-2 * t ** 3 + 3 * t ** 2) * c[key] + (t ** 3 - t ** 2) * second;
 }
 export function initialParticleScene(): ParticleScene {
   return { x: 0, y: 0, size: 600, opacity: 1, rotationX: 0, rotationY: 0, rotationZ: 0, spread: 0, captionOpacity: 1, formA: 0, formB: 0, morph: 0, energy: 0 };
@@ -122,9 +126,13 @@ export function createScrollStory(root: HTMLElement, scene: ParticleScene, onUpd
       const a = frames[Math.max(0, index - 1)], b = frames[index], c = frames[index + 1], d = frames[Math.min(frames.length - 1, index + 2)];
       const t = clamp((scroll - b.scroll) / (c.scroll - b.scroll), 0, 1);
       const eased = t * t * (3 - 2 * t);
-      scene.x = clamp(curve(a.x, b.x, c.x, d.x, t), width * 0.12, width * 0.88);
-      scene.y = curve(a.y, b.y, c.y, d.y, t);
-      for (const key of scalars) scene[key] = mix(b[key], c[key], eased);
+      scene.x = clamp(curve(a, b, c, d, "x", t), width * 0.12, width * 0.88);
+      scene.y = curve(a, b, c, d, "y", t);
+      for (const key of scalars) scene[key] = curve(a, b, c, d, key, t);
+      scene.size = Math.max(80, scene.size);
+      scene.opacity = clamp(scene.opacity, 0, 1);
+      scene.captionOpacity = clamp(scene.captionOpacity, 0, 1);
+      scene.spread = Math.max(0, scene.spread);
       scene.formA = b.form; scene.formB = c.form; scene.morph = b.form === c.form ? 0 : eased;
       const form = scene.morph < 0.5 ? b.form : c.form;
       root.dataset.particleForm = PARTICLE_FORMS[form];
@@ -141,7 +149,7 @@ export function createScrollStory(root: HTMLElement, scene: ParticleScene, onUpd
       onUpdate();
     };
     animation = gsap.to(cursor, { scroll: end, duration: 1, ease: "none", paused: true, onUpdate: update });
-    trigger = ScrollTrigger.create({ start: 0, end, animation, scrub: mobile ? 0.22 : 0.32, onUpdate: (self) => { scene.energy = clamp(self.getVelocity() / 2400, -1, 1); } });
+    trigger = ScrollTrigger.create({ start: 0, end, animation, scrub: mobile ? 0.16 : 0.24, onUpdate: (self) => { scene.energy = clamp(self.getVelocity() / 3000, -1, 1); } });
     animation.progress(trigger.progress);
     root.dataset.storyEnd = String(Math.round(end));
     update();
