@@ -247,7 +247,7 @@ export function ProjectDedicatedView({
               currentUserId={currentUserId}
               canManageTasks={tasks.permissions.canManageTasks}
               sprints={isAgile ? sprints.items : undefined}
-              initialView={initialTasksView}
+              initialView={initialTasksView || "board"}
             />
           </div>
         )}
@@ -268,10 +268,19 @@ export function ProjectDedicatedView({
 
         {activeTab === "investigacion" && (
           <div className="flex flex-col gap-4">
-            <div className="rounded-xl border border-hub-border bg-hub-subtle px-4 py-3 text-sm text-hub-muted">
-              {isFinished
-                ? "El proyecto está finalizado: su información investigativa se puede consultar, pero no cambiar."
-                : "Información investigativa del proyecto. Las tareas y el cronograma siguen en su propia pestaña."}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-hub-border bg-hub-subtle px-4 py-3 text-sm text-hub-muted">
+              <span>
+                {isFinished
+                  ? "El proyecto está finalizado: su información investigativa se puede consultar, pero no cambiar."
+                  : "Información investigativa del proyecto y vinculación a las líneas institucionales."}
+              </span>
+              <Link
+                href="/hub/investigacion"
+                className="inline-flex items-center gap-1.5 font-medium text-hub-accent hover:underline whitespace-nowrap"
+              >
+                <FlaskConical className="size-4" />
+                Catálogo de líneas de investigación →
+              </Link>
             </div>
             <ProjectResearch
               projectId={project.id}
@@ -379,7 +388,7 @@ function ProjectProductionPanel({
         if (type !== "all" && item.type !== type) return false;
         if (status !== "all" && item.status !== status) return false;
         if (onlyMine) {
-          const isMine = item.authors?.some((a) => a.userId === currentUserId || a.id === currentUserId);
+          const isMine = item.authors?.some((a) => a.userId === currentUserId);
           if (!isMine) return false;
         }
       } else {
@@ -454,7 +463,7 @@ function ProjectProductionPanel({
                 id="prod-type"
                 name="tipo"
                 value={type}
-                onChange={(val) => setType(val)}
+                onValueChange={(val: string) => setType(val)}
                 options={[{ value: "all", label: "Todos los tipos" }, ...Object.entries(PRODUCT_TYPES).map(([value, label]) => ({ value, label }))]}
               />
             </div>
@@ -466,7 +475,7 @@ function ProjectProductionPanel({
                 id="prod-status"
                 name="estado"
                 value={status}
-                onChange={(val) => setStatus(val)}
+                onValueChange={(val: string) => setStatus(val)}
                 options={[{ value: "all", label: "Todos los estados" }, ...Object.entries(PRODUCT_STATUSES).map(([value, label]) => ({ value, label }))]}
               />
             </div>
@@ -546,7 +555,7 @@ function ProjectEventsPanel({
             .filter((m) => m.role === "leader")
             .map((m) => m.fullName)
             .join(", "),
-        } as ProjectSummary,
+        } as unknown as ProjectSummary,
       ],
     [project, projectsSummary],
   );
@@ -605,7 +614,7 @@ function ProjectEventsPanel({
             id="evt-type"
             name="tipo"
             value={type}
-            onChange={(val) => setType(val)}
+            onValueChange={(val: string) => setType(val)}
             options={[{ value: "all", label: "Todos los tipos" }, ...Object.entries(EVENT_TYPES).map(([value, label]) => ({ value, label }))]}
           />
         </div>
@@ -617,7 +626,7 @@ function ProjectEventsPanel({
             id="evt-status"
             name="estado"
             value={status}
-            onChange={(val) => setStatus(val)}
+            onValueChange={(val: string) => setStatus(val)}
             options={[{ value: "all", label: "Todos los estados" }, ...Object.entries(EVENT_STATUSES).map(([value, label]) => ({ value, label }))]}
           />
         </div>

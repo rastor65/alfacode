@@ -101,7 +101,8 @@ export function AlfaLanding({ featuredProjects, researchLines }: { featuredProje
               <div className="alfa-research-steps">{researchLines.map((line, index) => {
                 const copy = lineCopy[line.id] ?? { title: line.name, text: line.description };
                 const concepts = ["Pensar. Diseñar. Programar.", "Aprender de las conexiones.", "Del mundo físico al mundo digital.", "Observar. Experimentar. Descubrir."];
-                return <article id={`linea-${line.id}`} tabIndex={-1} className="alfa-research-step" key={line.id} aria-labelledby={`titulo-linea-${line.id}`}>
+                return <article id={`linea-${line.id}`} tabIndex={-1} className="alfa-research-step" data-motion-side={index % 2 ? "right" : "left"} key={line.id} aria-labelledby={`titulo-linea-${line.id}`}>
+                  <div className="alfa-chapter-stage" data-particle-anchor aria-hidden="true" />
                   <div className="alfa-research-step-copy">
                     <p className="alfa-chapter-eyebrow"><span>0{index + 1}</span> / 0{researchLines.length}<span className="alfa-chapter-rule" aria-hidden="true" /></p>
                     <h3 id={`titulo-linea-${line.id}`}>{copy.title}</h3>
@@ -116,16 +117,19 @@ export function AlfaLanding({ featuredProjects, researchLines }: { featuredProje
 
           <section className="alfa-section alfa-container alfa-projects" id="proyectos" tabIndex={-1} aria-labelledby="alfa-projects-title">
             <div className="alfa-projects-heading alfa-reveal"><div><p className="alfa-eyebrow">03 / IDEAS EN MOVIMIENTO</p><h2 id="alfa-projects-title" className="alfa-display">Preguntas reales.<br />Ideas en marcha.</h2></div><p className="alfa-body">Preguntas que toman forma en código, prototipos y experiencias. Una selección de lo que estamos explorando.</p></div>
-            <div className="alfa-project-list">{selectedProjects.map((project, index) => <article className="alfa-project alfa-reveal" key={project.id}>
+            <div className="alfa-project-list">{selectedProjects.map((project, index) => <article className="alfa-project" data-motion-side={index % 2 ? "left" : "right"} data-project-form={[4, 2, 3][index]} key={project.id}>
+              <div className="alfa-project-stage" data-particle-anchor aria-hidden="true" />
+              <div className="alfa-project-copy">
               <div className="alfa-project-meta"><span className="alfa-index">0{index + 1}</span><span>{statuses[project.status] ?? project.status}</span></div>
               <div className="alfa-project-main"><h3><Link href={`/proyectos/${project.slug}`}>{projectCopy[project.id]?.title ?? project.name}</Link></h3><span className="alfa-project-discipline">{project.researchLines.map((line) => lineCopy[line.id]?.title ?? line.name).join(" / ")}</span></div>
               <div className="alfa-project-description"><p className="alfa-body">{projectCopy[project.id]?.summary ?? project.summary}</p><Link href={`/proyectos/${project.slug}`} className="alfa-text-link" aria-label={`Explorar proyecto: ${project.name}`}>Explorar proyecto <ArrowUpRight size={18} aria-hidden="true" /></Link></div>
+              </div>
             </article>)}</div>
             <Link href="/proyectos" className="alfa-text-link alfa-all-projects">Ver todo el portafolio <ArrowRight size={18} aria-hidden="true" /></Link>
           </section>
 
           <section className="alfa-section alfa-container alfa-method" aria-labelledby="alfa-method-title">
-            <div className="alfa-reveal"><p className="alfa-eyebrow">04 / NUESTRA FORMA DE HACER</p><h2 id="alfa-method-title" className="alfa-display">La mejor manera<br />de aprender<br />es hacer.</h2><ArrowDownRight size={62} strokeWidth={1} className="alfa-method-arrow" aria-hidden="true" /></div>
+            <div className="alfa-method-copy"><p className="alfa-eyebrow">04 / NUESTRA FORMA DE HACER</p><h2 id="alfa-method-title" className="alfa-display">La mejor manera<br />de aprender<br />es hacer.</h2><ArrowDownRight size={62} strokeWidth={1} className="alfa-method-arrow" aria-hidden="true" /><div className="alfa-method-stage" data-particle-anchor aria-hidden="true" /></div>
             <div className="alfa-method-steps alfa-reveal">{[
               ["Preguntamos.", "Observamos el contexto, escuchamos a las personas y buscamos entender el problema antes de proponer una respuesta."],
               ["Experimentamos.", "Diseñamos, programamos y ponemos a prueba nuestras ideas. Lo que no funciona también nos enseña."],
@@ -133,7 +137,7 @@ export function AlfaLanding({ featuredProjects, researchLines }: { featuredProje
             ].map(([title, text], index) => <div className="alfa-method-step" key={title}><span className="alfa-index">0{index + 1}</span><div><h3>{title}</h3><p className="alfa-body">{text}</p></div></div>)}</div>
           </section>
 
-          <section className="alfa-invitation alfa-container alfa-reveal" aria-labelledby="alfa-invitation-title"><p className="alfa-eyebrow">LO QUE VIENE, LO CONSTRUIMOS JUNTOS.</p><h2 id="alfa-invitation-title">Una buena idea<br />empieza con<br /><span>una conversación.</span></h2><Link href="/contacto" className="alfa-primary-link">Conversemos <ArrowUpRight size={18} aria-hidden="true" /></Link></section>
+          <section className="alfa-invitation alfa-container" aria-labelledby="alfa-invitation-title"><div className="alfa-invitation-stage" data-particle-anchor aria-hidden="true" /><p className="alfa-eyebrow">LO QUE VIENE, LO CONSTRUIMOS JUNTOS.</p><h2 id="alfa-invitation-title">Una buena idea<br />empieza con<br /><span>una conversación.</span></h2><Link href="/contacto" className="alfa-primary-link">Conversemos <ArrowUpRight size={18} aria-hidden="true" /></Link></section>
         </main>
 
         <footer className="alfa-footer alfa-container"><div className="alfa-footer-top"><div><a href="#inicio" aria-label="Volver al inicio de AlfaCode"><AlfaCodeLogo tone="on-blue" width={210} height={63} /></a><p>Investigamos en colectivo.<br />Construimos con propósito.</p></div><nav aria-label="Explora AlfaCode"><span>EXPLORA</span><Link href="/proyectos">Proyectos</Link><Link href="/investigacion">Investigación</Link><Link href="/equipo">Equipo</Link></nav><nav aria-label="Conecta con AlfaCode"><span>CONECTA</span><Link href="/contacto">Hablemos <ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/ingresar">Entrar al HUB <ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/publicaciones">Publicaciones</Link></nav></div><div className="alfa-footer-bottom"><span>© {new Date().getUTCFullYear()} AlfaCode.</span><span>Research & Software Lab</span><a href="#inicio">Volver arriba <ArrowUpRight size={13} aria-hidden="true" /></a></div></footer>

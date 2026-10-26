@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowUpRight, FlaskConical, FolderKanban, LoaderCircle, Pencil, Plus, Trash2, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -10,8 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS } from "@/features/projects/types";
+import { panelCard } from "@/features/tracking/components/dashboard-ui";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
+import { cn } from "@/lib/utils";
 
 import { LINE_STATUS_LABELS, type ResearchLine, type ResearchLineDetail } from "../types";
 import { LineForm } from "./line-form";
@@ -75,39 +77,93 @@ export function LinesCatalog({ lines, canManage, emptyMessage }: LinesCatalogPro
 
   return (
     <>
-      {canManage && (
-        <Button variant="neutral" className="min-h-10" onClick={() => setCreating(true)} aria-haspopup="dialog">
-          <Plus size={16} className="mr-2" aria-hidden="true" />
-          Nueva línea
-        </Button>
-      )}
+      <div className="flex flex-col gap-4">
+        {canManage && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-hub-muted">
+              {lines.length === 1 ? "1 línea mostrada" : `${lines.length} líneas mostradas`}
+            </p>
+            <Button variant="neutral" className="min-h-10 shadow-xs" onClick={() => setCreating(true)} aria-haspopup="dialog">
+              <Plus size={16} className="mr-2 text-hub-accent" aria-hidden="true" />
+              Nueva línea de investigación
+            </Button>
+          </div>
+        )}
 
-      {lines.length === 0 ? (
-        <p className="mt-5 rounded-xl border border-dashed border-hub-border px-4 py-10 text-center text-sm text-hub-muted">{emptyMessage}</p>
-      ) : (
-        <ul className="mt-5 divide-y divide-hub-border rounded-xl border border-hub-border">
-          {lines.map((line) => (
-            <li key={line.id}>
-              <button
-                type="button"
+        {lines.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-hub-border bg-hub-panel/40 px-6 py-14 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-hub-accent-soft text-hub-accent mb-3">
+              <FlaskConical className="size-7" />
+            </div>
+            <h3 className="text-base font-semibold text-hub-text">No se encontraron líneas de investigación</h3>
+            <p className="mt-1 max-w-sm text-sm text-hub-muted">{emptyMessage}</p>
+            {canManage && (
+              <Button variant="neutral" className="mt-5 min-h-10" onClick={() => setCreating(true)}>
+                <Plus size={16} className="mr-2" aria-hidden="true" />
+                Crear primera línea
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {lines.map((line) => (
+              <div
+                key={line.id}
                 onClick={() => void open(line)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    void open(line);
+                  }
+                }}
                 aria-haspopup="dialog"
-                className="flex w-full flex-wrap items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-hub-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500"
+                className={cn(
+                  panelCard,
+                  "group relative flex flex-col justify-between p-5 text-left cursor-pointer transition-all duration-200",
+                  "hover:border-cyan-500/40 hover:shadow-lg hover:shadow-cyan-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
+                )}
               >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-hub-text">{line.name}</p>
-                  <p className="truncate text-sm text-hub-muted">
-                    {line.responsible ? `Responsable: ${line.responsible.fullName}` : "Sin responsable"}
-                    {" · "}
-                    {line.projectCount === 1 ? "1 proyecto" : `${line.projectCount} proyectos`}
-                  </p>
+                <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-hub-accent-soft text-hub-accent group-hover:bg-cyan-500 group-hover:text-black transition-colors">
+                      <FlaskConical className="size-5" />
+                    </span>
+                    <Badge className={line.status === "active" ? "bg-hub-accent-soft text-hub-accent border-hub-accent/30" : "bg-hub-subtle text-hub-muted border-hub-border"}>
+                      {LINE_STATUS_LABELS[line.status]}
+                    </Badge>
+                  </div>
+
+                  <h3 className="mt-3 font-semibold text-hub-text group-hover:text-hub-accent transition-colors line-clamp-2">
+                    {line.name}
+                  </h3>
+
+                  {line.description && (
+                    <p className="mt-2 text-xs text-hub-muted line-clamp-2 leading-relaxed">
+                      {line.description}
+                    </p>
+                  )}
                 </div>
-                <Badge>{LINE_STATUS_LABELS[line.status]}</Badge>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-hub-border/60 pt-3 text-xs text-hub-soft">
+                  <span className="flex items-center gap-1.5 truncate max-w-[12rem]" title={line.responsible ? line.responsible.fullName : "Sin responsable"}>
+                    <UserRound className="size-3.5 text-hub-muted shrink-0" />
+                    <span className="truncate">
+                      {line.responsible ? line.responsible.fullName : "Sin responsable"}
+                    </span>
+                  </span>
+
+                  <span className="flex items-center gap-1 font-mono text-xs text-hub-muted bg-hub-subtle px-2 py-0.5 rounded-md">
+                    <FolderKanban className="size-3 text-hub-accent" />
+                    {line.projectCount} {line.projectCount === 1 ? "proyecto" : "proyectos"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <Modal open={creating} onClose={() => setCreating(false)} title="Nueva línea de investigación">
         {creating && (
@@ -162,7 +218,7 @@ export function LinesCatalog({ lines, canManage, emptyMessage }: LinesCatalogPro
                     {detail.projects.map((project) => (
                       <li key={project.id} className="flex flex-wrap items-center gap-2 text-sm">
                         <Link
-                          href={`/hub/proyectos/${project.id}/investigacion`}
+                          href={`/hub/proyectos/${project.id}?tab=investigacion`}
                           className="text-hub-accent underline-offset-4 hover:underline"
                         >
                           {project.name}

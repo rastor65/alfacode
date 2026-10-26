@@ -1,135 +1,182 @@
-import { gsap } from "gsap";
+﻿import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
 import { PARTICLE_FORMS } from "./alfa-particle-forms";
 
-export type ParticleScene = { x: number; y: number; size: number; shape: number; opacity: number };
-type StoryFrame = ParticleScene & { scroll: number };
+export type ParticleScene = {
+  x: number; y: number; size: number; opacity: number;
+  rotationX: number; rotationY: number; rotationZ: number;
+  spread: number; captionOpacity: number;
+  formA: number; formB: number; morph: number; energy: number;
+};
+type Pose = Omit<ParticleScene, "formA" | "formB" | "morph" | "energy"> & { form: number };
+type Frame = Pose & { scroll: number };
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+// Catmull–Rom keeps velocity continuous through the spatial waypoints.
+function curve(a: number, b: number, c: number, d: number, t: number) {
+  return 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
+}
+export function initialParticleScene(): ParticleScene {
+  return { x: 0, y: 0, size: 600, opacity: 1, rotationX: 0, rotationY: 0, rotationZ: 0, spread: 0, captionOpacity: 1, formA: 0, formB: 0, morph: 0, energy: 0 };
+}
 
-/** Native scrolling drives a single reversible timeline; nothing intercepts wheel or touch. */
+/** A spatial score tied to real content anchors. Native scrolling remains in control. */
 export function createScrollStory(root: HTMLElement, scene: ParticleScene, onUpdate: () => void) {
   gsap.registerPlugin(ScrollTrigger);
   const hero = root.querySelector<HTMLElement>(".alfa-hero-art");
   const brain = root.querySelector<HTMLElement>(".alfa-story-brain-anchor");
-  const research = root.querySelector<HTMLElement>(".alfa-research-visual");
   const steps = Array.from(root.querySelectorAll<HTMLElement>(".alfa-research-step"));
-  if (!hero || !brain || !research || !steps.length) return () => {};
-
+  const projects = Array.from(root.querySelectorAll<HTMLElement>(".alfa-project"));
+  if (!hero || !brain || !steps.length) return () => {};
+  const initialHash = window.location.hash;
   root.dataset.scrollStory = "true";
-  let timeline: gsap.core.Timeline | null = null;
+  let animation: gsap.core.Tween | null = null;
   let trigger: ScrollTrigger | null = null;
   let resizeCall: gsap.core.Tween | null = null;
   let disposed = false;
-  let active = -1;
+  let active = -2;
+  let zone = "";
+  const checkpointNodes = new Set<HTMLElement>();
   const rect = (element: HTMLElement) => {
-    const bounds = element.getBoundingClientRect();
-    return { x: bounds.left, y: bounds.top + window.scrollY, width: bounds.width, height: bounds.height };
+    const r = element.getBoundingClientRect();
+    return { x: r.left, y: r.top + window.scrollY, width: r.width, height: r.height };
   };
-
-  function describe() {
-    const form = Math.max(0, Math.min(5, Math.round(scene.shape)));
-    root.dataset.particleForm = PARTICLE_FORMS[form];
-    const next = form >= 2 ? Math.min(form - 2, steps.length - 1) : -1;
-    if (next !== active) {
-      active = next;
-      steps.forEach((step, index) => { step.dataset.active = String(index === active); });
-      root.querySelectorAll<HTMLElement>("[data-story-link]").forEach((link, index) => {
-        if (index === active) link.setAttribute("aria-current", "step");
-        else link.removeAttribute("aria-current");
-      });
-    }
-    onUpdate();
-  }
+  const mark = (element: HTMLElement, scroll: number, form: number) => {
+    element.dataset.scrollCheckpoint = String(Math.max(0, Math.round(scroll)));
+    element.dataset.form = PARTICLE_FORMS[form];
+    checkpointNodes.add(element);
+  };
 
   function build() {
     if (disposed) return;
-    trigger?.kill();
-    timeline?.kill();
-    const height = window.innerHeight;
-    const mobile = window.matchMedia("(max-width: 699px)").matches;
+    trigger?.kill(); animation?.kill();
+    const height = window.innerHeight, width = window.innerWidth;
+    const mobile = width < 700;
+    const frames: Frame[] = [];
+    const defaults: Pose = { x: width / 2, y: height / 2, size: 600, form: 0, opacity: 1, rotationX: 0, rotationY: 0, rotationZ: 0, spread: 0, captionOpacity: 1 };
+    const push = (scroll: number, pose: Pose) => frames.push({ ...pose, scroll: Math.max(frames.length ? frames[frames.length - 1].scroll + 1 : 0, scroll) });
     const logo = rect(hero!);
+    const logoPose = { ...defaults, x: logo.x + logo.width / 2, y: logo.y + logo.height / 2, size: Math.min(logo.width, logo.height) };
+    push(0, logoPose);
+    const logoRest = Math.max(1, logoPose.y - height * 0.54);
+    push(logoRest, { ...logoPose, y: logoPose.y - logoRest, rotationY: 0.08 });
     const knowledge = rect(brain!);
-    const area = rect(research!);
-    const frames: StoryFrame[] = [];
-    const push = (scroll: number, target: ParticleScene) => {
-      frames.push({ ...target, scroll: Math.max(frames.length ? frames[frames.length - 1].scroll + 1 : 0, scroll) });
-    };
-    const logoScene: ParticleScene = { x: logo.x + logo.width / 2, y: logo.y + logo.height / 2, size: Math.min(logo.width, logo.height), shape: 0, opacity: 1 };
-    push(0, logoScene);
-    const logoRest = Math.max(0, logoScene.y - height * 0.52);
-    push(logoRest, { ...logoScene, y: logoScene.y - logoRest });
-    const brainScene: ParticleScene = {
-      x: knowledge.x + knowledge.width / 2,
-      y: height * (mobile ? 0.24 : 0.5),
-      size: mobile ? Math.min(window.innerWidth * 0.95, height * 0.43) : Math.min(knowledge.width * 1.18, height * 0.74),
-      shape: 1, opacity: 1,
-    };
     const brainScroll = knowledge.y + (mobile ? height * 0.02 : knowledge.height / 2 - height / 2);
-    push(brainScroll, brainScene);
-    push(Math.max(brainScroll + height * 0.22, rect(steps[0]).y - height * 0.75), brainScene);
+    const brainPose: Pose = { ...defaults, x: knowledge.x + knowledge.width / 2, y: height * (mobile ? 0.23 : 0.48), size: mobile ? Math.min(width * 0.94, height * 0.42) : Math.min(knowledge.width * 1.16, height * 0.7), form: 1, rotationY: -0.1, rotationZ: -0.04 };
+    push(mix(logoRest, brainScroll, 0.47), { ...logoPose, x: width * (mobile ? 0.57 : 0.57), y: height * (mobile ? 0.32 : 0.29), size: brainPose.size * 0.72, rotationX: -0.28, rotationY: 0.6, rotationZ: -0.18, spread: 0.85, captionOpacity: 0 });
+    push(brainScroll, brainPose);
+    mark(brain!, brainScroll, 1);
+    push(brainScroll + height * 0.27, { ...brainPose, x: brainPose.x - width * 0.025, y: height * (mobile ? 0.18 : 0.4), size: brainPose.size * 0.91, rotationX: 0.08, rotationY: 0.16, rotationZ: 0.035 });
 
-    const chapterScene = { ...brainScene, x: area.x + area.width / 2, size: mobile ? Math.min(window.innerWidth * 0.98, height * 0.4) : Math.min(area.width * 1.2, height * 0.7) };
-    steps.forEach((step, index) => {
-      const bounds = rect(step);
-      const checkpoint = bounds.y + bounds.height / 2 - height / 2;
-      const target = { ...chapterScene, shape: index + 2 };
-      push(checkpoint, target);
-      const next = steps[index + 1];
-      if (next) push(rect(next).y + rect(next).height / 2 - height * 0.94, target);
-      else push(checkpoint + height * 0.25, target);
-    });
-    const last = frames[frames.length - 1];
-    push(last.scroll + height * 0.6, { ...last, shape: 5, y: height * 0.3, size: last.size * 0.78, opacity: 0 });
-
-    Object.assign(scene, logoScene);
-    timeline = gsap.timeline({ paused: true, onUpdate: describe });
-    for (let i = 1; i < frames.length; i++) {
-      const { scroll, ...target } = frames[i];
-      timeline.to(scene, { ...target, duration: scroll - frames[i - 1].scroll, ease: "power2.inOut" }, frames[i - 1].scroll);
+    let researchStart = Infinity, researchEnd = Infinity, projectStart = Infinity, methodStart = Infinity, closingStart = Infinity;
+    const addChapter = (element: HTMLElement, form: number, index: number, category: string) => {
+      const anchor = element.querySelector<HTMLElement>("[data-particle-anchor]") ?? element;
+      const bounds = rect(anchor);
+      const checkpoint = bounds.y + bounds.height / 2 - height * (mobile ? 0.25 : 0.48);
+      const side = bounds.x + bounds.width / 2 < width / 2 ? -1 : 1;
+      const center = mobile ? width * (index % 2 ? 0.46 : 0.54) : bounds.x + bounds.width / 2;
+      const size = mobile ? Math.min(width * 0.93, height * 0.4) : Math.min(bounds.width * 1.12, height * 0.68);
+      const pose: Pose = { ...defaults, x: center, y: height * (mobile ? 0.24 : 0.48), size, form, rotationX: index % 2 ? 0.06 : -0.08, rotationY: side * 0.14, rotationZ: side * 0.045 };
+      const entry = checkpoint - height * (mobile ? 0.17 : 0.25);
+      const previous = frames[frames.length - 1];
+      if (entry > previous.scroll + height * 0.18) {
+        push((previous.scroll + entry) / 2, { ...pose, form: previous.form, x: width * (mobile ? 0.5 + side * 0.1 : 0.5), y: height * (index % 2 ? 0.24 : 0.28), size: size * 0.64, rotationX: -0.35, rotationY: -side * 0.55, rotationZ: side * 0.24, spread: 1.15, captionOpacity: 0, opacity: 0.86 });
+      }
+      push(entry, { ...pose, x: center - side * size * 0.065, y: height * (mobile ? 0.28 : 0.58), size: size * 0.88, rotationY: -side * 0.28, rotationZ: -side * 0.065, captionOpacity: 0.65 });
+      push(checkpoint, pose);
+      push(checkpoint + height * (mobile ? 0.19 : 0.26), { ...pose, x: center + side * size * 0.055, y: height * (mobile ? 0.19 : 0.37), size: size * 0.92, rotationX: 0.12, rotationY: side * 0.32, rotationZ: side * 0.08, captionOpacity: 0.7 });
+      mark(element, checkpoint, form);
+      if (category === "research") {
+        if (researchStart === Infinity) researchStart = entry - height * 0.15;
+        researchEnd = frames[frames.length - 1].scroll + height * 0.2;
+      } else if (category === "projects" && projectStart === Infinity) projectStart = entry;
+      return checkpoint;
+    };
+    steps.forEach((step, index) => addChapter(step, index + 2, index, "research"));
+    projects.forEach((project, index) => addChapter(project, Number(project.dataset.projectForm) || 2, index + 4, "projects"));
+    const method = root.querySelector<HTMLElement>(".alfa-method-stage");
+    if (method) methodStart = addChapter(method, 2, 7, "method") - height * 0.2;
+    const invitation = root.querySelector<HTMLElement>(".alfa-invitation-stage");
+    if (invitation) {
+      const bounds = rect(invitation);
+      const checkpoint = bounds.y + bounds.height / 2 - height * 0.25;
+      closingStart = checkpoint - height * 0.3;
+      const pose: Pose = { ...defaults, form: 0, x: bounds.x + bounds.width / 2, y: height * 0.25, size: Math.min(bounds.width * 0.87, height * 0.38), rotationY: 0.06 };
+      const previous = frames[frames.length - 1];
+      push((previous.scroll + closingStart) / 2, { ...pose, x: width * 0.7, y: height * 0.3, size: pose.size * 0.85, form: previous.form, spread: 1.2, rotationY: -0.65, rotationZ: -0.16, captionOpacity: 0 });
+      push(checkpoint, pose);
+      mark(invitation, checkpoint, 0);
+      push(checkpoint + height * 0.32, { ...pose, y: height * 0.1, size: pose.size * 0.7, rotationY: -0.18, rotationZ: 0.06, captionOpacity: 0, opacity: 0.7 });
     }
-    trigger = ScrollTrigger.create({ start: 0, end: last.scroll + height * 0.6, animation: timeline, scrub: 0.55 });
-    timeline.progress(trigger.progress);
-    root.dataset.storyEnd = String(Math.round(last.scroll + height * 0.6));
-    steps.forEach((step, index) => {
-      const bounds = rect(step);
-      step.dataset.scrollCheckpoint = String(Math.round(bounds.y + bounds.height / 2 - height / 2));
-      step.dataset.form = PARTICLE_FORMS[index + 2];
-    });
-    brain!.dataset.scrollCheckpoint = String(Math.round(brainScroll));
-    describe();
+    const previous = frames[frames.length - 1];
+    const maxScroll = document.documentElement.scrollHeight - height;
+    const exit = Math.min(previous.scroll + height * 0.42, Math.max(previous.scroll + 1, maxScroll - 24));
+    push(exit, { ...previous, y: -height * 0.12, size: previous.size * 0.65, opacity: 0, captionOpacity: 0 });
+    const end = frames[frames.length - 1].scroll;
+    const cursor = { scroll: 0 };
+    const scalars = ["size", "opacity", "rotationX", "rotationY", "rotationZ", "spread", "captionOpacity"] as const;
+    const update = () => {
+      const scroll = cursor.scroll;
+      let index = 0;
+      while (index < frames.length - 2 && frames[index + 1].scroll < scroll) index++;
+      const a = frames[Math.max(0, index - 1)], b = frames[index], c = frames[index + 1], d = frames[Math.min(frames.length - 1, index + 2)];
+      const t = clamp((scroll - b.scroll) / (c.scroll - b.scroll), 0, 1);
+      const eased = t * t * (3 - 2 * t);
+      scene.x = clamp(curve(a.x, b.x, c.x, d.x, t), width * 0.12, width * 0.88);
+      scene.y = curve(a.y, b.y, c.y, d.y, t);
+      for (const key of scalars) scene[key] = mix(b[key], c[key], eased);
+      scene.formA = b.form; scene.formB = c.form; scene.morph = b.form === c.form ? 0 : eased;
+      const form = scene.morph < 0.5 ? b.form : c.form;
+      root.dataset.particleForm = PARTICLE_FORMS[form];
+      const nextZone = scroll >= closingStart ? "closing" : scroll >= methodStart ? "method" : scroll >= projectStart ? "projects" : scroll >= researchStart && scroll <= researchEnd ? "research" : "intro";
+      if (zone !== nextZone) { zone = nextZone; root.dataset.storyZone = zone; }
+      const next = zone === "research" ? clamp(form - 2, 0, steps.length - 1) : -1;
+      if (next !== active) {
+        active = next;
+        steps.forEach((step, i) => { step.dataset.active = String(i === active); });
+        root.querySelectorAll<HTMLElement>("[data-story-link]").forEach((link, i) => {
+          if (i === active) link.setAttribute("aria-current", "step"); else link.removeAttribute("aria-current");
+        });
+      }
+      onUpdate();
+    };
+    animation = gsap.to(cursor, { scroll: end, duration: 1, ease: "none", paused: true, onUpdate: update });
+    trigger = ScrollTrigger.create({ start: 0, end, animation, scrub: mobile ? 0.22 : 0.32, onUpdate: (self) => { scene.energy = clamp(self.getVelocity() / 2400, -1, 1); } });
+    animation.progress(trigger.progress);
+    root.dataset.storyEnd = String(Math.round(end));
+    update();
   }
-
-  const onResize = () => {
-    resizeCall?.kill();
-    resizeCall = gsap.delayedCall(0.18, build);
-  };
-  // Hash navigation has a semantic destination. Align the corresponding illustrated chapter.
+  const onResize = () => { resizeCall?.kill(); resizeCall = gsap.delayedCall(0.18, build); };
   const onSelect = (event: MouseEvent) => {
     const link = (event.target as HTMLElement).closest<HTMLAnchorElement>("[data-story-link]");
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-    const step = document.getElementById(link.hash.slice(1));
-    if (!step || !root.contains(step)) return;
+    const target = document.getElementById(link.hash.slice(1));
+    if (!target || !root.contains(target)) return;
     event.preventDefault();
-    window.history.replaceState(null, "", link.hash);
-    step.focus({ preventScroll: true });
-    window.scrollTo({ top: Number(step.dataset.scrollCheckpoint), behavior: "smooth" });
+    window.history.pushState(null, "", link.hash);
+    target.focus({ preventScroll: true });
+    window.scrollTo({ top: Number(target.dataset.scrollCheckpoint), behavior: "smooth" });
   };
   root.addEventListener("click", onSelect);
   window.addEventListener("resize", onResize, { passive: true });
-  void document.fonts.ready.then(() => { if (!disposed) build(); });
   build();
-
+  void document.fonts.ready.then(() => {
+    if (disposed) return;
+    build();
+    if (initialHash && initialHash === window.location.hash) {
+      const destination = document.getElementById(initialHash.slice(1));
+      if (destination && root.contains(destination)) {
+        if (destination.dataset.scrollCheckpoint) window.scrollTo({ top: Number(destination.dataset.scrollCheckpoint), behavior: "instant" });
+        else destination.scrollIntoView({ behavior: "instant" });
+      }
+    }
+  });
   return () => {
-    disposed = true;
-    resizeCall?.kill();
-    trigger?.kill();
-    timeline?.kill();
-    root.removeEventListener("click", onSelect);
-    window.removeEventListener("resize", onResize);
-    root.removeAttribute("data-scroll-story");
-    root.removeAttribute("data-particle-form");
-    root.removeAttribute("data-story-end");
-    steps.forEach((step) => { delete step.dataset.active; delete step.dataset.scrollCheckpoint; });
-    root.querySelectorAll("[data-story-link]").forEach((link) => link.removeAttribute("aria-current"));
+    disposed = true; resizeCall?.kill(); trigger?.kill(); animation?.kill();
+    root.removeEventListener("click", onSelect); window.removeEventListener("resize", onResize);
+    for (const key of ["data-scroll-story", "data-particle-form", "data-story-end", "data-story-zone"]) root.removeAttribute(key);
+    checkpointNodes.forEach((node) => { delete node.dataset.scrollCheckpoint; delete node.dataset.form; });
+    steps.forEach((step) => { delete step.dataset.active; });
+    root.querySelectorAll<HTMLElement>("[data-story-link]").forEach((link) => link.removeAttribute("aria-current"));
   };
 }
