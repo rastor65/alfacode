@@ -509,6 +509,16 @@ Este archivo documenta dudas y cambios que afectan arquitectura, alcance, seguri
 - **Restricciones que se mantienen:** permisos antes de agregar, sin puntajes ni comparacion entre personas, sin cambios de esquema, sin commit, push ni despliegue.
 - **Aprobacion del responsable:** autorizacion de la iteracion confirmada; aprobacion del resultado pendiente.
 
+### DEC-051 — Renombrar la migracion RbacResources por marca de tiempo duplicada
+
+- **Fecha:** 2026-10-25
+- **Estado:** propuesta
+- **Contexto/problema:** al integrar `origin/main` en `dev`, la migracion `RbacResources` (recursos y permisos de rol, proveniente de `main`) coincidia en marca de tiempo (`1728830000000`) con `ProjectObservations` (I-24). Los nombres de clase eran distintos, pero el orden entre ambas quedaba determinado solo por el nombre.
+- **Opciones analizadas:** conservar el prefijo duplicado; renombrar `RbacResources` a una marca posterior antes de aplicarla.
+- **Decision propuesta:** renombrar a `1728840000000-rbac-resources.ts` (clase y `name` `RbacResources1728840000000`) y actualizar `database.options.ts`. No habia sido aplicada en ninguna base conocida; si `main` ya la aplico en algun entorno, ese entorno la vera como nueva.
+- **Archivos afectados:** `backend/src/database/migrations/1728840000000-rbac-resources.ts`, `backend/src/database/database.options.ts`.
+- **Aprobacion del responsable:** instruccion "hazlo todo" (2026-10-25) cubre la ejecucion; la decision queda pendiente de confirmacion formal.
+
 ## Referencias vigentes
 
 - `AlfaCode_HUB_Diseno_Tecnico_Inicial_v0.2.md`
