@@ -21,6 +21,7 @@ const VERTEX = `
   attribute vec4 aNormals2;
   attribute vec3 aColor;
   attribute vec3 aParticle;
+  attribute vec2 aBrainStyle;
   uniform float uTime;
   uniform float uFormA;
   uniform float uFormB;
@@ -31,6 +32,7 @@ const VERTEX = `
   uniform vec3 uRotation;
   uniform float uScale;
   uniform float uOpacity;
+  uniform float uBrainGlyph;
   uniform vec2 uCenter;
   uniform vec2 uPointer;
   varying vec3 vBarycentric;
@@ -77,6 +79,7 @@ const VERTEX = `
     p += scatter * (transition * 0.22 + uSpread * 0.15);
     float logo = (1.0 - step(0.1, uFormA)) * (1.0 - uMorph) + (1.0 - step(0.1, uFormB)) * uMorph;
     float sculpture = 1.0 - logo;
+    float brain = (1.0 - step(0.1, abs(uFormA - 1.0))) * (1.0 - uMorph) + (1.0 - step(0.1, abs(uFormB - 1.0))) * uMorph;
     float pitch = uRotation.x + uEnergy * 0.025;
     float turn = uRotation.y + sin(uTime * 0.10) * 0.035 + uEnergy * 0.045;
     vec3 normal = blendNormal(surfaceNormal(uFormA), surfaceNormal(uFormB), morph);
@@ -99,7 +102,7 @@ const VERTEX = `
     float angle = aParticle.x * 6.28318 + uTime * 0.018;
     vec2 glyph = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * position.xy;
     glyph.y *= 1.0 + abs(uEnergy) * 0.4;
-    viewPosition.xy += glyph * aParticle.y * uScale * perspective * 0.70;
+    viewPosition.xy += glyph * aParticle.y * uScale * perspective * 0.70 * mix(1.0, uBrainGlyph, brain);
     gl_Position = projectionMatrix * viewPosition;
     vBarycentric = aBarycentric;
     float light = max(0.0, dot(normal, normalize(vec3(-0.55 + uPointer.x * uPointerInfluence * 0.12, 0.8 + uPointer.y * uPointerInfluence * 0.08, 1.1))));
@@ -110,9 +113,16 @@ const VERTEX = `
     float packet = pow(0.5 + 0.5 * sin(uTime * 1.2 - phase * 3.0), 16.0);
     litColor += vec3(0.30, 0.85, 0.98) * packet * 0.075;
     vColor = mix(brandColor, litColor, sculpture);
+    float region = 0.5 + 0.5 * sin(aBrain.x * 2.1 + aBrain.y * 1.7 + aBrain.z * 1.3);
+    float corticalLight = max(0.0, dot(normal, normalize(vec3(-0.85, 0.95, 0.45))));
+    vec3 neuralColor = mix(vec3(0.002, 0.10, 0.17), vec3(0.72, 0.96, 1.0), smoothstep(0.0, 0.85, corticalLight));
+    neuralColor *= 0.55 + aBrainStyle.y * 0.45;
+    neuralColor = mix(neuralColor, neuralColor * vec3(0.15, 0.65, 1.0), region * 0.45);
+    vColor = mix(vColor, neuralColor, brain);
     float facing = mix(1.0, 0.3 + 0.7 * smoothstep(-0.3, 0.45, normal.z), sculpture);
-    vFill = sculpture * 0.14;
+    vFill = sculpture * 0.14 * (1.0 - brain);
     vAlpha = aParticle.z * uOpacity * facing * (0.92 + 0.08 * sin(uTime * 0.45 + aParticle.x * 91.0));
+    vAlpha = mix(vAlpha, uOpacity * aBrainStyle.x * (0.65 + aParticle.z * 0.35), brain);
   }
 `;
 const FRAGMENT = `
@@ -198,6 +208,7 @@ export default function AlfaConstellation() {
       const parameters = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) parameters.set([particles.seeds[i], particles.sizes[i], particles.alphas[i]], i * 3);
       geometry.setAttribute("aParticle", new THREE.InstancedBufferAttribute(parameters, 3));
+      geometry.setAttribute("aBrainStyle", new THREE.InstancedBufferAttribute(particles.brainStyle, 2));
       const colors = new Float32Array(count * 3);
       const palette = ["#0382a1", "#049ebf", "#469eb4", "#94eefe", "#e1feff"].map((color) => new THREE.Color(color));
       for (let i = 0; i < count; i++) {
@@ -207,7 +218,7 @@ export default function AlfaConstellation() {
       geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(colors, 3));
       geometry.instanceCount = count;
       const material = new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uFormA: { value: 0 }, uFormB: { value: 0 }, uMorph: { value: 0 }, uSpread: { value: 0 }, uEnergy: { value: 0 }, uPointerInfluence: { value: 0 }, uRotation: { value: new THREE.Vector3() }, uScale: { value: 100 }, uOpacity: { value: 1 }, uCenter: { value: new THREE.Vector2() }, uPointer: { value: new THREE.Vector2() } },
+        uniforms: { uTime: { value: 0 }, uFormA: { value: 0 }, uFormB: { value: 0 }, uMorph: { value: 0 }, uSpread: { value: 0 }, uEnergy: { value: 0 }, uPointerInfluence: { value: 0 }, uRotation: { value: new THREE.Vector3() }, uScale: { value: 100 }, uOpacity: { value: 1 }, uBrainGlyph: { value: 1.35 }, uCenter: { value: new THREE.Vector2() }, uPointer: { value: new THREE.Vector2() } },
         vertexShader: VERTEX, fragmentShader: FRAGMENT, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
       });
       const mesh = new THREE.Mesh(geometry, material);
@@ -301,6 +312,7 @@ export default function AlfaConstellation() {
         camera.right = width; camera.top = height;
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);
+        material.uniforms.uBrainGlyph.value = width < 700 ? 2.1 : 2.0;
         if (!storytelling) Object.assign(scene, initialParticleScene(), { x: width / 2, y: height / 2, size: Math.min(width, height) });
         draw();
       };
