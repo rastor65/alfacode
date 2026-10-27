@@ -24,3 +24,16 @@ export function knownKey<T extends Record<string, unknown>>(values: T, input: st
   const key = Array.isArray(input) ? input[0] : input;
   return key && Object.hasOwn(values, key) ? key : undefined;
 }
+
+/** Conteo por estado de las solicitudes visibles y las abiertas que aun no tienen responsable. */
+export function requestTotals(items: readonly Pick<RequestItem, "status" | "reviewerId">[]) {
+  const byStatus: Record<RequestStatus, number> = { pending: 0, in_review: 0, approved: 0, rejected: 0, completed: 0 };
+  let unassigned = 0;
+
+  for (const item of items) {
+    byStatus[item.status] += 1;
+    if (!item.reviewerId && (item.status === "pending" || item.status === "in_review")) unassigned += 1;
+  }
+
+  return { byStatus, unassigned, resolved: byStatus.approved + byStatus.rejected + byStatus.completed };
+}

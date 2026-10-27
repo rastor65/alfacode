@@ -1,25 +1,6 @@
 "use client";
 
-import {
-  ArrowRight,
-  ArrowUpDown,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Globe,
-  Image as ImageIcon,
-  Link2,
-  LoaderCircle,
-  Lock,
-  Pencil,
-  Presentation,
-  Search,
-  Shield,
-  Trash2,
-  Upload,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, ArrowUpDown, Download, Link2, LoaderCircle, Pencil, Search, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { ProjectPageHeader } from "@/features/projects/components/project-page-header";
 import { formatCalendarDate, type ProjectDetail, type ProjectTabCounts } from "@/features/projects/types";
-import { chip, eyebrow, neutralChip, panelCard } from "@/features/tracking/components/dashboard-ui";
+import { eyebrow, neutralChip, panelCard } from "@/features/tracking/components/dashboard-ui";
 import { plural } from "@/features/tracking/types";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
@@ -49,7 +30,6 @@ import {
   type DocumentItem,
   type DocumentList,
   type DocumentSort,
-  type FileFamily,
   documentTotals,
   downloadHref,
   fileFamily,
@@ -58,29 +38,10 @@ import {
   isFiltering,
 } from "../types";
 import { DocumentForm } from "./document-form";
-
-/** Cada familia de archivo lleva icono y texto (la extension): el color nunca es la unica senal. */
-const FILE_STYLE: Record<FileFamily, { icon: LucideIcon; tone: string }> = {
-  pdf: { icon: FileText, tone: "bg-hub-danger-bg text-hub-danger-text" },
-  word: { icon: FileText, tone: "bg-hub-info-bg text-hub-info-text" },
-  sheet: { icon: FileSpreadsheet, tone: "bg-hub-success-bg text-hub-success-text" },
-  slides: { icon: Presentation, tone: "bg-hub-accent-soft text-hub-accent" },
-  image: { icon: ImageIcon, tone: "bg-hub-badge-bg text-hub-badge-text" },
-  other: { icon: FileText, tone: "bg-hub-badge-bg text-hub-badge-text" },
-};
-
-const ACCESS_STYLE: Record<AccessLevel, { icon: LucideIcon; tone: string; bar: string }> = {
-  general: { icon: Globe, tone: neutralChip, bar: "bg-hub-series-1" },
-  restricted: { icon: Shield, tone: `${chip} bg-hub-info-bg text-hub-info-text`, bar: "bg-hub-series-2" },
-  private: { icon: Lock, tone: `${chip} bg-hub-accent-soft text-hub-accent`, bar: "bg-hub-series-3" },
-};
+import { ACCESS_STYLE, FILE_STYLE, iconButton, primaryButton } from "./document-ui";
 
 const controlClass =
   "min-h-9 max-w-56 rounded-lg bg-hub-subtle px-2.5 text-sm text-hub-text focus:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent";
-const primaryButton =
-  "inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-hub-accent px-3 text-sm font-semibold text-hub-bg transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent focus-visible:ring-offset-2 focus-visible:ring-offset-hub-bg";
-const iconButton =
-  "flex size-9 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent disabled:opacity-50";
 
 type ProjectDocumentsProps = {
   project: Pick<ProjectDetail, "id" | "name" | "status" | "methodology" | "type">;

@@ -207,3 +207,28 @@ export function documentTotals(items: readonly DocumentItem[]) {
 
   return { bytes, byCategory, byAccess, latest };
 }
+
+/** De donde viene un documento: adjunto de un tramite, de un proyecto o institucional. */
+export type DocumentOrigin = "institutional" | "project" | "request";
+
+export const ORIGIN_LABELS: Record<DocumentOrigin, string> = {
+  institutional: "Institucionales",
+  project: "De proyectos",
+  request: "Adjuntos de trámites",
+};
+
+export function documentOrigin(item: Pick<DocumentItem, "administrativeRequestId" | "project">): DocumentOrigin {
+  if (item.administrativeRequestId) return "request";
+  return item.project ? "project" : "institutional";
+}
+
+/** Conteo de documentos por origen. */
+export function originTotals(items: readonly Pick<DocumentItem, "administrativeRequestId" | "project">[]) {
+  const totals: Record<DocumentOrigin, number> = { institutional: 0, project: 0, request: 0 };
+
+  for (const item of items) {
+    totals[documentOrigin(item)] += 1;
+  }
+
+  return totals;
+}

@@ -6,11 +6,13 @@ import {
   acceptAttribute,
   accessHint,
   checkFile,
+  documentOrigin,
   documentTotals,
   fileFamily,
   filterDocuments,
   formatBytes,
   isFiltering,
+  originTotals,
   parseCategory,
   parseScope,
   type DocumentItem,
@@ -140,5 +142,21 @@ describe("vista de documentos del proyecto", () => {
     const before = items.map((item) => item.id);
     ids({ sort: "size" });
     assert.deepEqual(items.map((item) => item.id), before);
+  });
+});
+
+describe("origen del documento", () => {
+  const project = { id: "p1", name: "Proyecto" };
+
+  it("distingue adjuntos de tramite, de proyecto e institucionales", () => {
+    assert.equal(documentOrigin({ administrativeRequestId: "r1", project: null }), "request");
+    assert.equal(documentOrigin({ administrativeRequestId: null, project }), "project");
+    assert.equal(documentOrigin({ project: null }), "institutional");
+    assert.equal(documentOrigin({ administrativeRequestId: "r1", project }), "request");
+  });
+
+  it("cuenta cada origen y devuelve ceros sin documentos", () => {
+    assert.deepEqual(originTotals([{ project: null }, { project }, { project }, { administrativeRequestId: "r1", project: null }]), { institutional: 1, project: 2, request: 1 });
+    assert.deepEqual(originTotals([]), { institutional: 0, project: 0, request: 0 });
   });
 });

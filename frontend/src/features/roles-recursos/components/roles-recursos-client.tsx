@@ -3,11 +3,11 @@
 import { CheckSquare, FolderKanban, Shield, Users } from "lucide-react";
 import { useState } from "react";
 
+import { neutralChip } from "@/features/tracking/components/dashboard-ui";
 import { apiRequest } from "@/lib/api/client";
-import { cn } from "@/lib/utils";
-
 import type { ResourcePermissions } from "@/lib/auth/permissions";
 import { usePermissions } from "@/lib/auth/permissions-context";
+import { cn } from "@/lib/utils";
 
 import type { ResourceItem, RoleItem, RoleMetrics, UserRoleItem } from "../types";
 import { MatrixTab } from "./matrix-tab";
@@ -25,13 +25,7 @@ type RolesRecursosClientProps = {
   permissions?: ResourcePermissions;
 };
 
-export function RolesRecursosClient({
-  initialRoles,
-  initialResources,
-  initialMetrics,
-  initialUsers,
-  permissions,
-}: RolesRecursosClientProps) {
+export function RolesRecursosClient({ initialRoles, initialResources, initialMetrics, initialUsers, permissions }: RolesRecursosClientProps) {
   const contextPermissions = usePermissions("/hub/roles-recursos");
   const effectivePermissions = permissions ?? contextPermissions.permissions;
   const [activeTab, setActiveTab] = useState<TabKey>("matrix");
@@ -55,75 +49,56 @@ export function RolesRecursosClient({
   };
 
   const tabs = [
-    { key: "matrix" as const, label: "Matriz de Permisos", icon: CheckSquare, badge: null },
+    { key: "matrix" as const, label: "Matriz de permisos", icon: CheckSquare, badge: null },
     { key: "roles" as const, label: "Roles", icon: Shield, badge: roles.length },
     { key: "resources" as const, label: "Recursos", icon: FolderKanban, badge: resources.length },
-    { key: "users" as const, label: "Usuarios y Roles", icon: Users, badge: null },
+    { key: "users" as const, label: "Usuarios y roles", icon: Users, badge: null },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Encabezado y Selector de Pestañas */}
-      <div className="border-b border-hub-border pb-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-hub-text sm:text-2xl">
-              Roles y Recursos (RBAC)
-            </h1>
-            <p className="mt-1 text-xs text-hub-muted sm:text-sm">
-              Control de acceso dinámico basado en roles, módulos del sistema y matriz granular de permisos.
-            </p>
-          </div>
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-hub-text">Roles y recursos</h1>
+          <span className={neutralChip}>Seguridad (RBAC)</span>
         </div>
+        <p className="max-w-3xl text-sm text-hub-muted">Control de acceso dinámico basado en roles, módulos del sistema y matriz granular de permisos.</p>
+      </header>
 
-        {/* Barra de Pestañas */}
-        <div className="mt-6 flex flex-wrap gap-2">
+      <div className="-mx-1 overflow-x-auto px-1 pb-1">
+        <div role="tablist" aria-label="Secciones de seguridad" className="flex min-w-max items-center gap-1.5 rounded-xl bg-hub-subtle p-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
             return (
               <button
                 key={tab.key}
+                id={`tab-${tab.key}`}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls="rbac-panel"
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all",
-                  isActive
-                    ? "bg-hub-accent text-white shadow-sm"
-                    : "bg-hub-panel text-hub-muted hover:bg-hub-hover hover:text-hub-text border border-hub-border/60",
+                  "flex min-h-9 items-center gap-2 rounded-lg px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent",
+                  isActive ? "bg-hub-accent font-semibold text-hub-bg shadow-sm" : "text-hub-muted hover:bg-hub-hover hover:text-hub-text",
                 )}
               >
-                <Icon size={15} />
-                <span>{tab.label}</span>
-                {tab.badge !== null && (
-                  <span
-                    className={cn(
-                      "ml-1 rounded-full px-1.5 py-0.2 text-[10px] font-mono",
-                      isActive ? "bg-white/20 text-white" : "bg-hub-hover text-hub-muted",
-                    )}
-                  >
-                    {tab.badge}
-                  </span>
-                )}
+                <Icon aria-hidden="true" className="size-4" />
+                {tab.label}
+                {tab.badge !== null && <span className={cn("rounded-md px-1.5 py-0.5 font-mono text-[11px]", isActive ? "bg-hub-bg/20" : "bg-hub-border text-hub-muted")}>{tab.badge}</span>}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Contenido según la pestaña activa */}
-      {activeTab === "matrix" && (
-        <MatrixTab roles={roles} resources={resources} permissions={effectivePermissions} />
-      )}
-      {activeTab === "roles" && (
-        <RolesTab roles={roles} metrics={metrics} onRefresh={refreshData} permissions={effectivePermissions} />
-      )}
-      {activeTab === "resources" && (
-        <ResourcesTab resources={resources} onRefresh={refreshData} permissions={effectivePermissions} />
-      )}
-      {activeTab === "users" && (
-        <UsersRolesTab roles={roles} initialUsers={initialUsers} permissions={effectivePermissions} />
-      )}
+      <div id="rbac-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`} className="flex flex-col gap-6">
+        {activeTab === "matrix" && <MatrixTab roles={roles} resources={resources} permissions={effectivePermissions} />}
+        {activeTab === "roles" && <RolesTab roles={roles} metrics={metrics} onRefresh={refreshData} permissions={effectivePermissions} />}
+        {activeTab === "resources" && <ResourcesTab resources={resources} onRefresh={refreshData} permissions={effectivePermissions} />}
+        {activeTab === "users" && <UsersRolesTab roles={roles} initialUsers={initialUsers} permissions={effectivePermissions} />}
+      </div>
     </div>
   );
 }

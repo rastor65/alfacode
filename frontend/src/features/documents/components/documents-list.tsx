@@ -1,38 +1,43 @@
 "use client";
 
-import { Download, FileText, Image as ImageIcon, LoaderCircle, Lock, Pencil, Trash2, Upload } from "lucide-react";
+import { ArrowRight, Download, Link2, LoaderCircle, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { formatCalendarDate } from "@/features/projects/types";
+import { chip, eyebrow, neutralChip, panelCard } from "@/features/tracking/components/dashboard-ui";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
+import { bogotaDay } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
-import { ACCESS_LABELS, CATEGORY_LABELS, type DocumentItem, type DocumentScope, type UploadLimits, downloadHref, formatBytes } from "../types";
+import {
+  ACCESS_LABELS,
+  CATEGORY_LABELS,
+  type DocumentItem,
+  type UploadLimits,
+  accessHint,
+  documentOrigin,
+  downloadHref,
+  fileFamily,
+  formatBytes,
+} from "../types";
 import { DocumentForm } from "./document-form";
+import { ACCESS_STYLE, FILE_STYLE, iconButton } from "./document-ui";
 
 type DocumentsListProps = {
   documents: DocumentItem[];
-  scope: DocumentScope;
-  projectId?: string;
-  results?: { id: string; title: string }[];
   limits: UploadLimits;
-  canUpload: boolean;
   emptyMessage: string;
-  /** En el repositorio se muestra el proyecto de cada documento. */
-  showProject?: boolean;
 };
 
-const dateFormat = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "America/Bogota" });
-
-/** Lista de documentos con descarga, carga y edicion en modales (F3-09). */
-export function DocumentsList({ documents, scope, projectId, results, limits, canUpload, emptyMessage, showProject = false }: DocumentsListProps) {
+/** Repositorio: una fila por documento con origen, acceso y acciones; edita y elimina en el sitio (F3-09). */
+export function DocumentsList({ documents, limits, emptyMessage }: DocumentsListProps) {
   const router = useRouter();
-  const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState<DocumentItem | null>(null);
   const [loadingEdit, setLoadingEdit] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -70,130 +75,35 @@ export function DocumentsList({ documents, scope, projectId, results, limits, ca
 
   return (
     <>
-      {error && (
-        <Alert tone="error" className="mb-3">
-          {error}
-        </Alert>
-      )}
-      {canUpload &&
-        (limits.enabled ? (
-          <Button variant="neutral" className="mb-4 min-h-10" onClick={() => setUploading(true)} aria-haspopup="dialog">
-            <Upload size={15} className="mr-2" aria-hidden="true" />
-            Subir documento
-          </Button>
-        ) : (
-          <Alert tone="info" className="mb-4">
-            El almacenamiento de documentos no está configurado en este entorno.
-          </Alert>
-        ))}
+      {error && <Alert tone="error">{error}</Alert>}
 
       {documents.length === 0 ? (
         <p className="rounded-xl border border-dashed border-hub-border px-4 py-10 text-center text-sm text-hub-muted">{emptyMessage}</p>
       ) : (
-        <ul className="divide-y divide-hub-border rounded-xl border border-hub-border">
-          {documents.map((document) => {
-            const Icon = document.mimeType.startsWith("image/") ? ImageIcon : FileText;
-
-            return (
-              <li key={document.id} className="px-4 py-3">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex min-w-0 gap-3">
-                    <Icon size={20} className="mt-0.5 shrink-0 text-hub-muted" aria-hidden="true" />
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-hub-text">{document.title}</p>
-                      <p className="truncate text-sm text-hub-muted">
-                        {document.originalName} · {formatBytes(document.sizeBytes)} · {dateFormat.format(new Date(document.createdAt))}
-                        {document.uploadedBy && ` · ${document.uploadedBy.fullName}`}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        <Badge>{CATEGORY_LABELS[document.category]}</Badge>
-                        <Badge>
-                          {document.accessLevel === "private" && <Lock size={11} className="mr-1" aria-hidden="true" />}
-                          {ACCESS_LABELS[document.accessLevel]}
-                        </Badge>
-                        {showProject && document.project && (
-                          <Link
-                            href={`/hub/proyectos/${document.project.id}/documentos`}
-                            className="inline-flex items-center rounded-full border border-hub-badge-border px-2.5 py-1 text-xs text-hub-accent underline-offset-4 hover:underline"
-                          >
-                            {document.project.name}
-                          </Link>
-                        )}
-                        {document.administrativeRequestId ? <Link href={`/hub/tramites/${document.administrativeRequestId}`} className="inline-flex min-h-6 items-center rounded-full border border-hub-badge-border px-2.5 py-1 text-xs text-hub-accent underline">Adjunto de trámite</Link> : showProject && !document.project && <Badge>Institucional</Badge>}
-                        {document.researchResult && <Badge>Resultado: {document.researchResult.title}</Badge>}
-                      </div>
-                      {document.description && <p className="mt-2 whitespace-pre-line text-sm text-hub-soft">{document.description}</p>}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <a
-                      href={downloadHref(document.id)}
-                      className="flex size-9 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-                      aria-label={`Descargar ${document.title}`}
-                    >
-                      <Download size={16} aria-hidden="true" />
-                    </a>
-                    {document.permissions.canEdit && (
-                      <button
-                        type="button"
-                        onClick={() => void openEdit(document)}
-                        disabled={loadingEdit !== null}
-                        aria-haspopup="dialog"
-                        className="flex size-9 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:opacity-50"
-                        aria-label={`Editar ${document.title}`}
-                      >
-                        {loadingEdit === document.id ? (
-                          <LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                        ) : (
-                          <Pencil size={16} aria-hidden="true" />
-                        )}
-                      </button>
-                    )}
-                    {document.permissions.canDelete && (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDelete(document.id)}
-                        disabled={busy}
-                        className="flex size-9 items-center justify-center rounded-lg text-hub-muted transition hover:bg-hub-hover hover:text-hub-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:opacity-50"
-                        aria-label={`Eliminar ${document.title}`}
-                      >
-                        <Trash2 size={16} aria-hidden="true" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {confirmDelete === document.id && (
-                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hub-border pt-3" role="group" aria-label="Confirmar eliminación">
-                    <p className="text-sm text-hub-text">¿Eliminar el documento y su archivo? No se puede deshacer.</p>
-                    <Button className="min-h-9" pending={busy} pendingLabel="Eliminando…" onClick={() => void remove(document)}>
-                      Eliminar
-                    </Button>
-                    <Button variant="ghost" className="w-auto min-h-9 px-4" onClick={() => setConfirmDelete(null)} disabled={busy}>
-                      Cancelar
-                    </Button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <section aria-label="Lista de documentos" className={cn(panelCard, "overflow-hidden")}>
+          <div aria-hidden="true" className={cn(eyebrow, "hidden grid-cols-12 items-center gap-4 bg-hub-subtle px-5 py-3 md:grid")}>
+            <span className="col-span-5">Documento</span>
+            <span className="col-span-3">Origen</span>
+            <span className="col-span-2">Acceso</span>
+            <span className="col-span-2 text-right">Acciones</span>
+          </div>
+          <ul className="divide-y divide-hub-border">
+            {documents.map((document) => (
+              <DocumentRow
+                key={document.id}
+                document={document}
+                confirming={confirmDelete === document.id}
+                loadingEdit={loadingEdit}
+                busy={busy}
+                onEdit={() => void openEdit(document)}
+                onAskDelete={() => setConfirmDelete(document.id)}
+                onCancelDelete={() => setConfirmDelete(null)}
+                onDelete={() => void remove(document)}
+              />
+            ))}
+          </ul>
+        </section>
       )}
-
-      <Modal open={uploading} onClose={() => setUploading(false)} title="Subir documento" size="lg">
-        {uploading && (
-          <DocumentForm
-            scope={scope}
-            projectId={projectId}
-            results={results}
-            limits={limits}
-            onCancel={() => setUploading(false)}
-            onSaved={() => {
-              setUploading(false);
-              router.refresh();
-            }}
-          />
-        )}
-      </Modal>
 
       <Modal open={editing !== null} onClose={() => setEditing(null)} title="Editar documento" size="lg">
         {editing && (
@@ -201,7 +111,6 @@ export function DocumentsList({ documents, scope, projectId, results, limits, ca
             key={editing.id}
             scope={editing.scope}
             projectId={editing.project?.id}
-            results={results}
             limits={limits}
             document={editing}
             onCancel={() => setEditing(null)}
@@ -213,5 +122,140 @@ export function DocumentsList({ documents, scope, projectId, results, limits, ca
         )}
       </Modal>
     </>
+  );
+}
+
+const originLink = `${chip} max-w-full gap-1 rounded-full py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent`;
+
+/** Origen del documento: institucional, proyecto o adjunto de tramite, con enlace cuando lo hay. */
+function Origin({ document }: { document: DocumentItem }) {
+  const origin = documentOrigin(document);
+
+  return (
+    <div className="flex min-w-0 flex-col items-start gap-1">
+      {origin === "request" ? (
+        <Link href={`/hub/tramites/${document.administrativeRequestId}`} className={`${originLink} bg-hub-info-bg text-hub-info-text hover:opacity-80`}>
+          <span className="truncate">Adjunto de trámite</span>
+          <ArrowRight aria-hidden="true" className="size-3 shrink-0" />
+        </Link>
+      ) : origin === "project" && document.project ? (
+        <Link href={`/hub/proyectos/${document.project.id}/documentos`} className={`${originLink} bg-hub-accent-soft text-hub-accent hover:opacity-80`}>
+          <span className="truncate">{document.project.name}</span>
+          <ArrowRight aria-hidden="true" className="size-3 shrink-0" />
+        </Link>
+      ) : (
+        <span className={`${chip} gap-1.5 rounded-full bg-hub-accent-soft py-1 text-hub-accent`}>
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-hub-accent" />
+          Institucional
+        </span>
+      )}
+      <span className="max-w-full truncate text-xs text-hub-muted">
+        {origin === "request" ? "Trámite administrativo" : document.researchResult ? `Resultado: ${document.researchResult.title}` : origin === "project" ? "Documento de proyecto" : "Repositorio del semillero"}
+      </span>
+    </div>
+  );
+}
+
+function DocumentRow({
+  document,
+  confirming,
+  loadingEdit,
+  busy,
+  onEdit,
+  onAskDelete,
+  onCancelDelete,
+  onDelete,
+}: {
+  document: DocumentItem;
+  confirming: boolean;
+  loadingEdit: string | null;
+  busy: boolean;
+  onEdit: () => void;
+  onAskDelete: () => void;
+  onCancelDelete: () => void;
+  onDelete: () => void;
+}) {
+  const { icon: Icon, tone } = FILE_STYLE[fileFamily(document.extension)];
+  const access = ACCESS_STYLE[document.accessLevel];
+  const AccessIcon = access.icon;
+  const isRequest = documentOrigin(document) === "request";
+
+  return (
+    <li className="px-5 py-4 transition-colors hover:bg-hub-hover/60">
+      <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-12 md:gap-4">
+        <div className="flex min-w-0 items-start gap-3 md:col-span-5">
+          <span aria-hidden="true" className={cn("flex size-11 shrink-0 flex-col items-center justify-center rounded-xl", tone)}>
+            <Icon className="size-5" />
+            <span className="mt-0.5 text-[9px] font-bold uppercase leading-none">{document.extension}</span>
+          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <h3 className="wrap-break-word text-sm font-semibold text-hub-text">{document.title}</h3>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-hub-muted">
+              <span className="max-w-full truncate rounded bg-hub-subtle px-1.5 py-0.5 font-mono text-hub-accent">{document.originalName}</span>
+              <span className="font-semibold text-hub-text">{formatBytes(document.sizeBytes)}</span>
+              <span aria-hidden="true">·</span>
+              <span>
+                {formatCalendarDate(bogotaDay(document.createdAt))}
+                {document.uploadedBy && ` · ${document.uploadedBy.fullName}`}
+              </span>
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className={neutralChip}>{CATEGORY_LABELS[document.category]}</span>
+              {document.researchResult && (
+                <span className={`${neutralChip} max-w-full md:hidden`}>
+                  <Link2 aria-hidden="true" className="size-3 shrink-0 text-hub-accent" />
+                  <span className="truncate">{document.researchResult.title}</span>
+                </span>
+              )}
+            </div>
+            {document.description && <p className="line-clamp-2 whitespace-pre-line text-xs text-hub-soft">{document.description}</p>}
+          </div>
+        </div>
+
+        <div className="min-w-0 md:col-span-3">
+          <Origin document={document} />
+        </div>
+
+        <div className="flex min-w-0 flex-col items-start gap-1 md:col-span-2">
+          <span className={`${access.tone} gap-1`}>
+            <AccessIcon aria-hidden="true" className="size-3" />
+            {ACCESS_LABELS[document.accessLevel]}
+          </span>
+          <span className="text-xs text-hub-muted">{isRequest ? "La persona solicitante y la coordinación." : accessHint(document.accessLevel, document.scope)}</span>
+        </div>
+
+        <div className="-ml-1 flex gap-1 md:col-span-2 md:ml-0 md:justify-end">
+          <a href={downloadHref(document.id)} className={`${iconButton} hover:text-hub-accent`} aria-label={`Descargar ${document.title}`} title={`Descargar (${formatBytes(document.sizeBytes)})`}>
+            <Download aria-hidden="true" className="size-4" />
+          </a>
+          {document.permissions.canEdit && (
+            <button type="button" onClick={onEdit} disabled={loadingEdit !== null} aria-haspopup="dialog" className={iconButton} aria-label={`Editar ${document.title}`} title="Editar">
+              {loadingEdit === document.id ? (
+                <LoaderCircle aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
+              ) : (
+                <Pencil aria-hidden="true" className="size-4" />
+              )}
+            </button>
+          )}
+          {document.permissions.canDelete && (
+            <button type="button" onClick={onAskDelete} disabled={busy} className={`${iconButton} hover:bg-hub-danger-bg hover:text-hub-danger-text`} aria-label={`Eliminar ${document.title}`} title="Eliminar">
+              <Trash2 aria-hidden="true" className="size-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {confirming && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-hub-border pt-3" role="group" aria-label="Confirmar eliminación">
+          <p className="text-sm text-hub-text">¿Eliminar el documento y su archivo? No se puede deshacer.</p>
+          <Button className="min-h-9" pending={busy} pendingLabel="Eliminando…" onClick={onDelete}>
+            Eliminar
+          </Button>
+          <Button variant="ghost" className="w-auto min-h-9 px-4" onClick={onCancelDelete} disabled={busy}>
+            Cancelar
+          </Button>
+        </div>
+      )}
+    </li>
   );
 }
