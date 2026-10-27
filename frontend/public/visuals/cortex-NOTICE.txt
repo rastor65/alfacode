@@ -6,11 +6,13 @@ as redistributed by Nilearn. Both hemispheres were resampled, centered, rotated,
 scaled and quantized for a decorative WebGL illustration. This modified asset is
 not the original surface dataset. No individual participant data are included.
 alfacode-cortex.svg is a simplified, shaded projection of those same surfaces.
+alfacode-cortex-surface.bin is the indexed surface, with both hemispheres slightly
+separated and the view tilted upward to make the central fissure readable.
 
 Source: https://github.com/nilearn/nilearn/tree/4354a8f2aa9619743d1623a5166d3816ecaa7f5d/nilearn/datasets/data/fsaverage5
 Files: pial_left.gii.gz, pial_right.gii.gz, curv_left.gii.gz, curv_right.gii.gz
 Generator: scripts/generate-landing-cortex.py
-SHA256: 967c5db1721fdcb8bdae2a3a4aefb5d643db44d1cd2b43d1fe1d7801a071e82a
+SHA256: e8c295c65be3a2c95c00997c2fad6e47815e0dea27a2860c3276bced1286c941
 
 All or portions of this licensed product (such portions are the "Software") have
 been obtained under license from The General Hospital Corporation "MGH" and are

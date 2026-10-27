@@ -4,6 +4,7 @@ import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
+import { loadCortexSurface } from "./alfa-cortex-surface";
 import { encodeSurfaceNormal } from "./alfa-particle-sculptures";
 import { createParticleForms, PARTICLE_FORMS } from "./alfa-particle-forms";
 import { createScrollStory, initialParticleScene } from "./alfa-scroll-story";
@@ -31,6 +32,7 @@ const VERTEX = `
   uniform vec3 uRotation;
   uniform float uScale;
   uniform float uOpacity;
+  uniform float uSurfaceResolve;
   uniform vec2 uCenter;
   uniform vec2 uPointer;
   varying vec3 vBarycentric;
@@ -100,7 +102,7 @@ const VERTEX = `
     float angle = aParticle.x * 6.28318 + uTime * 0.018;
     vec2 glyph = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * position.xy;
     glyph.y *= 1.0 + abs(uEnergy) * 0.4;
-    viewPosition.xy += glyph * aParticle.y * uScale * perspective * mix(0.70, 0.85, cortex);
+    viewPosition.xy += glyph * aParticle.y * uScale * perspective * mix(0.70, 0.55, cortex);
     gl_Position = projectionMatrix * viewPosition;
     vBarycentric = aBarycentric;
     float light = max(0.0, dot(normal, normalize(vec3(-0.55 + uPointer.x * uPointerInfluence * 0.12, 0.8 + uPointer.y * uPointerInfluence * 0.08, 1.1))));
@@ -117,6 +119,7 @@ const VERTEX = `
     facing = mix(facing, 0.03 + 0.97 * smoothstep(-0.1, 0.15, normal.z), cortex);
     vFill = sculpture * 0.14 + cortex * 0.20;
     vAlpha = aParticle.z * uOpacity * facing * (0.92 + 0.08 * sin(uTime * 0.45 + aParticle.x * 91.0));
+    vAlpha *= 1.0 - uSurfaceResolve * 0.90;
   }
 `;
 const FRAGMENT = `
@@ -144,7 +147,7 @@ function subscribeMotion(callback: () => void) {
   return () => media.removeEventListener("change", callback);
 }
 
-/** One renderer, one instanced draw, six GPU morph targets and a reversible scroll narrative. */
+/** One renderer, six GPU morph targets and a cortical surface that resolves with the brain. */
 export default function AlfaConstellation() {
   const stageRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -211,12 +214,14 @@ export default function AlfaConstellation() {
       geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(colors, 4));
       geometry.instanceCount = count;
       const material = new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uFormA: { value: 0 }, uFormB: { value: 0 }, uMorph: { value: 0 }, uSpread: { value: 0 }, uEnergy: { value: 0 }, uPointerInfluence: { value: 0 }, uRotation: { value: new THREE.Vector3() }, uScale: { value: 100 }, uOpacity: { value: 1 }, uCenter: { value: new THREE.Vector2() }, uPointer: { value: new THREE.Vector2() } },
-        vertexShader: VERTEX, fragmentShader: FRAGMENT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        uniforms: { uTime: { value: 0 }, uFormA: { value: 0 }, uFormB: { value: 0 }, uMorph: { value: 0 }, uSpread: { value: 0 }, uEnergy: { value: 0 }, uPointerInfluence: { value: 0 }, uRotation: { value: new THREE.Vector3() }, uScale: { value: 100 }, uOpacity: { value: 1 }, uSurfaceResolve: { value: 0 }, uCenter: { value: new THREE.Vector2() }, uPointer: { value: new THREE.Vector2() } },
+        vertexShader: VERTEX, fragmentShader: FRAGMENT, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.frustumCulled = false;
+      mesh.renderOrder = 1;
       world.add(mesh);
+      let cortex: Awaited<ReturnType<typeof loadCortexSurface>> | null = null;
       const scene = initialParticleScene();
       let width = 0, height = 0, frame = 0, elapsed = 0;
       let last = performance.now();
@@ -247,11 +252,20 @@ export default function AlfaConstellation() {
           material.uniforms.uEnergy.value += (scene.energy - material.uniforms.uEnergy.value) * blend;
           scene.energy *= Math.exp(-5 * delta);
         }
+        const brainWeight = (scene.formA === 1 ? 1 - scene.morph : 0) + (scene.formB === 1 ? scene.morph : 0);
+        const amount = Math.max(0, Math.min(1, (brainWeight - 0.3) / 0.7));
+        const resolve = cortex ? amount * amount * (3 - 2 * amount) * scene.opacity : 0;
+        material.uniforms.uSurfaceResolve.value = resolve;
+        if (cortex) {
+          cortex.resolve.value = resolve;
+          cortex.mesh.visible = resolve > 0.001;
+        }
+        stage.dataset.cortexOpacity = resolve.toFixed(3);
         renderer.render(world, camera);
         if (storytelling) {
           const captionWidth = Math.min(420, window.innerWidth - 48);
           const x = Math.max(24, Math.min(window.innerWidth - captionWidth - 24, scene.x - captionWidth / 2));
-          const captionOffset = window.innerWidth < 700 ? 0.29 : 0.39;
+          const captionOffset = window.innerWidth < 700 ? 0.29 + brainWeight * 0.05 : 0.39;
           const y = Math.max(8, Math.min(height - 110, scene.y + scene.size * captionOffset));
           const opacity = scene.opacity * scene.captionOpacity;
           caption.style.transform = `translate3d(${x}px, ${y}px, 0)`;
@@ -369,10 +383,18 @@ export default function AlfaConstellation() {
         document.removeEventListener("visibilitychange", sync);
         renderer.domElement.removeEventListener("webglcontextlost", onLost);
         renderer.domElement.removeEventListener("webglcontextrestored", onRestored);
-        geometry.dispose(); material.dispose(); renderer.dispose(); renderer.domElement.remove();
+        cortex?.dispose(); geometry.dispose(); material.dispose(); renderer.dispose(); renderer.domElement.remove();
       };
       resize(); configure(); draw();
       setReady(true);
+      // Resolve anatomy after the hero is ready; particles remain available if this asset fails.
+      void loadCortexSurface(THREE, material.uniforms, abort.signal).then((surface) => {
+        if (disposed) { surface.dispose(); return; }
+        cortex = surface;
+        world.add(surface.mesh);
+        stage.dataset.cortex = "ready";
+        draw();
+      }).catch(() => { if (!disposed) stage.dataset.cortex = "unavailable"; });
     })().catch(() => { release(); if (!disposed) setReady(false); });
     return () => { disposed = true; abort.abort(); release(); };
   }, []);

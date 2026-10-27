@@ -1,4 +1,4 @@
-"""Build the decorative cortex point cloud. Standard library only; no runtime mesh decoder.
+"""Build decorative cortex particles, indexed surface and SVG. Standard library only.
 
 Source: fsaverage5 pial surfaces redistributed by Nilearn. See the generated NOTICE.
 The resulting quantized particle surface is a modified visualization asset.
@@ -54,9 +54,9 @@ def normalize(v):
 
 def rotate(v):
     x, y, z = v
-    angle = 0.68
+    angle = 0.48
     x, z = x * math.cos(angle) + z * math.sin(angle), -x * math.sin(angle) + z * math.cos(angle)
-    angle = -0.1
+    angle = 0.28
     return x, y * math.cos(angle) - z * math.sin(angle), y * math.sin(angle) + z * math.cos(angle)
 
 
@@ -68,7 +68,8 @@ def main():
         points, triangles = gifti(f"pial_{side}.gii.gz")
         offset = len(vertices)
         # Source RAS: X left/right, Y anterior/posterior, Z superior/inferior.
-        vertices.extend((p[0], p[2], p[1]) for p in points)
+        separation = -2.5 if side == "left" else 2.5
+        vertices.extend((p[0] + separation, p[2], p[1]) for p in points)
         # Swapping source axes reverses winding.
         faces.extend((t[0] + offset, t[2] + offset, t[1] + offset) for t in triangles)
         curvature.extend(gifti(f"curv_{side}.gii.gz")[0])
@@ -103,6 +104,16 @@ def main():
         output.extend(struct.pack("<hhhbbbB", *(round(max(-1, min(1, x / 3)) * 32767) for x in point), *(round(x * 127) for x in normal), shade))
     target = OUTPUT / "alfacode-cortex.bin"
     target.write_bytes(output)
+    # Indexed, opaque surface resolves the folds while particles retain the scroll morph.
+    surface = bytearray(b"ACS1" + struct.pack("<II", len(vertices), len(faces)))
+    for index, vertex in enumerate(vertices):
+        point = rotate(tuple((vertex[i] - center[i]) * scale for i in range(3)))
+        normal = normalize(rotate(normals[index]))
+        shade = round(max(0, min(1, 0.62 - curvature[index] * 1.9)) * 255)
+        surface.extend(struct.pack("<hhhbbbB", *(round(max(-1, min(1, x / 3)) * 32767) for x in point), *(round(x * 127) for x in normal), shade))
+    for face in faces:
+        surface.extend(struct.pack("<HHH", *face))
+    (OUTPUT / "alfacode-cortex-surface.bin").write_bytes(surface)
     # A static vector fallback from the same cortex, for reduced motion / no WebGL.
     transformed = [rotate(tuple((p[i] - center[i]) * scale for i in range(3))) for p in vertices]
     clusters = {}
@@ -142,6 +153,8 @@ as redistributed by Nilearn. Both hemispheres were resampled, centered, rotated,
 scaled and quantized for a decorative WebGL illustration. This modified asset is
 not the original surface dataset. No individual participant data are included.
 alfacode-cortex.svg is a simplified, shaded projection of those same surfaces.
+alfacode-cortex-surface.bin is the indexed surface, with both hemispheres slightly
+separated and the view tilted upward to make the central fissure readable.
 
 Source: https://github.com/nilearn/nilearn/tree/{COMMIT}/nilearn/datasets/data/fsaverage5
 Files: pial_left.gii.gz, pial_right.gii.gz, curv_left.gii.gz, curv_right.gii.gz
