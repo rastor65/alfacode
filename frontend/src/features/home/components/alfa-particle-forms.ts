@@ -1,12 +1,8 @@
+import { createSculptureSamplers } from "./alfa-particle-sculptures";
+
 /** Equal-size point clouds: the GPU interpolates the same particles between every chapter. */
 export const PARTICLE_FORMS = ["logo", "brain", "software", "ai", "iot", "research"] as const;
 export type ParticleForm = typeof PARTICLE_FORMS[number];
-
-const symbols = {
-  software: '<path d="M31 25 8 50l23 25M69 25l23 25-23 25M59 13 41 87"/>',
-  ai: '<rect x="25" y="25" width="50" height="50" rx="7"/><path d="M35 10v15m15-15v15m15-15v15M35 75v15m15-15v15m15-15v15M10 35h15m-15 15h15m-15 15h15M75 35h15m-15 15h15m-15 15h15M38 39l24 22M38 61l24-22M38 39v22h24V39Z"/><circle cx="38" cy="39" r="3"/><circle cx="62" cy="61" r="3"/><circle cx="38" cy="61" r="3"/><circle cx="62" cy="39" r="3"/>',
-  research: '<path d="m49 10 18 11-23 36-18-11ZM53 12l5-8 12 8-5 8M33 51l-5 9 8 5 6-9M63 37c24 9 23 39-4 43H38M22 67h34M26 88h54M38 80v8M68 79v9"/>',
-};
 
 function seededRandom() {
   let seed = 27041998;
@@ -31,15 +27,22 @@ async function rasterize(source: string, signal: AbortSignal) {
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
     const points: [number, number][] = [];
+    const edges: { point: [number, number]; normal: [number, number, number] }[] = [];
+    const alpha = (x: number, y: number) => x < 0 || y < 0 || x >= pixels.width || y >= pixels.height ? 0 : pixels.data[(y * pixels.width + x) * 4 + 3];
     for (let y = 0; y < pixels.height; y++) {
       for (let x = 0; x < pixels.width; x++) {
         if (pixels.data[(y * pixels.width + x) * 4 + 3] > 100) {
-          points.push([(x / pixels.width - 0.5) * 6.05, (0.5 - y / pixels.height) * 4.54]);
+          const point: [number, number] = [(x / pixels.width - 0.5) * 6.05, (0.5 - y / pixels.height) * 4.54];
+          points.push(point);
+          const gx = alpha(x + 2, y) - alpha(x - 2, y);
+          const gy = alpha(x, y + 2) - alpha(x, y - 2);
+          const gradient = Math.hypot(gx, gy);
+          if (gradient > 60) edges.push({ point, normal: [-gx / gradient, gy / gradient, 0] });
         }
       }
     }
     if (!points.length) throw new Error("Empty particle form");
-    return points;
+    return { points, edges };
   } finally { URL.revokeObjectURL(url); }
 }
 
@@ -57,17 +60,16 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
   const xml = new DOMParser().parseFromString(await response.text(), "image/svg+xml");
   const symbol = xml.querySelector('[id="isotipo"]');
   if (!symbol) throw new Error("Symbol unavailable");
-  const masks = await Promise.all([
-    rasterize(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="215 163 824 618">${symbol.outerHTML}</svg>`, signal),
-    ...Object.values(symbols).map((paths) => rasterize(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -2 128 104" fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`, signal)),
-  ]);
+  const logo = await rasterize(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="215 163 824 618">${symbol.outerHTML}</svg>`, signal);
   signal.throwIfAborted();
   const random = seededRandom();
+  const sculptures = createSculptureSamplers(random);
   const forms = Object.fromEntries(PARTICLE_FORMS.map((key) => [key, new Float32Array(count * 3)])) as Record<ParticleForm, Float32Array>;
   const seeds = new Float32Array(count);
   const sizes = new Float32Array(count);
   const alphas = new Float32Array(count);
-  const brainNormals = new Float32Array(count * 3);
+  const surfaceNormals = Object.fromEntries(PARTICLE_FORMS.map((key) => [key, new Float32Array(count * 3)])) as Record<ParticleForm, Float32Array>;
+  const brainNormals = surfaceNormals.brain;
   const brainShades = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
@@ -80,13 +82,24 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       const radius = 3.1 + random() * 1.1;
       const point = [Math.cos(angle) * radius, Math.sin(angle) * radius * 0.78, (random() - 0.5) * 2];
       for (const key of PARTICLE_FORMS) forms[key].set(point, i * 3);
-      brainNormals.set([0, 0, 1], i * 3);
+      for (const key of PARTICLE_FORMS) surfaceNormals[key].set([0, 0, 1], i * 3);
       brainShades[i] = 0.25;
       continue;
     }
-    for (const [key, mask] of [["logo", masks[0]], ["software", masks[1]], ["ai", masks[2]], ["research", masks[3]]] as const) {
-      const point = mask[Math.floor(random() * mask.length)];
-      forms[key].set([point[0], point[1], (random() - 0.5) * (key === "logo" ? 1 : 0.35)], i * 3);
+    if (i % 5 === 0 && logo.edges.length) {
+      const edge = logo.edges[Math.floor(random() * logo.edges.length)];
+      forms.logo.set([edge.point[0], edge.point[1], (random() - 0.5) * 0.42], i * 3);
+      surfaceNormals.logo.set(edge.normal, i * 3);
+    } else {
+      const point = logo.points[Math.floor(random() * logo.points.length)];
+      const back = i % 10 === 1;
+      forms.logo.set([point[0], point[1], back ? -0.21 : 0.21], i * 3);
+      surfaceNormals.logo.set([0, 0, back ? -1 : 1], i * 3);
+    }
+    for (const key of ["software", "ai", "iot", "research"] as const) {
+      const sample = sculptures[key]();
+      forms[key].set(sample.point, i * 3);
+      surfaceNormals[key].set(sample.normal, i * 3);
     }
 
     // A compact surface sample from fsaverage5; real sulci, normals and curvature.
@@ -98,34 +111,6 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
     }
     brainShades[i] = cortex.getUint8(offset + 9) / 255;
 
-    // A globe with meridians, latitude rings, three data orbits and satellite nodes.
-    const t = random() * Math.PI * 2;
-    let gx: number, gy: number, gz: number;
-    if (i % 10 < 6) {
-      if (i % 2) {
-        const longitude = (i % 9) * Math.PI / 9;
-        gx = Math.cos(t) * Math.cos(longitude) * 1.8;
-        gy = Math.sin(t) * 1.8;
-        gz = Math.cos(t) * Math.sin(longitude) * 1.8;
-      } else {
-        const latitude = ((i % 7) - 3) * 0.38;
-        gx = Math.cos(t) * Math.cos(latitude) * 1.8;
-        gy = Math.sin(latitude) * 1.8;
-        gz = Math.sin(t) * Math.cos(latitude) * 1.8;
-      }
-    } else {
-      const orbit = (i % 3) * Math.PI / 3 + 0.35;
-      gx = Math.cos(t) * 2.7;
-      gy = Math.sin(t) * Math.cos(orbit) * 2.7;
-      gz = Math.sin(t) * Math.sin(orbit) * 2.7;
-      if (i % 10 === 9) {
-        const node = (i % 5) * Math.PI * 0.4;
-        gx = Math.cos(node) * 2.7 + (random() - 0.5) * 0.25;
-        gy = Math.sin(node) * 2.1 + (random() - 0.5) * 0.25;
-        gz = (random() - 0.5) * 0.25;
-      }
-    }
-    forms.iot.set([gx, gy, gz], i * 3);
   }
   // Match spatial neighborhoods across forms, preserving a particle's sense of place.
   const bodyCount = Math.ceil(count * 0.91);
@@ -142,15 +127,13 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       const q = (axis: number) => Math.max(0, Math.min(1023, Math.floor((source[index * 3 + axis] + 4) / 8 * 1023)));
       return { index, code: (expand(q(0)) | expand(q(1)) << 1 | expand(q(2)) << 2) >>> 0 };
     }).sort((a, b) => a.code - b.code);
-    const normals = key === "brain" ? brainNormals.slice() : null;
+    const normals = surfaceNormals[key].slice();
     const shades = key === "brain" ? brainShades.slice() : null;
     ranks.forEach(({ index }, target) => {
       forms[key].set(source.subarray(index * 3, index * 3 + 3), target * 3);
-      if (normals && shades) {
-        brainNormals.set(normals.subarray(index * 3, index * 3 + 3), target * 3);
-        brainShades[target] = shades[index];
-      }
+      surfaceNormals[key].set(normals.subarray(index * 3, index * 3 + 3), target * 3);
+      if (shades) brainShades[target] = shades[index];
     });
   }
-  return { forms, seeds, sizes, alphas, brainNormals, brainShades };
+  return { forms, seeds, sizes, alphas, normals: surfaceNormals, brainShades };
 }

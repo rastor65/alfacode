@@ -80,7 +80,9 @@ export function createScrollStory(root: HTMLElement, scene: ParticleScene, onUpd
       const side = bounds.x + bounds.width / 2 < width / 2 ? -1 : 1;
       const center = mobile ? width * (index % 2 ? 0.46 : 0.54) : bounds.x + bounds.width / 2;
       const size = mobile ? Math.min(width * 0.93, height * 0.4) : Math.min(bounds.width * 1.12, height * 0.68);
-      const pose: Pose = { ...defaults, x: center, y: height * (mobile ? 0.24 : 0.48), size, form, rotationX: index % 2 ? 0.06 : -0.08, rotationY: side * 0.14, rotationZ: side * 0.045 };
+      const pitch = form === 3 ? 0.1 : form === 5 ? -0.04 : -0.08;
+      const yaw = form === 3 ? 0.30 : form === 5 ? 0.26 : 0.20;
+      const pose: Pose = { ...defaults, x: center, y: height * (mobile ? 0.24 : 0.48), size, form, rotationX: pitch, rotationY: side * yaw, rotationZ: side * 0.035 };
       const entry = checkpoint - height * (mobile ? 0.17 : 0.25);
       const previous = frames[frames.length - 1];
       if (entry > previous.scroll + height * 0.18) {

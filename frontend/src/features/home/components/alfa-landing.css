@@ -416,7 +416,7 @@ html:has(.alfa-landing-mobile-menu[open]) { overflow: hidden; }
 }
 @media (max-width: 699px) {
   .alfa-landing .alfa-body { font-weight: 300; }
-  .alfa-landing[data-scroll-story="true"] .alfa-research-step, .alfa-landing[data-scroll-story="true"] .alfa-project { grid-template-columns: minmax(0, 1fr); gap: 24px; min-height: 112svh; padding-block: 6svh; }
+  .alfa-landing[data-scroll-story="true"] .alfa-research-step, .alfa-landing[data-scroll-story="true"] .alfa-project { grid-template-columns: minmax(0, 1fr); gap: 20px; min-height: 104svh; padding-block: 6svh; }
   .alfa-landing[data-scroll-story="true"] :is(.alfa-research-step, .alfa-project) > [data-particle-anchor] { height: 43svh; grid-column: 1; grid-row: 1; }
   .alfa-landing[data-scroll-story="true"] :is(.alfa-research-step, .alfa-project) > :is(.alfa-research-step-copy, .alfa-project-copy) { grid-column: 1; grid-row: 2; background: #000; padding-block: 20px; }
   .alfa-landing[data-scroll-story="true"] .alfa-project-main h3 { font-size: 36px; }
