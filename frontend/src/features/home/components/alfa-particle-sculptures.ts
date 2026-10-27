@@ -95,6 +95,44 @@ function sampler(surfaces: Surface[], random: Random) {
   };
 }
 
+/** A readable brain emblem: open folds and two hemispheres, built from the same tubes as the other figures. */
+export function createBrainSampler(random: Random) {
+  const surfaces: Surface[] = [];
+  const curve = (points: [V3, V3, V3, V3], radius: number) => {
+    surfaces.push(tube((t) => {
+      const s = 1 - t;
+      return [0, 1, 2].map((axis) => s ** 3 * points[0][axis] + 3 * s ** 2 * t * points[1][axis] + 3 * s * t ** 2 * points[2][axis] + t ** 3 * points[3][axis]) as V3;
+    }, radius));
+  };
+  const outline = [
+    [[-0.17, 1.57], [-0.17, 2.13], [-0.94, 2.27], [-1.17, 1.85]],
+    [[-1.17, 1.85], [-1.70, 2.04], [-2.07, 1.60], [-1.87, 1.21]],
+    [[-1.87, 1.21], [-2.38, 1.17], [-2.55, 0.55], [-2.18, 0.24]],
+    [[-2.18, 0.24], [-2.55, -0.16], [-2.30, -0.82], [-1.97, -0.86]],
+    [[-1.97, -0.86], [-2.05, -1.42], [-1.26, -1.79], [-0.95, -1.49]],
+    [[-0.95, -1.49], [-0.63, -1.83], [-0.17, -1.58], [-0.17, -1.10]],
+    [[-0.17, -1.10], [-0.12, -0.25], [-0.22, 0.85], [-0.17, 1.57]],
+  ];
+  const folds = [
+    [[-0.17, 1.12], [-0.73, 1.49], [-1.43, 1.18], [-1.28, 0.70]],
+    [[-1.28, 0.70], [-1.20, 0.38], [-0.79, 0.43], [-0.74, 0.68]],
+    [[-1.87, 1.21], [-1.52, 0.82], [-1.91, 0.16], [-2.18, 0.24]],
+    [[-0.17, 0.13], [-0.81, 0.52], [-1.56, 0.04], [-1.24, -0.46]],
+    [[-1.97, -0.86], [-1.83, -0.32], [-1.14, -0.94], [-0.99, -0.65]],
+    [[-0.17, -1.10], [-0.64, -1.44], [-1.12, -1.08], [-0.95, -0.82]],
+  ];
+  for (const side of [-1, 1]) {
+    for (const [paths, radius] of [[outline, 0.105], [folds, 0.085]] as const) {
+      for (const path of paths) {
+        const points = path.map(([x, y]) => [x * side, y, 0.18 + 0.18 * Math.cos(y * 0.9) * Math.cos(x * 0.65)] as V3) as [V3, V3, V3, V3];
+        curve(points, radius);
+      }
+    }
+  }
+  curve([[-0.18, -1.60, 0.12], [-0.24, -2.12, 0.06], [0.24, -2.12, 0.06], [0.18, -1.60, 0.12]], 0.095);
+  return sampler(surfaces, random);
+}
+
 export function createSculptureSamplers(random: Random) {
   const software: Surface[] = [
     cylinder([-1.25, 1.3, 0], [-2.45, 0, 0.1], 0.115),
@@ -161,7 +199,7 @@ export function createSculptureSamplers(random: Random) {
     cylinder([1.17, -0.22, 0.18], [1.17, -0.22, 0.31], 0.27),
     box([-0.42, -0.29, 0.1], [0.36, 0.025, 0.18], 0.015),
   ];
-  return { software: sampler(software, random), ai: sampler(ai, random), iot: sampler(iot, random), research: sampler(research, random) };
+  return { brain: createBrainSampler(random), software: sampler(software, random), ai: sampler(ai, random), iot: sampler(iot, random), research: sampler(research, random) };
 }
 
 /** Octahedral encoding packs six surface normals into three vec4 vertex attributes. */

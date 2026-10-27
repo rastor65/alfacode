@@ -47,15 +47,7 @@ async function rasterize(source: string, signal: AbortSignal) {
 }
 
 export async function createParticleForms(count: number, signal: AbortSignal) {
-  const [response, cortexResponse] = await Promise.all([
-    fetch("/AlfaCode_logos/SVG/AlfaCode_logo_horizontal.svg", { signal }),
-    fetch("/visuals/alfacode-cortex.bin", { signal }),
-  ]);
-  if (!cortexResponse.ok) throw new Error("Cortex unavailable");
-  const cortex = new DataView(await cortexResponse.arrayBuffer());
-  if (cortex.byteLength < 8 || cortex.getUint32(0, false) !== 0x41434232) throw new Error("Invalid cortex");
-  const cortexCount = cortex.getUint32(4, true);
-  if (cortex.byteLength !== 8 + cortexCount * 10 || !cortexCount) throw new Error("Invalid cortex size");
+  const response = await fetch("/AlfaCode_logos/SVG/AlfaCode_logo_horizontal.svg", { signal });
   if (!response.ok) throw new Error("Logo unavailable");
   const xml = new DOMParser().parseFromString(await response.text(), "image/svg+xml");
   const symbol = xml.querySelector('[id="isotipo"]');
@@ -69,8 +61,6 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
   const sizes = new Float32Array(count);
   const alphas = new Float32Array(count);
   const surfaceNormals = Object.fromEntries(PARTICLE_FORMS.map((key) => [key, new Float32Array(count * 3)])) as Record<ParticleForm, Float32Array>;
-  const brainNormals = surfaceNormals.brain;
-  const brainShades = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
     seeds[i] = random();
@@ -83,7 +73,6 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       const point = [Math.cos(angle) * radius, Math.sin(angle) * radius * 0.78, (random() - 0.5) * 2];
       for (const key of PARTICLE_FORMS) forms[key].set(point, i * 3);
       for (const key of PARTICLE_FORMS) surfaceNormals[key].set([0, 0, 1], i * 3);
-      brainShades[i] = 0.25;
       continue;
     }
     if (i % 5 === 0 && logo.edges.length) {
@@ -96,21 +85,11 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       forms.logo.set([point[0], point[1], back ? -0.21 : 0.21], i * 3);
       surfaceNormals.logo.set([0, 0, back ? -1 : 1], i * 3);
     }
-    for (const key of ["software", "ai", "iot", "research"] as const) {
+    for (const key of ["brain", "software", "ai", "iot", "research"] as const) {
       const sample = sculptures[key]();
       forms[key].set(sample.point, i * 3);
       surfaceNormals[key].set(sample.normal, i * 3);
     }
-
-    // A compact surface sample from fsaverage5; real sulci, normals and curvature.
-    const sample = Math.min(cortexCount - 1, Math.floor(i / (count * 0.91) * cortexCount));
-    const offset = 8 + sample * 10;
-    for (let axis = 0; axis < 3; axis++) {
-      forms.brain[i * 3 + axis] = cortex.getInt16(offset + axis * 2, true) / 32767 * 3;
-      brainNormals[i * 3 + axis] = cortex.getInt8(offset + 6 + axis) / 127;
-    }
-    brainShades[i] = cortex.getUint8(offset + 9) / 255;
-
   }
   // Match spatial neighborhoods across forms, preserving a particle's sense of place.
   const bodyCount = Math.ceil(count * 0.91);
@@ -128,12 +107,10 @@ export async function createParticleForms(count: number, signal: AbortSignal) {
       return { index, code: (expand(q(0)) | expand(q(1)) << 1 | expand(q(2)) << 2) >>> 0 };
     }).sort((a, b) => a.code - b.code);
     const normals = surfaceNormals[key].slice();
-    const shades = key === "brain" ? brainShades.slice() : null;
     ranks.forEach(({ index }, target) => {
       forms[key].set(source.subarray(index * 3, index * 3 + 3), target * 3);
       surfaceNormals[key].set(normals.subarray(index * 3, index * 3 + 3), target * 3);
-      if (shades) brainShades[target] = shades[index];
     });
   }
-  return { forms, seeds, sizes, alphas, normals: surfaceNormals, brainShades };
+  return { forms, seeds, sizes, alphas, normals: surfaceNormals };
 }

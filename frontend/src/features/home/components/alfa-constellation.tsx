@@ -4,7 +4,6 @@ import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { AlfaCodeSymbol } from "@/components/brand/alfacode-logo";
-import { loadCortexSurface } from "./alfa-cortex-surface";
 import { encodeSurfaceNormal } from "./alfa-particle-sculptures";
 import { createParticleForms, PARTICLE_FORMS } from "./alfa-particle-forms";
 import { createScrollStory, initialParticleScene } from "./alfa-scroll-story";
@@ -20,7 +19,7 @@ const VERTEX = `
   attribute vec4 aNormals0;
   attribute vec4 aNormals1;
   attribute vec4 aNormals2;
-  attribute vec4 aColor;
+  attribute vec3 aColor;
   attribute vec3 aParticle;
   uniform float uTime;
   uniform float uFormA;
@@ -32,7 +31,6 @@ const VERTEX = `
   uniform vec3 uRotation;
   uniform float uScale;
   uniform float uOpacity;
-  uniform float uSurfaceResolve;
   uniform vec2 uCenter;
   uniform vec2 uPointer;
   varying vec3 vBarycentric;
@@ -77,7 +75,6 @@ const VERTEX = `
     float transition = sin(morph * 3.14159);
     vec3 scatter = vec3(sin(aParticle.x * 113.0), cos(aParticle.x * 67.0), sin(aParticle.x * 91.0));
     p += scatter * (transition * 0.22 + uSpread * 0.15);
-    float cortex = (1.0 - step(0.1, abs(uFormA - 1.0))) * (1.0 - uMorph) + (1.0 - step(0.1, abs(uFormB - 1.0))) * uMorph;
     float logo = (1.0 - step(0.1, uFormA)) * (1.0 - uMorph) + (1.0 - step(0.1, uFormB)) * uMorph;
     float sculpture = 1.0 - logo;
     float pitch = uRotation.x + uEnergy * 0.025;
@@ -102,24 +99,20 @@ const VERTEX = `
     float angle = aParticle.x * 6.28318 + uTime * 0.018;
     vec2 glyph = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * position.xy;
     glyph.y *= 1.0 + abs(uEnergy) * 0.4;
-    viewPosition.xy += glyph * aParticle.y * uScale * perspective * mix(0.70, 0.55, cortex);
+    viewPosition.xy += glyph * aParticle.y * uScale * perspective * 0.70;
     gl_Position = projectionMatrix * viewPosition;
     vBarycentric = aBarycentric;
     float light = max(0.0, dot(normal, normalize(vec3(-0.55 + uPointer.x * uPointerInfluence * 0.12, 0.8 + uPointer.y * uPointerInfluence * 0.08, 1.1))));
     float rim = pow(1.0 - max(0.0, normal.z), 2.5);
-    vec3 corticalColor = mix(vec3(0.004, 0.085, 0.13), vec3(0.30, 0.85, 0.98), clamp(pow(light, 0.65) * 0.87 + rim * 0.13, 0.0, 1.0));
-    corticalColor *= 0.72 + aColor.a * 0.4;
     vec3 brandColor = aColor.rgb * (0.65 + 0.35 * smoothstep(-1.5, 1.5, p.z));
     vec3 litColor = aColor.rgb * (0.3 + light * 0.85) + vec3(0.30, 0.85, 0.98) * rim * 0.045;
     float phase = p.y * 0.8 + p.x * 0.25 + p.z * 0.4;
     float packet = pow(0.5 + 0.5 * sin(uTime * 1.2 - phase * 3.0), 16.0);
     litColor += vec3(0.30, 0.85, 0.98) * packet * 0.075;
-    vColor = mix(mix(brandColor, litColor, sculpture), corticalColor, cortex);
+    vColor = mix(brandColor, litColor, sculpture);
     float facing = mix(1.0, 0.3 + 0.7 * smoothstep(-0.3, 0.45, normal.z), sculpture);
-    facing = mix(facing, 0.03 + 0.97 * smoothstep(-0.1, 0.15, normal.z), cortex);
-    vFill = sculpture * 0.14 + cortex * 0.20;
+    vFill = sculpture * 0.14;
     vAlpha = aParticle.z * uOpacity * facing * (0.92 + 0.08 * sin(uTime * 0.45 + aParticle.x * 91.0));
-    vAlpha *= 1.0 - uSurfaceResolve * 0.90;
   }
 `;
 const FRAGMENT = `
@@ -147,7 +140,7 @@ function subscribeMotion(callback: () => void) {
   return () => media.removeEventListener("change", callback);
 }
 
-/** One renderer, six GPU morph targets and a cortical surface that resolves with the brain. */
+/** One instanced particle mesh, six GPU morph targets and a reversible scroll narrative. */
 export default function AlfaConstellation() {
   const stageRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -205,23 +198,21 @@ export default function AlfaConstellation() {
       const parameters = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) parameters.set([particles.seeds[i], particles.sizes[i], particles.alphas[i]], i * 3);
       geometry.setAttribute("aParticle", new THREE.InstancedBufferAttribute(parameters, 3));
-      const colors = new Float32Array(count * 4);
+      const colors = new Float32Array(count * 3);
       const palette = ["#0382a1", "#049ebf", "#469eb4", "#94eefe", "#e1feff"].map((color) => new THREE.Color(color));
       for (let i = 0; i < count; i++) {
         const color = palette[Math.floor(particles.seeds[i] * palette.length)];
-        colors.set([color.r, color.g, color.b, particles.brainShades[i]], i * 4);
+        colors.set([color.r, color.g, color.b], i * 3);
       }
-      geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(colors, 4));
+      geometry.setAttribute("aColor", new THREE.InstancedBufferAttribute(colors, 3));
       geometry.instanceCount = count;
       const material = new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0 }, uFormA: { value: 0 }, uFormB: { value: 0 }, uMorph: { value: 0 }, uSpread: { value: 0 }, uEnergy: { value: 0 }, uPointerInfluence: { value: 0 }, uRotation: { value: new THREE.Vector3() }, uScale: { value: 100 }, uOpacity: { value: 1 }, uSurfaceResolve: { value: 0 }, uCenter: { value: new THREE.Vector2() }, uPointer: { value: new THREE.Vector2() } },
+        uniforms: { uTime: { value: 0 }, uFormA: { value: 0 }, uFormB: { value: 0 }, uMorph: { value: 0 }, uSpread: { value: 0 }, uEnergy: { value: 0 }, uPointerInfluence: { value: 0 }, uRotation: { value: new THREE.Vector3() }, uScale: { value: 100 }, uOpacity: { value: 1 }, uCenter: { value: new THREE.Vector2() }, uPointer: { value: new THREE.Vector2() } },
         vertexShader: VERTEX, fragmentShader: FRAGMENT, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.frustumCulled = false;
-      mesh.renderOrder = 1;
       world.add(mesh);
-      let cortex: Awaited<ReturnType<typeof loadCortexSurface>> | null = null;
       const scene = initialParticleScene();
       let width = 0, height = 0, frame = 0, elapsed = 0;
       let last = performance.now();
@@ -253,14 +244,6 @@ export default function AlfaConstellation() {
           scene.energy *= Math.exp(-5 * delta);
         }
         const brainWeight = (scene.formA === 1 ? 1 - scene.morph : 0) + (scene.formB === 1 ? scene.morph : 0);
-        const amount = Math.max(0, Math.min(1, (brainWeight - 0.3) / 0.7));
-        const resolve = cortex ? amount * amount * (3 - 2 * amount) * scene.opacity : 0;
-        material.uniforms.uSurfaceResolve.value = resolve;
-        if (cortex) {
-          cortex.resolve.value = resolve;
-          cortex.mesh.visible = resolve > 0.001;
-        }
-        stage.dataset.cortexOpacity = resolve.toFixed(3);
         renderer.render(world, camera);
         if (storytelling) {
           const captionWidth = Math.min(420, window.innerWidth - 48);
@@ -383,18 +366,10 @@ export default function AlfaConstellation() {
         document.removeEventListener("visibilitychange", sync);
         renderer.domElement.removeEventListener("webglcontextlost", onLost);
         renderer.domElement.removeEventListener("webglcontextrestored", onRestored);
-        cortex?.dispose(); geometry.dispose(); material.dispose(); renderer.dispose(); renderer.domElement.remove();
+        geometry.dispose(); material.dispose(); renderer.dispose(); renderer.domElement.remove();
       };
       resize(); configure(); draw();
       setReady(true);
-      // Resolve anatomy after the hero is ready; particles remain available if this asset fails.
-      void loadCortexSurface(THREE, material.uniforms, abort.signal).then((surface) => {
-        if (disposed) { surface.dispose(); return; }
-        cortex = surface;
-        world.add(surface.mesh);
-        stage.dataset.cortex = "ready";
-        draw();
-      }).catch(() => { if (!disposed) stage.dataset.cortex = "unavailable"; });
     })().catch(() => { release(); if (!disposed) setReady(false); });
     return () => { disposed = true; abort.abort(); release(); };
   }, []);
