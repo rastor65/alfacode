@@ -5,8 +5,8 @@ import type { MigrationInterface, QueryRunner } from "typeorm";
  * Agrega el recurso de Líneas de Investigación (res-investigacion-013) al catálogo RBAC
  * y asocia los permisos correspondientes a todos los roles activos.
  */
-export class ResearchLinesResource1728840000000 implements MigrationInterface {
-  name = "ResearchLinesResource1728840000000";
+export class ResearchLinesResource1728850000000 implements MigrationInterface {
+  name = "ResearchLinesResource1728850000000";
 
   async up(q: QueryRunner): Promise<void> {
     if (!["sqlite", "better-sqlite3"].includes(q.connection.options.type)) {
