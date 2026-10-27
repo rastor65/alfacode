@@ -439,6 +439,41 @@ async function main() {
   buildWeb();
   await startWeb();
 
+  // Solicitudes de acceso (vista /hub/solicitudes): pendiente con Hoja de Vida, aprobada y rechazada.
+  const approvedPage = await admin.page("/hub/solicitudes?estado=approved");
+  check("UI: /hub/solicitudes?estado=approved muestra la solicitud aprobada y la ultima decision",
+    approvedPage.status === 200 && approvedPage.html.includes("Estudiante E2E") && approvedPage.html.includes("Última decisión"), approvedPage.status);
+  const waitingEmail = "pendiente.e2e@uniguajira.edu.co";
+  const waiting = await anon.call("POST", "/auth/register", { fullName: "Aspirante Pendiente E2E", email: waitingEmail, message: "Motivacion E2E", cvData: { programa: "Licenciatura E2E", semestreActual: "3" } });
+  check("un segundo aspirante queda pendiente", ok(waiting), waiting);
+  const pendingPage = await admin.page("/hub/solicitudes");
+  check("UI: /hub/solicitudes lista la solicitud pendiente con indicadores, Hoja de Vida y acciones",
+    pendingPage.status === 200 && pendingPage.html.includes("Aspirante Pendiente E2E") && pendingPage.html.includes("Total en cola") && pendingPage.html.includes("Mayor tiempo de espera") &&
+    pendingPage.html.includes("Ver Hoja de Vida") && pendingPage.html.includes("Aprobar") && pendingPage.html.includes("Licenciatura E2E"), pendingPage.status);
+  check("UI: /hub/solicitudes redirige a quien no tiene sesion", (await anon.page("/hub/solicitudes")).status === 307);
+  const waitingRequest = items((await admin.call("GET", "/membership-requests?status=pending")).json).find((r) => JSON.stringify(r).includes(waitingEmail));
+  const rejected = await admin.call("POST", `/membership-requests/${waitingRequest?.id}/reject`, { comment: "Rechazo E2E" });
+  check("el admin rechaza al segundo aspirante", ok(rejected), rejected);
+  const rejectedPage = await admin.page("/hub/solicitudes?estado=rejected");
+  check("UI: la pestaña de rechazadas muestra la solicitud con su comentario", rejectedPage.status === 200 && rejectedPage.html.includes("Aspirante Pendiente E2E") && rejectedPage.html.includes("Rechazo E2E"), rejectedPage.status);
+
+  // Directorio de integrantes (/hub/integrantes): la autoridad ve correos y puede invitar; el estudiante, solo nombres.
+  const directoryAdmin = await admin.page("/hub/integrantes");
+  check("UI: /hub/integrantes muestra a la autoridad indicadores, correos y la invitacion",
+    directoryAdmin.status === 200 && directoryAdmin.html.includes("Directorio institucional") && directoryAdmin.html.includes("Total de cuentas") &&
+    directoryAdmin.html.includes("Estudiante E2E") && directoryAdmin.html.includes(coordEmail) && directoryAdmin.html.includes("Invitar integrante"), directoryAdmin.status);
+  const directoryStudent = await student.page("/hub/integrantes");
+  check("UI: /hub/integrantes muestra al estudiante los nombres sin correos ajenos ni invitacion",
+    directoryStudent.status === 200 && directoryStudent.html.includes("Coordinadora E2E") && !directoryStudent.html.includes(coordEmail) && !directoryStudent.html.includes("Invitar integrante"), directoryStudent.status);
+
+  // Roles y recursos (/hub/roles-recursos): solo el admin; la matriz, los roles y los recursos se renderizan con datos reales.
+  const rbacAdmin = await admin.page("/hub/roles-recursos");
+  check("UI: /hub/roles-recursos muestra al admin la matriz de permisos, las pestañas y los roles base",
+    rbacAdmin.status === 200 && rbacAdmin.html.includes("Roles y recursos") && rbacAdmin.html.includes("Matriz de permisos") && rbacAdmin.html.includes("Rol a configurar") &&
+    rbacAdmin.html.includes("Usuarios y roles") && rbacAdmin.html.includes("Coordinador"), rbacAdmin.status);
+  const rbacStudent = await student.page("/hub/roles-recursos");
+  check("UI: /hub/roles-recursos redirige al estudiante sin permiso", rbacStudent.status === 307 && !rbacStudent.html.includes("Matriz de permisos"), rbacStudent.status);
+
   // Cargas grandes a traves del proxy de Next.js: el limite es el del backend (20 MiB).
   const large = pdf(19 * 1024 * 1024, "grande");
   const viaProxy = await coord.upload(`/projects/${projectId}/documents`, large, "Anexo grande.pdf", {}, true);
@@ -447,6 +482,12 @@ async function main() {
   check("y se descarga integro a traves del proxy", largeCopy.status === 200 && sha(largeCopy.body) === sha(large), largeCopy.status);
   const tooLarge = await coord.upload(`/projects/${projectId}/documents`, pdf(20 * 1024 * 1024 + 1, "excesivo"), "Excesivo.pdf", {}, true);
   check("un archivo de mas de 20 MiB se rechaza con 413", tooLarge.status === 413, tooLarge.status);
+
+  const sprintsPage = (await coord.page(`/hub/proyectos/${projectId}/sprints`)).html;
+  check(
+    "la vista de sprints muestra el historial del sprint cerrado y el backlog",
+    sprintsPage.includes("Historial") && sprintsPage.includes("Sprint 1") && sprintsPage.includes("Backlog") && sprintsPage.includes("Ninguno"),
+  );
 
   const catalog = await student.page("/hub/investigacion");
   check("la pagina de lineas muestra la linea", catalog.status === 200 && catalog.html.includes(lineName), catalog.status);

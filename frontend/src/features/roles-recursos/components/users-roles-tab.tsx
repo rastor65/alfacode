@@ -1,24 +1,28 @@
 "use client";
 
-import { Check, LoaderCircle, Search, Shield, UserCheck } from "lucide-react";
+import { Check, LoaderCircle, Shield, UserCheck } from "lucide-react";
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { chip, neutralChip } from "@/features/tracking/components/dashboard-ui";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
-import { roleLabel } from "@/lib/auth/roles";
 import type { ResourcePermissions } from "@/lib/auth/permissions";
+import { roleLabel } from "@/lib/auth/roles";
 import { cn } from "@/lib/utils";
 
 import type { RoleItem, UserRoleItem } from "../types";
+import { MessageRow, rowClass, TableCard, tableHeadClass, Toolbar } from "./rbac-ui";
 
 type UsersRolesTabProps = {
   roles: RoleItem[];
   initialUsers?: UserRoleItem[];
   permissions?: ResourcePermissions;
 };
+
+const controlClass = "min-h-10 rounded-lg bg-hub-subtle px-2.5 text-sm text-hub-text focus:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent";
 
 export function UsersRolesTab({ roles, initialUsers = [], permissions }: UsersRolesTabProps) {
   const canUpdate = permissions?.canUpdate ?? true;
@@ -52,18 +56,13 @@ export function UsersRolesTab({ roles, initialUsers = [], permissions }: UsersRo
   const handleOpenAssign = (user: UserRoleItem) => {
     setSelectedUser(user);
     // Mapear los roles actuales del usuario (códigos) a los IDs correspondientes
-    const activeRoleIds = roles
-      .filter((r) => user.roles.includes(r.code))
-      .map((r) => r.id);
-    setSelectedRoleIds(activeRoleIds);
+    setSelectedRoleIds(roles.filter((r) => user.roles.includes(r.code)).map((r) => r.id));
     setModalError(null);
     setModalOpen(true);
   };
 
   const toggleRoleId = (roleId: string) => {
-    setSelectedRoleIds((prev) =>
-      prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId],
-    );
+    setSelectedRoleIds((prev) => (prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId]));
   };
 
   const handleSaveUserRoles = async () => {
@@ -94,47 +93,21 @@ export function UsersRolesTab({ roles, initialUsers = [], permissions }: UsersRo
     }
   };
 
+  const term = search.toLowerCase();
   const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = u.fullName.toLowerCase().includes(term) || u.email.toLowerCase().includes(term);
     const matchesRole = roleFilter === "all" || u.roles.includes(roleFilter);
     return matchesSearch && matchesRole;
   });
 
   return (
-    <div className="space-y-6">
-      {/* Toast de éxito */}
-      {successToast && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-500 animate-in fade-in">
-          <Check size={16} />
-          {successToast}
-        </div>
-      )}
+    <>
+      {successToast && <Alert tone="success">{successToast}</Alert>}
 
-      {/* Barra de Filtros */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-hub-muted pointer-events-none" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar integrante por nombre o correo..."
-            className="w-full rounded-xl border border-hub-border bg-hub-bg/60 pl-8 pr-3 py-2 text-xs text-hub-text placeholder:text-hub-muted focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label htmlFor="filterByRole" className="text-xs text-hub-muted whitespace-nowrap">
-            Filtrar por rol:
-          </label>
-          <select
-            id="filterByRole"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-          >
+      <Toolbar label="Buscar integrantes" value={search} onChange={setSearch} placeholder="Buscar integrante por nombre o correo…">
+        <label className="flex items-center gap-1.5 text-xs text-hub-muted">
+          Rol
+          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className={controlClass}>
             <option value="all">Todos los roles</option>
             {roles.map((r) => (
               <option key={r.id} value={r.code}>
@@ -142,161 +115,133 @@ export function UsersRolesTab({ roles, initialUsers = [], permissions }: UsersRo
               </option>
             ))}
           </select>
-        </div>
-      </div>
+        </label>
+      </Toolbar>
 
-      {/* Tabla de Usuarios y Roles */}
-      <div className="overflow-hidden rounded-2xl border border-hub-border bg-hub-panel shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-hub-border bg-hub-hover/40 text-[11px] font-semibold uppercase tracking-wider text-hub-muted">
-              <tr>
-                <th className="px-4 py-3">Integrante</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3">Roles Asignados</th>
-                <th className="px-4 py-3 text-right">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-hub-border/60">
-              {loading ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center text-hub-muted">
-                    <div className="flex items-center justify-center gap-2">
-                      <LoaderCircle size={18} className="animate-spin text-hub-accent" />
-                      <span>Cargando integrantes...</span>
+      <TableCard label="Integrantes y sus roles">
+        <table className="w-full min-w-170 border-collapse text-left text-[13px]">
+          <caption className="sr-only">Integrantes activos con su estado, roles asignados y acción para gestionarlos</caption>
+          <thead>
+            <tr className={tableHeadClass}>
+              <th scope="col" className="px-4 py-3 font-semibold">Integrante</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Estado</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Roles asignados</th>
+              <th scope="col" className="px-4 py-3 text-right font-semibold">Acción</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-hub-border">
+            {loading ? (
+              <MessageRow colSpan={4}>
+                <span className="flex items-center justify-center gap-2" role="status">
+                  <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-hub-accent motion-reduce:animate-none" />
+                  Cargando integrantes…
+                </span>
+              </MessageRow>
+            ) : error ? (
+              <MessageRow colSpan={4}>
+                <span className="text-hub-danger-text">{error}</span>
+              </MessageRow>
+            ) : filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user.id} className={rowClass}>
+                  <td className="px-4 py-3">
+                    <p className="font-semibold text-hub-text">{user.fullName}</p>
+                    <p className="font-mono text-[11px] text-hub-muted">{user.email}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={user.accountStatus === "active" ? `${chip} rounded-full bg-hub-success-bg px-2.5 py-1 text-hub-success-text` : `${neutralChip} rounded-full px-2.5 py-1`}>
+                      {user.accountStatus === "active" ? "Activo" : user.accountStatus}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {user.roles.map((r) => (
+                        <span key={r} className={`${chip} gap-1 rounded-full bg-hub-accent-soft px-2.5 text-hub-accent`}>
+                          <Shield aria-hidden="true" className="size-3" />
+                          {roleLabel(r)}
+                        </span>
+                      ))}
                     </div>
                   </td>
-                </tr>
-              ) : error ? (
-                <tr>
-                  <td colSpan={4} className="py-6 text-center text-rose-500">
-                    {error}
+                  <td className="px-4 py-3 text-right">
+                    {canUpdate && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAssign(user)}
+                        aria-haspopup="dialog"
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-hub-accent transition-colors hover:bg-hub-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent"
+                      >
+                        <UserCheck aria-hidden="true" className="size-4" />
+                        Gestionar roles<span className="sr-only"> de {user.fullName}</span>
+                      </button>
+                    )}
                   </td>
                 </tr>
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="transition hover:bg-hub-hover/30">
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-semibold text-hub-text">{user.fullName}</p>
-                        <p className="text-hub-muted font-mono text-[11px]">{user.email}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge className={user.accountStatus === "active" ? "text-emerald-500" : undefined}>
-                        {user.accountStatus}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {user.roles.map((r) => (
-                          <span
-                            key={r}
-                            className="inline-flex items-center gap-1 rounded-md bg-hub-accent-soft px-2 py-0.5 text-[10px] font-medium text-hub-accent"
-                          >
-                            <Shield size={10} />
-                            {roleLabel(r)}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {canUpdate && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => handleOpenAssign(user)}
-                          className="h-8 gap-1.5 text-xs text-hub-accent hover:bg-hub-accent-soft"
-                        >
-                          <UserCheck size={14} />
-                          Gestionar Roles
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-hub-muted">
-                    No se encontraron integrantes que coincidan con la búsqueda.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              ))
+            ) : (
+              <MessageRow colSpan={4}>No se encontraron integrantes que coincidan con la búsqueda.</MessageRow>
+            )}
+          </tbody>
+        </table>
+      </TableCard>
 
-      {/* Modal Asignar Roles */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={`Gestionar Roles: ${selectedUser?.fullName}`}
+        title={`Gestionar roles: ${selectedUser?.fullName ?? ""}`}
         description="Selecciona los roles que tendrá asignados este usuario en el semillero."
       >
-        <div className="space-y-4 py-2">
-          {modalError && (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-500">
-              {modalError}
-            </div>
-          )}
+        <div className="flex flex-col gap-4">
+          {modalError && <Alert tone="error">{modalError}</Alert>}
 
-          <div className="rounded-xl border border-hub-border bg-hub-hover/20 p-3 text-xs">
+          <div className="rounded-xl bg-hub-subtle p-3 text-sm">
             <p className="font-semibold text-hub-text">{selectedUser?.fullName}</p>
-            <p className="text-hub-muted font-mono">{selectedUser?.email}</p>
+            <p className="font-mono text-xs text-hub-muted">{selectedUser?.email}</p>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-hub-text uppercase tracking-wide">
-              Roles Disponibles
-            </p>
-            <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
+          <div className="flex flex-col gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-hub-muted">Roles disponibles</p>
+            <ul className="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto">
               {roles.map((role) => {
                 const isChecked = selectedRoleIds.includes(role.id);
                 return (
-                  <button
-                    key={role.id}
-                    type="button"
-                    onClick={() => toggleRoleId(role.id)}
-                    className={cn(
-                      "flex items-center justify-between rounded-xl border p-3 text-left transition cursor-pointer",
-                      isChecked
-                        ? "border-cyan-500/50 bg-cyan-500/10"
-                        : "border-hub-border bg-hub-panel hover:bg-hub-hover/50",
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className={cn(
-                        "flex size-6 shrink-0 items-center justify-center rounded-md text-xs",
-                        isChecked ? "bg-cyan-500 text-white" : "border border-hub-border bg-hub-bg text-transparent"
-                      )}>
-                        <Check size={14} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-hub-text">{role.name}</p>
-                        <p className="text-[11px] text-hub-muted font-mono">{role.code}</p>
-                      </div>
-                    </div>
-                    {role.description && (
-                      <span className="text-[10px] text-hub-muted max-w-[150px] truncate hidden sm:inline">
-                        {role.description}
+                  <li key={role.id}>
+                    <button
+                      type="button"
+                      aria-pressed={isChecked}
+                      onClick={() => toggleRoleId(role.id)}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent",
+                        isChecked ? "border-hub-accent bg-hub-accent-soft" : "border-hub-border bg-hub-panel hover:bg-hub-hover",
+                      )}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span aria-hidden="true" className={cn("flex size-6 shrink-0 items-center justify-center rounded-md border", isChecked ? "border-hub-accent bg-hub-accent text-hub-bg" : "border-hub-border text-transparent")}>
+                          <Check className="size-3.5" />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold text-hub-text">{role.name}</span>
+                          <span className="block font-mono text-[11px] text-hub-muted">{role.code}</span>
+                        </span>
                       </span>
-                    )}
-                  </button>
+                      {role.description && <span className="hidden max-w-40 truncate text-xs text-hub-muted sm:inline">{role.description}</span>}
+                    </button>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" className="w-auto px-4" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveUserRoles} disabled={savingRoles}>
-              {savingRoles ? "Guardando..." : "Guardar Roles"}
+            <Button onClick={handleSaveUserRoles} pending={savingRoles} pendingLabel="Guardando…">
+              Guardar roles
             </Button>
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   );
 }

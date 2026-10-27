@@ -1,4 +1,5 @@
 import type { PersonRef } from "@/features/research/types";
+import { normalizeSearch } from "@/lib/text";
 
 export type DocumentScope = "project" | "institutional";
 export type DocumentCategory = "minutes" | "report" | "certificate" | "evidence" | "project" | "academic" | "administrative" | "other";
@@ -118,4 +119,116 @@ export function parseCategory(value: string | string[] | undefined): DocumentCat
 export function parseScope(value: string | string[] | undefined): DocumentScope | undefined {
   const candidate = first(value);
   return candidate === "project" || candidate === "institutional" ? candidate : undefined;
+}
+
+export const ACCESS_LEVELS = Object.keys(ACCESS_LABELS) as AccessLevel[];
+export const CATEGORIES = Object.keys(CATEGORY_LABELS) as DocumentCategory[];
+
+/** Familia del archivo (formatos admitidos por DEC-029) para elegir su icono. */
+export type FileFamily = "pdf" | "word" | "sheet" | "slides" | "image" | "other";
+
+export function fileFamily(extension: string): FileFamily {
+  switch (extension.toLowerCase()) {
+    case "pdf":
+      return "pdf";
+    case "docx":
+      return "word";
+    case "xlsx":
+      return "sheet";
+    case "pptx":
+      return "slides";
+    case "png":
+    case "jpg":
+    case "jpeg":
+    case "webp":
+      return "image";
+    default:
+      return "other";
+  }
+}
+
+export type DocumentSort = "recent" | "oldest" | "title" | "size";
+
+export const DOCUMENT_SORT_LABELS: Record<DocumentSort, string> = {
+  recent: "Más recientes",
+  oldest: "Más antiguos",
+  title: "Título (A-Z)",
+  size: "Mayor tamaño",
+};
+
+export type DocumentFilter = {
+  text: string;
+  category: DocumentCategory | "all";
+  access: AccessLevel | "all";
+  linked: "all" | "linked" | "unlinked";
+  sort: DocumentSort;
+};
+
+export const NO_DOCUMENT_FILTER: DocumentFilter = { text: "", category: "all", access: "all", linked: "all", sort: "recent" };
+
+/** Hay algun filtro activo (el orden no cuenta). */
+export function isFiltering(filter: DocumentFilter) {
+  return filter.text.trim() !== "" || filter.category !== "all" || filter.access !== "all" || filter.linked !== "all";
+}
+
+/** Filtra por tipo, acceso, vinculo a un resultado y texto (titulo, archivo, descripcion, autor o resultado), y ordena. */
+export function filterDocuments<T extends DocumentItem>(items: readonly T[], filter: DocumentFilter) {
+  const needle = normalizeSearch(filter.text.trim());
+  const matches = items.filter(
+    (item) =>
+      (filter.category === "all" || item.category === filter.category) &&
+      (filter.access === "all" || item.accessLevel === filter.access) &&
+      (filter.linked === "all" || (filter.linked === "linked") === (item.researchResult !== null)) &&
+      (needle === "" ||
+        normalizeSearch([item.title, item.originalName, item.description ?? "", item.uploadedBy?.fullName ?? "", item.researchResult?.title ?? ""].join(" ")).includes(needle)),
+  );
+
+  return matches.sort((a, b) => {
+    if (filter.sort === "title") return a.title.localeCompare(b.title, "es");
+    if (filter.sort === "size") return b.sizeBytes - a.sizeBytes || a.title.localeCompare(b.title, "es");
+    const byDate = a.createdAt.localeCompare(b.createdAt);
+    return filter.sort === "oldest" ? byDate : -byDate;
+  });
+}
+
+/** Cifras de los documentos cargados: espacio, conteo por tipo y por acceso, y el ultimo subido. */
+export function documentTotals(items: readonly DocumentItem[]) {
+  const byCategory = Object.fromEntries(CATEGORIES.map((category) => [category, 0])) as Record<DocumentCategory, number>;
+  const byAccess = Object.fromEntries(ACCESS_LEVELS.map((level) => [level, 0])) as Record<AccessLevel, number>;
+  let bytes = 0;
+  let latest: DocumentItem | null = null;
+
+  for (const item of items) {
+    byCategory[item.category] += 1;
+    byAccess[item.accessLevel] += 1;
+    bytes += item.sizeBytes;
+    if (!latest || item.createdAt > latest.createdAt) latest = item;
+  }
+
+  return { bytes, byCategory, byAccess, latest };
+}
+
+/** De donde viene un documento: adjunto de un tramite, de un proyecto o institucional. */
+export type DocumentOrigin = "institutional" | "project" | "request";
+
+export const ORIGIN_LABELS: Record<DocumentOrigin, string> = {
+  institutional: "Institucionales",
+  project: "De proyectos",
+  request: "Adjuntos de trámites",
+};
+
+export function documentOrigin(item: Pick<DocumentItem, "administrativeRequestId" | "project">): DocumentOrigin {
+  if (item.administrativeRequestId) return "request";
+  return item.project ? "project" : "institutional";
+}
+
+/** Conteo de documentos por origen. */
+export function originTotals(items: readonly Pick<DocumentItem, "administrativeRequestId" | "project">[]) {
+  const totals: Record<DocumentOrigin, number> = { institutional: 0, project: 0, request: 0 };
+
+  for (const item of items) {
+    totals[documentOrigin(item)] += 1;
+  }
+
+  return totals;
 }

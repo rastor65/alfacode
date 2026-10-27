@@ -44,7 +44,7 @@ export default async function RolesRecursosPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto w-full max-w-430">
       <RolesRecursosClient
         initialRoles={roles}
         initialResources={resources}

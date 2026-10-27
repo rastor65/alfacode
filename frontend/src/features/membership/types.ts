@@ -58,3 +58,30 @@ export function parsePage(value: string | string[] | undefined) {
   const candidate = Number(Array.isArray(value) ? value[0] : value);
   return Number.isInteger(candidate) && candidate > 0 && candidate < 10_000 ? candidate : 1;
 }
+
+/** Iniciales (hasta dos) para el avatar de una persona. */
+export function initialsOf(fullName: string) {
+  return fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]!.toUpperCase())
+    .join("");
+}
+
+/** Cifras de las solicitudes de una pagina: con Hoja de Vida, correo verificado, la mas antigua y la ultima revision. */
+export function requestStats(items: readonly Pick<MembershipRequestItem, "cvData" | "user" | "createdAt" | "reviewedAt" | "reviewedBy">[]) {
+  let withCv = 0;
+  let verified = 0;
+  let oldest: string | null = null;
+  let latestReview: { at: string; by: string | null } | null = null;
+
+  for (const item of items) {
+    if (item.cvData) withCv += 1;
+    if (item.user.emailVerified) verified += 1;
+    if (!oldest || item.createdAt < oldest) oldest = item.createdAt;
+    if (item.reviewedAt && (!latestReview || item.reviewedAt > latestReview.at)) latestReview = { at: item.reviewedAt, by: item.reviewedBy?.fullName ?? null };
+  }
+
+  return { withCv, verified, oldest, latestReview };
+}

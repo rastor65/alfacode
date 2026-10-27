@@ -3,32 +3,41 @@
 import {
   Award,
   Calendar,
-  Check,
   CheckSquare,
+  Download,
+  Eye,
   FileText,
   FlaskConical,
   FolderKanban,
   Inbox,
   LayoutDashboard,
   LoaderCircle,
+  Pencil,
+  Plus,
   Repeat,
   Save,
   Shield,
+  Trash2,
   UserPlus,
   UserRound,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { OptionSelect } from "@/components/ui/option-select";
+import { panelCard } from "@/features/tracking/components/dashboard-ui";
+import { KpiCard } from "@/features/tracking/components/kpi-card";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
-import { cn } from "@/lib/utils";
 import type { ResourcePermissions } from "@/lib/auth/permissions";
+import { cn } from "@/lib/utils";
 
 import type { ResourceItem, RoleItem, RolePermissionsMatrix, RoleResourcePermission } from "../types";
 
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard,
   folder: FolderKanban,
   "check-square": CheckSquare,
@@ -44,10 +53,23 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
   user: UserRound,
 };
 
-function renderResourceIcon(iconName: string | null) {
-  const IconComp = (iconName && ICON_MAP[iconName.toLowerCase()]) || LayoutDashboard;
-  return <IconComp size={15} />;
+function ResourceIcon({ name }: { name: string | null }) {
+  const Icon = (name && ICON_MAP[name.toLowerCase()]) || LayoutDashboard;
+  return <Icon aria-hidden="true" className="size-4" />;
 }
+
+type PermissionField = "canRead" | "canCreate" | "canUpdate" | "canDelete" | "canExport";
+
+const FIELDS: PermissionField[] = ["canRead", "canCreate", "canUpdate", "canDelete", "canExport"];
+const FIELD_LABELS: Record<PermissionField, string> = {
+  canRead: "Ver",
+  canCreate: "Crear",
+  canUpdate: "Editar",
+  canDelete: "Eliminar",
+  canExport: "Exportar",
+};
+
+const NO_PERMISSIONS = { canRead: false, canCreate: false, canUpdate: false, canDelete: false, canExport: false };
 
 type MatrixTabProps = {
   roles: RoleItem[];
@@ -117,10 +139,7 @@ export function MatrixTab({ roles, resources, permissions }: MatrixTabProps) {
     };
   }, [selectedRoleId, resources]);
 
-  const togglePermission = (
-    resourceId: string,
-    field: "canRead" | "canCreate" | "canUpdate" | "canDelete" | "canExport",
-  ) => {
+  const togglePermission = (resourceId: string, field: PermissionField) => {
     setSaveSuccess(false);
     setPermissionsMap((prev) => {
       const current = prev[resourceId];
@@ -138,55 +157,13 @@ export function MatrixTab({ roles, resources, permissions }: MatrixTabProps) {
     });
   };
 
-  const handleGrantAll = () => {
+  /** Aplica el mismo conjunto de permisos a todos los recursos activos. */
+  const setAll = (values: typeof NO_PERMISSIONS) => {
     setSaveSuccess(false);
     setPermissionsMap((prev) => {
       const next: Record<string, RoleResourcePermission> = {};
       for (const [id, perm] of Object.entries(prev)) {
-        next[id] = {
-          ...perm,
-          canRead: true,
-          canCreate: true,
-          canUpdate: true,
-          canDelete: true,
-          canExport: true,
-        };
-      }
-      return next;
-    });
-  };
-
-  const handleReadOnly = () => {
-    setSaveSuccess(false);
-    setPermissionsMap((prev) => {
-      const next: Record<string, RoleResourcePermission> = {};
-      for (const [id, perm] of Object.entries(prev)) {
-        next[id] = {
-          ...perm,
-          canRead: true,
-          canCreate: false,
-          canUpdate: false,
-          canDelete: false,
-          canExport: false,
-        };
-      }
-      return next;
-    });
-  };
-
-  const handleClearAll = () => {
-    setSaveSuccess(false);
-    setPermissionsMap((prev) => {
-      const next: Record<string, RoleResourcePermission> = {};
-      for (const [id, perm] of Object.entries(prev)) {
-        next[id] = {
-          ...perm,
-          canRead: false,
-          canCreate: false,
-          canUpdate: false,
-          canDelete: false,
-          canExport: false,
-        };
+        next[id] = { ...perm, ...values };
       }
       return next;
     });
@@ -224,217 +201,120 @@ export function MatrixTab({ roles, resources, permissions }: MatrixTabProps) {
 
   // Estadísticas del rol actual
   const permsList = Object.values(permissionsMap);
-  const countCanRead = permsList.filter((p) => p.canRead).length;
-  const countCanCreate = permsList.filter((p) => p.canCreate).length;
-  const countCanUpdate = permsList.filter((p) => p.canUpdate).length;
-  const countCanDelete = permsList.filter((p) => p.canDelete).length;
-  const countCanExport = permsList.filter((p) => p.canExport).length;
+  const count = (field: PermissionField) => permsList.filter((p) => p[field]).length;
+  const busy = !canUpdate || saving || loading;
+  const quickAction =
+    "inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent";
 
   return (
-    <div className="space-y-6">
-      {/* Selector de Rol y Acciones Rápidas */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-hub-border bg-hub-panel p-4 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <label htmlFor="roleSelect" className="text-xs font-semibold uppercase tracking-wider text-hub-muted">
-            Seleccionar Rol:
+    <>
+      <section aria-label="Rol a configurar" className={cn(panelCard, "flex flex-col gap-3 p-4 md:flex-row md:items-end md:justify-between")}>
+        <div className="flex min-w-0 flex-col gap-1.5 md:w-96">
+          <label htmlFor="roleSelect" className="text-[11px] font-semibold uppercase tracking-wider text-hub-muted">
+            Rol a configurar
           </label>
-          <select
-            id="roleSelect"
-            value={selectedRoleId}
-            onChange={(e) => setSelectedRoleId(e.target.value)}
-            className="rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs font-semibold text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-          >
-            {roles.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name} ({r.code})
-              </option>
-            ))}
-          </select>
+          <OptionSelect id="roleSelect" options={roles.map((r) => ({ value: r.id, label: `${r.name} (${r.code})` }))} value={selectedRoleId} onValueChange={setSelectedRoleId} />
         </div>
 
-        {/* Acciones en lote */}
         {canUpdate && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-medium text-hub-muted mr-1 hidden sm:inline">Acciones rápidas:</span>
-            <Button
+          <div role="group" aria-label="Acciones rápidas" className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 hidden text-xs text-hub-muted sm:inline">Acciones rápidas:</span>
+            <button
               type="button"
-              variant="ghost"
-              onClick={handleGrantAll}
-              className="h-8 text-xs text-cyan-500 hover:bg-cyan-500/10"
+              onClick={() => setAll({ canRead: true, canCreate: true, canUpdate: true, canDelete: true, canExport: true })}
+              className={`${quickAction} bg-hub-accent-soft text-hub-accent hover:opacity-80`}
             >
-              Conceder Todo
-            </Button>
-            <Button
+              Conceder todo
+            </button>
+            <button
               type="button"
-              variant="ghost"
-              onClick={handleReadOnly}
-              className="h-8 text-xs text-hub-text hover:bg-hub-hover"
+              onClick={() => setAll({ ...NO_PERMISSIONS, canRead: true })}
+              className={`${quickAction} bg-hub-subtle text-hub-text hover:bg-hub-hover`}
             >
-              Solo Lectura
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleClearAll}
-              className="h-8 text-xs text-rose-500 hover:bg-rose-500/10"
-            >
-              Limpiar Todo
-            </Button>
+              Solo lectura
+            </button>
+            <button type="button" onClick={() => setAll(NO_PERMISSIONS)} className={`${quickAction} bg-hub-danger-bg text-hub-danger-text hover:opacity-80`}>
+              Limpiar todo
+            </button>
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Resumen de permisos del rol */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 text-center">
-        <div className="rounded-xl border border-hub-border bg-hub-panel p-2.5">
-          <p className="text-[11px] text-hub-muted">Acceso / Ver</p>
-          <p className="text-lg font-bold text-cyan-500">{countCanRead} / {activeResources.length}</p>
-        </div>
-        <div className="rounded-xl border border-hub-border bg-hub-panel p-2.5">
-          <p className="text-[11px] text-hub-muted">Crear</p>
-          <p className="text-lg font-bold text-emerald-500">{countCanCreate}</p>
-        </div>
-        <div className="rounded-xl border border-hub-border bg-hub-panel p-2.5">
-          <p className="text-[11px] text-hub-muted">Editar</p>
-          <p className="text-lg font-bold text-amber-500">{countCanUpdate}</p>
-        </div>
-        <div className="rounded-xl border border-hub-border bg-hub-panel p-2.5">
-          <p className="text-[11px] text-hub-muted">Eliminar</p>
-          <p className="text-lg font-bold text-rose-500">{countCanDelete}</p>
-        </div>
-        <div className="rounded-xl border border-hub-border bg-hub-panel p-2.5 col-span-2 sm:col-span-1">
-          <p className="text-[11px] text-hub-muted">Exportar</p>
-          <p className="text-lg font-bold text-indigo-400">{countCanExport}</p>
-        </div>
-      </div>
+      <dl aria-label={`Permisos del rol ${selectedRole?.name ?? ""}`} className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <KpiCard label="Acceso / ver" icon={Eye} value={`${count("canRead")} / ${activeResources.length}`} hint="Recursos que puede abrir" />
+        <KpiCard label="Crear" icon={Plus} value={count("canCreate")} hint="Recursos donde puede crear" />
+        <KpiCard label="Editar" icon={Pencil} value={count("canUpdate")} hint="Recursos donde puede editar" />
+        <KpiCard label="Eliminar" icon={Trash2} value={count("canDelete")} hint="Recursos donde puede eliminar" />
+        <KpiCard label="Exportar" icon={Download} value={count("canExport")} hint="Recursos que puede exportar" />
+      </dl>
 
-      {/* Alerta de guardado o error */}
-      {saveSuccess && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-500 animate-in fade-in">
-          <Check size={16} />
-          ¡Matriz de permisos actualizada exitosamente para el rol &ldquo;{selectedRole?.name}&rdquo;!
-        </div>
-      )}
-      {error && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-500">
-          {error}
-        </div>
-      )}
+      {saveSuccess && <Alert tone="success">Matriz de permisos actualizada para el rol «{selectedRole?.name}».</Alert>}
+      {error && <Alert tone="error">{error}</Alert>}
 
-      {/* Tabla Matriz de Permisos */}
-      <div className="overflow-hidden rounded-2xl border border-hub-border bg-hub-panel shadow-sm">
+      <section aria-label="Matriz de permisos" className={cn(panelCard, "overflow-hidden")}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-hub-border bg-hub-hover/40 text-[11px] font-semibold uppercase tracking-wider text-hub-muted">
-              <tr>
-                <th className="px-4 py-3">Recurso / Módulo</th>
-                <th className="px-3 py-3 text-center">Puede Ver</th>
-                <th className="px-3 py-3 text-center">Puede Crear</th>
-                <th className="px-3 py-3 text-center">Puede Editar</th>
-                <th className="px-3 py-3 text-center">Puede Eliminar</th>
-                <th className="px-3 py-3 text-center">Puede Exportar</th>
+          <table className="w-full min-w-190 border-collapse text-left text-[13px]">
+            <caption className="sr-only">Permisos del rol seleccionado sobre cada recurso activo</caption>
+            <thead>
+              <tr className="bg-hub-subtle text-[11px] uppercase tracking-wider text-hub-muted">
+                <th scope="col" className="px-4 py-3 font-semibold">
+                  Recurso / módulo
+                </th>
+                {FIELDS.map((field) => (
+                  <th key={field} scope="col" className="px-3 py-3 text-center font-semibold">
+                    {FIELD_LABELS[field]}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-hub-border/60">
+            <tbody className="divide-y divide-hub-border">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-hub-muted">
-                    <div className="flex items-center justify-center gap-2">
-                      <LoaderCircle size={18} className="animate-spin text-hub-accent" />
-                      <span>Cargando matriz de permisos...</span>
-                    </div>
+                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-hub-muted">
+                    <span className="flex items-center justify-center gap-2" role="status">
+                      <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-hub-accent motion-reduce:animate-none" />
+                      Cargando matriz de permisos…
+                    </span>
                   </td>
                 </tr>
               ) : activeResources.length > 0 ? (
                 activeResources.map((res) => {
-                  const perm = permissionsMap[res.id] || {
-                    canRead: false,
-                    canCreate: false,
-                    canUpdate: false,
-                    canDelete: false,
-                    canExport: false,
-                  };
+                  const perm = permissionsMap[res.id] || NO_PERMISSIONS;
 
                   return (
-                    <tr
-                      key={res.id}
-                      className={cn(
-                        "transition hover:bg-hub-hover/30",
-                        perm.canRead ? "bg-hub-hover/10" : "opacity-60",
-                      )}
-                    >
+                    <tr key={res.id} className="transition-colors hover:bg-hub-hover/60">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className={cn(
-                            "flex size-7 shrink-0 items-center justify-center rounded-lg",
-                            perm.canRead ? "bg-hub-accent-soft text-hub-accent" : "bg-hub-border/40 text-hub-muted"
-                          )}>
-                            {renderResourceIcon(res.icon)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-hub-text">{res.name}</p>
-                            <p className="text-[11px] text-hub-muted truncate max-w-xs">
-                              {res.urlFrontend || res.urlBackend}
-                            </p>
+                        <div className="flex items-center gap-3">
+                          <span
+                            aria-hidden="true"
+                            className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", perm.canRead ? "bg-hub-accent-soft text-hub-accent" : "bg-hub-badge-bg text-hub-badge-text")}
+                          >
+                            <ResourceIcon name={res.icon} />
+                          </span>
+                          <div className="min-w-0">
+                            <p className={cn("font-semibold", perm.canRead ? "text-hub-text" : "text-hub-muted")}>{res.name}</p>
+                            <p className="max-w-xs truncate font-mono text-[11px] text-hub-muted">{res.urlFrontend || res.urlBackend}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm.canRead}
-                          disabled={!canUpdate || saving || loading}
-                          onChange={() => togglePermission(res.id, "canRead")}
-                          title={`Puede ver ${res.name}`}
-                          className={cn("size-4.5 rounded border-hub-border text-cyan-600 focus:ring-cyan-500", canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-60")}
-                        />
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm.canCreate}
-                          disabled={!canUpdate || saving || loading}
-                          onChange={() => togglePermission(res.id, "canCreate")}
-                          title={`Puede crear en ${res.name}`}
-                          className={cn("size-4.5 rounded border-hub-border text-emerald-600 focus:ring-emerald-500", canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-60")}
-                        />
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm.canUpdate}
-                          disabled={!canUpdate || saving || loading}
-                          onChange={() => togglePermission(res.id, "canUpdate")}
-                          title={`Puede editar en ${res.name}`}
-                          className={cn("size-4.5 rounded border-hub-border text-amber-600 focus:ring-amber-500", canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-60")}
-                        />
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm.canDelete}
-                          disabled={!canUpdate || saving || loading}
-                          onChange={() => togglePermission(res.id, "canDelete")}
-                          title={`Puede eliminar en ${res.name}`}
-                          className={cn("size-4.5 rounded border-hub-border text-rose-600 focus:ring-rose-500", canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-60")}
-                        />
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={perm.canExport}
-                          disabled={!canUpdate || saving || loading}
-                          onChange={() => togglePermission(res.id, "canExport")}
-                          title={`Puede exportar en ${res.name}`}
-                          className={cn("size-4.5 rounded border-hub-border text-indigo-600 focus:ring-indigo-500", canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-60")}
-                        />
-                      </td>
+                      {FIELDS.map((field) => (
+                        <td key={field} className="px-3 py-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={perm[field]}
+                            disabled={busy}
+                            onChange={() => togglePermission(res.id, field)}
+                            aria-label={`${FIELD_LABELS[field]} en ${res.name}`}
+                            className={cn("size-4.5 accent-(--hub-accent)", canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-60")}
+                          />
+                        </td>
+                      ))}
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-hub-muted">
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-hub-muted">
                     No hay recursos activos configurados en el sistema.
                   </td>
                 </tr>
@@ -442,29 +322,26 @@ export function MatrixTab({ roles, resources, permissions }: MatrixTabProps) {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-      {/* Botón flotante / inferior de Guardar */}
       {canUpdate && (
-        <div className="flex items-center justify-between rounded-2xl border border-hub-border bg-hub-panel p-4 shadow-sm">
-          <p className="text-xs text-hub-muted">
-            Los cambios se aplicarán inmediatamente a las sesiones de los integrantes con este rol.
-          </p>
-          <Button onClick={handleSave} disabled={saving || loading} className="gap-2">
+        <div className={cn(panelCard, "flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center")}>
+          <p className="text-sm text-hub-muted">Los cambios se aplican de inmediato a las sesiones de los integrantes con este rol.</p>
+          <Button onClick={handleSave} disabled={saving || loading} className="w-auto gap-2 px-5">
             {saving ? (
               <>
-                <LoaderCircle size={16} className="animate-spin" />
-                Guardando...
+                <LoaderCircle aria-hidden="true" size={16} className="animate-spin motion-reduce:animate-none" />
+                Guardando…
               </>
             ) : (
               <>
-                <Save size={16} />
-                Guardar Matriz de Permisos
+                <Save aria-hidden="true" size={16} />
+                Guardar matriz de permisos
               </>
             )}
           </Button>
         </div>
       )}
-    </div>
+    </>
   );
 }

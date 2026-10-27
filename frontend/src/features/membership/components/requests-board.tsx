@@ -1,33 +1,122 @@
 "use client";
 
-import { Check, FileText, GraduationCap, MapPin, Microscope, User as UserIcon, X } from "lucide-react";
+import { Check, CircleAlert, FileText, GraduationCap, Info, MailCheck, MailWarning, MapPin, Microscope, User as UserIcon, X, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, type ReactNode, useId, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TextAreaField } from "@/components/ui/form-field";
 import { Modal } from "@/components/ui/modal";
 import { RoleSelect } from "@/features/members/components/role-select";
+import { chip, eyebrow, neutralChip, panelCard } from "@/features/tracking/components/dashboard-ui";
+import { relativeTime } from "@/features/tracking/types";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
 import { type RoleCode, assignableRoles, roleLabel } from "@/lib/auth/roles";
+import { cn } from "@/lib/utils";
 
-import type { MembershipRequestItem, TemporaryCredentials } from "../types";
+import { type MembershipRequestItem, type StudentCvData, type TemporaryCredentials, initialsOf } from "../types";
 import { type CredentialsResult, CredentialsNotice } from "./credentials-notice";
 
 type Mode = "idle" | "approve" | "reject";
 
+const actionButton =
+  "inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hub-accent disabled:opacity-50";
+
+const STATUS_TONE = {
+  approved: `${chip} bg-hub-success-bg text-hub-success-text`,
+  rejected: `${chip} bg-hub-danger-bg text-hub-danger-text`,
+} as const;
+
+/** Un dato de la Hoja de Vida: etiqueta y valor, o «No registrado» en cursiva. */
+function CvField({ label, value, wide, mono }: { label: string; value?: string | null; wide?: boolean; mono?: boolean }) {
+  return (
+    <div className={cn("min-w-0", wide && "sm:col-span-2")}>
+      <dt className="text-[11px] text-hub-muted">{label}</dt>
+      <dd className={cn("mt-0.5 wrap-break-word text-sm", value ? "font-medium text-hub-text" : "italic text-hub-muted", mono && "font-mono")}>{value || "No registrado"}</dd>
+    </div>
+  );
+}
+
+function CvBlock({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
+  return (
+    <section className={cn(panelCard, "flex flex-col gap-3 p-4")}>
+      <h3 className={cn(eyebrow, "flex items-center gap-2 text-hub-accent")}>
+        <Icon aria-hidden="true" className="size-4" />
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function CvText({ label, value }: { label: string; value?: string }) {
+  if (!value) return null;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[11px] text-hub-muted">{label}</span>
+      <p className="whitespace-pre-line rounded-lg bg-hub-subtle p-3 text-sm text-hub-soft">{value}</p>
+    </div>
+  );
+}
+
+/** Hoja de Vida del aspirante en tres bloques: identificacion, informacion academica e interes investigativo. */
+function CvDetails({ cv, request }: { cv: StudentCvData; request: MembershipRequestItem }) {
+  const fullName = `${cv.nombres || request.user.fullName} ${cv.apellidos || ""}`.trim();
+
+  return (
+    <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1">
+      <CvBlock icon={UserIcon} title="a) Identificación y contacto">
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+          <CvField label="Nombre completo" value={fullName} />
+          <CvField label="Documento de identidad" value={cv.documentoIdentidad} mono />
+          <CvField label="Correo institucional" value={request.user.email} mono />
+          <CvField label="Celular" value={cv.celular} />
+          <CvField label="Fecha de nacimiento" value={cv.fechaNacimiento} />
+          <CvField label="Nacionalidad" value={cv.nacionalidad} />
+          {cv.telefonoFijo && <CvField label="Teléfono fijo" value={cv.telefonoFijo} />}
+          {cv.fechaElaboracion && <CvField label="Fecha de elaboración" value={cv.fechaElaboracion} />}
+        </dl>
+      </CvBlock>
+
+      <CvBlock icon={GraduationCap} title="b) Información académica">
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+          <CvField label="Facultad" value={cv.facultad} />
+          <CvField label="Programa académico" value={cv.programa} />
+          <CvField label="Sede" value={cv.sede} />
+          <CvField label="Semestre actual" value={cv.semestreActual} />
+          <CvField label="Promedio académico" value={cv.promedioAcademico} mono />
+        </dl>
+      </CvBlock>
+
+      <CvBlock icon={Microscope} title="c) Perfil e interés investigativo">
+        <CvText label="Líneas de investigación de interés" value={cv.lineasInvestigacion} />
+        <CvText label="Experiencia investigativa y proyectos" value={cv.experienciaInvestigativa} />
+        <CvText label="Áreas y temáticas de estudio" value={cv.areasEstudio} />
+        <CvText label="Publicaciones recientes" value={cv.publicaciones} />
+        <CvText label="Prácticas o pasantías" value={cv.practicasPasantias} />
+        <CvText label="Motivación declarada" value={request.message ?? undefined} />
+        {!cv.lineasInvestigacion && !cv.experienciaInvestigativa && !cv.areasEstudio && !cv.publicaciones && !cv.practicasPasantias && !request.message && (
+          <p className="text-sm italic text-hub-muted">No registrado</p>
+        )}
+      </CvBlock>
+    </div>
+  );
+}
+
 function RequestCard({
   request,
   actorRoles,
+  cutoff,
   createdLabel,
   reviewedLabel,
   onApproved,
 }: {
   request: MembershipRequestItem;
   actorRoles: RoleCode[];
+  cutoff: string;
   createdLabel: string;
   reviewedLabel: string | null;
   onApproved: (result: CredentialsResult) => void;
@@ -40,6 +129,8 @@ function RequestCard({
   const [error, setError] = useState<string | null>(null);
   const roles = assignableRoles(actorRoles);
   const cv = request.cvData;
+  const waiting = relativeTime(request.createdAt, cutoff);
+  const isPending = request.status === "pending";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,47 +172,110 @@ function RequestCard({
   }
 
   return (
-    <li className="rounded-xl border border-hub-border bg-hub-subtle p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-medium text-hub-text">{request.user.fullName}</p>
-          <p className="break-all text-sm text-hub-muted">{request.user.email}</p>
+    <li className={cn(panelCard, "flex flex-col gap-4 p-5 transition-shadow hover:shadow-md")}>
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+        <div className="flex min-w-0 items-start gap-4">
+          <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-hub-accent-soft text-base font-bold text-hub-accent">
+            {initialsOf(request.user.fullName)}
+          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="wrap-break-word text-base font-semibold text-hub-text">{request.user.fullName}</h3>
+              {request.user.emailVerified ? (
+                <span className={`${neutralChip} gap-1`}>
+                  <MailCheck aria-hidden="true" className="size-3 text-hub-accent" />
+                  Correo verificado
+                </span>
+              ) : (
+                <span className={`${chip} gap-1 bg-hub-danger-bg text-hub-danger-text`}>
+                  <MailWarning aria-hidden="true" className="size-3" />
+                  Correo sin verificar
+                </span>
+              )}
+              {!cv && (
+                <span className={`${neutralChip} gap-1`}>
+                  <CircleAlert aria-hidden="true" className="size-3" />
+                  Sin Hoja de Vida
+                </span>
+              )}
+              {!isPending && <span className={cn(STATUS_TONE[request.status as "approved" | "rejected"], "rounded-full px-2.5 py-1")}>{request.status === "approved" ? "Aprobada" : "Rechazada"}</span>}
+            </div>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-xs text-hub-muted">
+              <span className="break-all">{request.user.email}</span>
+              {cv?.documentoIdentidad && (
+                <>
+                  <span aria-hidden="true">•</span>
+                  <span>{cv.documentoIdentidad}</span>
+                </>
+              )}
+            </p>
+            <p className="text-xs text-hub-muted">
+              Radicada {waiting ? `${waiting.toLowerCase()} · ` : ""}
+              <time dateTime={request.createdAt}>{createdLabel}</time>
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-hub-muted">{createdLabel}</p>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-2 self-start lg:self-center">
+          {cv && (
+            <button type="button" onClick={() => setShowCv(true)} aria-haspopup="dialog" className={`${actionButton} bg-hub-subtle text-hub-text hover:bg-hub-hover`}>
+              <FileText aria-hidden="true" className="size-4 text-hub-accent" />
+              Ver Hoja de Vida
+            </button>
+          )}
+          {isPending && roles.length > 0 && (
+            <button type="button" onClick={() => setMode("approve")} aria-haspopup="dialog" className={`${actionButton} bg-hub-accent text-hub-bg hover:opacity-90`}>
+              <Check aria-hidden="true" className="size-4" />
+              Aprobar
+            </button>
+          )}
+          {isPending && (
+            <button type="button" onClick={() => setMode("reject")} aria-haspopup="dialog" className={`${actionButton} text-hub-muted hover:bg-hub-danger-bg hover:text-hub-danger-text`}>
+              <X aria-hidden="true" className="size-4" />
+              Rechazar
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Resumen rápido si tiene datos de Hoja de Vida */}
-      {cv && (
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs">
-          {cv.programa && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-hub-surface border border-hub-border px-2 py-0.5 text-hub-soft">
-              <GraduationCap size={12} className="text-cyan-400" />
-              {cv.programa} {cv.semestreActual ? `· ${cv.semestreActual}` : ""}
-            </span>
-          )}
-          {cv.sede && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-hub-surface border border-hub-border px-2 py-0.5 text-hub-muted">
-              <MapPin size={11} />
-              {cv.sede}
-            </span>
-          )}
-          {cv.promedioAcademico && (
-            <span className="rounded-md bg-cyan-950/40 border border-cyan-500/20 px-2 py-0.5 font-medium text-cyan-300">
-              Prom: {cv.promedioAcademico}
-            </span>
+      {(request.message || cv) && (
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+          <div className={cn("flex flex-col gap-1 rounded-lg bg-hub-subtle p-3", cv ? "lg:col-span-7" : "lg:col-span-12")}>
+            <span className={eyebrow}>Motivación de vinculación</span>
+            {request.message ? (
+              <blockquote className="whitespace-pre-line text-sm italic text-hub-text">“{request.message}”</blockquote>
+            ) : (
+              <p className="text-sm italic text-hub-muted">No registrada</p>
+            )}
+          </div>
+          {cv && (
+            <div className="flex flex-col justify-center gap-1.5 rounded-lg border border-hub-border p-3 lg:col-span-5">
+              <span className={eyebrow}>Resumen de la Hoja de Vida</span>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {cv.programa && (
+                  <span className="inline-flex items-center gap-1 font-semibold text-hub-accent">
+                    <GraduationCap aria-hidden="true" className="size-3.5" />
+                    {cv.programa}
+                  </span>
+                )}
+                {cv.semestreActual && <span className="text-hub-soft">· {cv.semestreActual}</span>}
+                {cv.sede && (
+                  <span className="inline-flex items-center gap-1 text-hub-muted">
+                    <MapPin aria-hidden="true" className="size-3" />
+                    {cv.sede}
+                  </span>
+                )}
+                {cv.promedioAcademico && <span className="rounded bg-hub-subtle px-1.5 py-0.5 font-mono font-semibold text-hub-text">Promedio: {cv.promedioAcademico}</span>}
+                {!cv.programa && !cv.semestreActual && !cv.sede && !cv.promedioAcademico && <span className="italic text-hub-muted">Sin datos académicos</span>}
+              </div>
+            </div>
           )}
         </div>
       )}
 
-      {request.message && (
-        <blockquote className="mt-3 whitespace-pre-line border-l-2 border-hub-border pl-3 text-sm text-hub-soft">
-          {request.message}
-        </blockquote>
-      )}
-
-      {request.status !== "pending" && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-hub-muted">
-          {request.approvedRole && <Badge>{roleLabel(request.approvedRole)}</Badge>}
+      {!isPending && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-hub-border pt-3 text-sm text-hub-muted">
+          {request.approvedRole && <span className={neutralChip}>{roleLabel(request.approvedRole)}</span>}
           {request.reviewedBy && reviewedLabel && (
             <span>
               {request.status === "approved" ? "Aprobada" : "Rechazada"} por {request.reviewedBy.fullName} · {reviewedLabel}
@@ -131,182 +285,22 @@ function RequestCard({
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {cv && (
-          <Button variant="secondary" className="min-h-9 px-3.5 py-1.5 text-xs" onClick={() => setShowCv(true)}>
-            <FileText size={14} className="mr-1.5 text-cyan-400" aria-hidden="true" />
-            Ver Hoja de Vida
-          </Button>
-        )}
-
-        {request.status === "pending" && (
-          <>
-            {roles.length > 0 && (
-              <Button variant="neutral" className="min-h-9 px-3.5 py-1.5 text-xs" onClick={() => setMode("approve")}>
-                <Check size={14} className="mr-1.5" aria-hidden="true" />
-                Aprobar
-              </Button>
-            )}
-            <Button variant="ghost" className="min-h-9 w-auto px-3.5 py-1.5 text-xs" onClick={() => setMode("reject")}>
-              <X size={14} className="mr-1.5" aria-hidden="true" />
-              Rechazar
-            </Button>
-          </>
-        )}
-      </div>
-
       {/* Modal de Hoja de Vida Completa del Aspirante */}
       {cv && (
         <Modal
           open={showCv}
           onClose={() => setShowCv(false)}
-          title="Hoja de Vida de Estudiante (RESUMEN)"
+          title="Hoja de Vida del aspirante"
           description={`${cv.nombres || request.user.fullName} ${cv.apellidos || ""} · ${request.user.email}`}
+          size="lg"
         >
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-            {/* 1. IDENTIFICACIÓN Y CONTACTO */}
-            <div className="space-y-2 rounded-xl border border-hub-border bg-hub-surface p-3.5">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-                <UserIcon size={14} />
-                <span>1. Identificación Personal y Contacto</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <div>
-                  <span className="text-hub-muted">Nombres y Apellidos:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.nombres || request.user.fullName} {cv.apellidos || ""}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Documento de identidad:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.documentoIdentidad || "No registrado"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Fecha de Nacimiento:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.fechaNacimiento || "No registrada"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Nacionalidad:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.nacionalidad || "Colombiana"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Correo institucional:</span>{" "}
-                  <span className="font-medium text-hub-text break-all">{request.user.email}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Celular:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.celular || "No registrado"}</span>
-                </div>
-                {cv.telefonoFijo && (
-                  <div>
-                    <span className="text-hub-muted">Teléfono Fijo:</span>{" "}
-                    <span className="font-medium text-hub-text">{cv.telefonoFijo}</span>
-                  </div>
-                )}
-                {cv.fechaElaboracion && (
-                  <div>
-                    <span className="text-hub-muted">Fecha elaboración:</span>{" "}
-                    <span className="font-medium text-hub-text">{cv.fechaElaboracion}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 2. INFORMACIÓN ACADÉMICA */}
-            <div className="space-y-2 rounded-xl border border-hub-border bg-hub-surface p-3.5">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-                <GraduationCap size={14} />
-                <span>2. Información Académica Uniguajira</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <div>
-                  <span className="text-hub-muted">Facultad:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.facultad || "Facultad de Ingeniería"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Programa:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.programa || "Ingeniería de Sistemas"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Sede:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.sede || "Riohacha"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Semestre Actual:</span>{" "}
-                  <span className="font-medium text-hub-text">{cv.semestreActual || "No registrado"}</span>
-                </div>
-                <div>
-                  <span className="text-hub-muted">Promedio Académico:</span>{" "}
-                  <span className="font-semibold text-cyan-400">{cv.promedioAcademico || "No registrado"}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. PERFIL E INTERÉS INVESTIGATIVO */}
-            <div className="space-y-3 rounded-xl border border-hub-border bg-hub-surface p-3.5">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-                <Microscope size={14} />
-                <span>3. Perfil e Interés Investigativo</span>
-              </div>
-
-              {cv.lineasInvestigacion && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-hub-muted">Líneas de Investigación de interés en AlfaCode:</span>
-                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft border border-hub-border">
-                    {cv.lineasInvestigacion}
-                  </p>
-                </div>
-              )}
-
-              {cv.experienciaInvestigativa && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-hub-muted">Experiencia Investigativa y Proyectos:</span>
-                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
-                    {cv.experienciaInvestigativa}
-                  </p>
-                </div>
-              )}
-
-              {cv.areasEstudio && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-hub-muted">Áreas y/o Temáticas de Estudio:</span>
-                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
-                    {cv.areasEstudio}
-                  </p>
-                </div>
-              )}
-
-              {cv.publicaciones && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-hub-muted">Publicaciones Recientes:</span>
-                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
-                    {cv.publicaciones}
-                  </p>
-                </div>
-              )}
-
-              {cv.practicasPasantias && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-hub-muted">Prácticas o Pasantías Realizadas:</span>
-                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
-                    {cv.practicasPasantias}
-                  </p>
-                </div>
-              )}
-
-              {request.message && (
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-hub-muted">Motivación adicional:</span>
-                  <p className="rounded-lg bg-hub-subtle p-2.5 text-xs text-hub-soft whitespace-pre-line border border-hub-border">
-                    {request.message}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-hub-border">
+          <div className="flex flex-col gap-4">
+            <CvDetails cv={cv} request={request} />
+            <div className="flex flex-wrap justify-end gap-2 border-t border-hub-border pt-3">
               <Button variant="ghost" onClick={() => setShowCv(false)}>
                 Cerrar
               </Button>
-              {request.status === "pending" && roles.length > 0 && (
+              {isPending && roles.length > 0 && (
                 <Button
                   variant="neutral"
                   onClick={() => {
@@ -314,8 +308,8 @@ function RequestCard({
                     setMode("approve");
                   }}
                 >
-                  <Check size={14} className="mr-1.5" />
-                  Proceder a Aprobar
+                  <Check size={14} className="mr-1.5" aria-hidden="true" />
+                  Proceder a aprobar
                 </Button>
               )}
             </div>
@@ -324,7 +318,7 @@ function RequestCard({
       )}
 
       <Modal
-        open={request.status === "pending" && mode !== "idle"}
+        open={isPending && mode !== "idle"}
         onClose={() => {
           if (!pending) {
             setMode("idle");
@@ -357,7 +351,8 @@ function RequestCard({
             rows={2}
           />
 
-          <p className="text-sm text-hub-muted">
+          <p className="flex items-start gap-2 rounded-lg bg-hub-subtle p-3 text-sm text-hub-muted">
+            <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-hub-accent" />
             {mode === "approve"
               ? "La cuenta quedará activa y se enviará una contraseña temporal a su correo institucional."
               : "La persona no podrá ingresar. Esta decisión no se puede deshacer desde la cola."}
@@ -388,19 +383,21 @@ function RequestCard({
 type RequestsBoardProps = {
   requests: MembershipRequestItem[];
   actorRoles: RoleCode[];
+  /** Instante de corte de la pagina, para los tiempos relativos. */
+  cutoff: string;
   /** Fechas ya formateadas en el servidor (zona America/Bogota), por id de solicitud. */
   dates: Record<string, { created: string; reviewed: string | null }>;
   emptyMessage: string;
 };
 
-export function RequestsBoard({ requests, actorRoles, dates, emptyMessage }: RequestsBoardProps) {
+export function RequestsBoard({ requests, actorRoles, cutoff, dates, emptyMessage }: RequestsBoardProps) {
   // Se conservan aunque la lista se recargue y la solicitud ya no aparezca en "Pendientes".
   const [results, setResults] = useState<CredentialsResult[]>([]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {results.length > 0 && (
-        <div className="space-y-3" aria-live="polite">
+        <div className="flex flex-col gap-3" aria-live="polite">
           {results.map((result) => (
             <CredentialsNotice
               key={result.key}
@@ -413,16 +410,15 @@ export function RequestsBoard({ requests, actorRoles, dates, emptyMessage }: Req
       )}
 
       {requests.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-hub-border px-4 py-10 text-center text-sm text-hub-muted">
-          {emptyMessage}
-        </p>
+        <p className="rounded-xl border border-dashed border-hub-border px-4 py-10 text-center text-sm text-hub-muted">{emptyMessage}</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="flex flex-col gap-4">
           {requests.map((request) => (
             <RequestCard
               key={request.id}
               request={request}
               actorRoles={actorRoles}
+              cutoff={cutoff}
               createdLabel={dates[request.id]?.created ?? ""}
               reviewedLabel={dates[request.id]?.reviewed ?? null}
               onApproved={(result) => setResults((current) => [result, ...current.filter((item) => item.key !== result.key)])}

@@ -41,3 +41,44 @@ export function overlapsDay(event: Pick<EventItem, "startsAt" | "endsAt">, day: 
   const start = new Date(`${day}T00:00:00-05:00`).getTime(), end = start + 86400000;
   return Date.parse(event.startsAt) < end && Date.parse(event.endsAt) > start;
 }
+
+export type EventStatus = keyof typeof EVENT_STATUSES;
+export const EVENT_STATUS_KEYS = Object.keys(EVENT_STATUSES) as EventStatus[];
+
+/** Maximo que acepta el backend por pagina; el calendario lee el mes completo. */
+export const EVENTS_PAGE_SIZE = 100;
+
+const shortDay = new Intl.DateTimeFormat("es-CO", { timeZone: "America/Bogota", day: "numeric", month: "short" });
+const clock = new Intl.DateTimeFormat("es-CO", { timeZone: "America/Bogota", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+const dayKey = (value: string) => bogotaInput(value).slice(0, 10);
+
+/** Cuando ocurre una actividad, en hora de Bogota: "26 oct · 09:00–10:30" o "5 mar – 7 mar" si cruza dias. */
+export function formatEventRange(startsAt: string, endsAt: string) {
+  const day = (value: string) => {
+    const parts = shortDay.formatToParts(new Date(value));
+    const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+    return `${part("day")} ${part("month").replace(".", "")}`;
+  };
+  const time = (value: string) => clock.format(new Date(value));
+
+  if (dayKey(startsAt) === dayKey(endsAt)) return `${day(startsAt)} · ${time(startsAt)}–${time(endsAt)}`;
+  return `${day(startsAt)} ${time(startsAt)} – ${day(endsAt)} ${time(endsAt)}`;
+}
+
+/** Cifras de las actividades cargadas: conteo por estado e inscritos. */
+export function eventStats(events: readonly Pick<EventItem, "status" | "participantCount">[]) {
+  const byStatus = Object.fromEntries(EVENT_STATUS_KEYS.map((key) => [key, 0])) as Record<EventStatus, number>;
+  let enrolled = 0;
+
+  for (const event of events) {
+    byStatus[event.status] += 1;
+    enrolled += event.participantCount;
+  }
+
+  return { byStatus, enrolled };
+}
+
+/** Actividades que coinciden con un dia, en el orden recibido. */
+export function eventsOnDay<T extends Pick<EventItem, "startsAt" | "endsAt">>(events: readonly T[], day: string) {
+  return events.filter((event) => overlapsDay(event, day));
+}

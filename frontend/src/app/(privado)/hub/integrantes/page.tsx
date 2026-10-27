@@ -80,7 +80,7 @@ export default async function MembersPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto w-full max-w-430">
       <MembersDirectoryClient
         initialMembers={uniqueMembers}
         actor={{ id: user.id, roles: user.roles }}

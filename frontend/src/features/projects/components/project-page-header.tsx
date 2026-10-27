@@ -4,7 +4,7 @@ import Link from "next/link";
 import { neutralChip, STATUS_CHIP } from "@/features/tracking/components/dashboard-ui";
 import { cn } from "@/lib/utils";
 
-import { METHODOLOGY_LABELS, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, type ProjectDetail } from "../types";
+import { METHODOLOGY_LABELS, PROJECT_STATUS_LABELS, PROJECT_TYPE_LABELS, type ProjectDetail, type ProjectTabCounts } from "../types";
 import { ProjectTabs, type ProjectSection } from "./project-header";
 
 type ProjectPageHeaderProps = {
@@ -15,12 +15,12 @@ type ProjectPageHeaderProps = {
   /** Datos junto al titulo (alertas, rol, corte...). */
   meta?: React.ReactNode;
   actions?: React.ReactNode;
-  badges?: Partial<Record<ProjectSection, React.ReactNode>>;
-  onTabChange?: (key: ProjectSection) => void;
+  /** Cifras de las pestañas; se muestran en todas, este o no activa. */
+  counts?: ProjectTabCounts;
 };
 
 /** Encabezado comun de las vistas de un proyecto (I-27): ruta, titulo con chips, datos, acciones y pestañas. */
-export function ProjectPageHeader({ project, current, crumb, meta, actions, badges, onTabChange }: ProjectPageHeaderProps) {
+export function ProjectPageHeader({ project, current, crumb, meta, actions, counts }: ProjectPageHeaderProps) {
   return (
     <>
       <header className="flex flex-col gap-4">
@@ -31,17 +31,7 @@ export function ProjectPageHeader({ project, current, crumb, meta, actions, badg
           <span aria-hidden="true" className="text-hub-muted">/</span>
           {crumb ? (
             <>
-              {onTabChange ? (
-                <button
-                  type="button"
-                  onClick={() => onTabChange("resumen")}
-                  className="max-w-60 truncate text-hub-muted underline-offset-4 hover:underline"
-                >
-                  {project.name}
-                </button>
-              ) : (
-                <Link href={`/hub/proyectos/${project.id}`} className="max-w-60 truncate text-hub-muted underline-offset-4 hover:underline">{project.name}</Link>
-              )}
+              <Link href={`/hub/proyectos/${project.id}`} className="max-w-60 truncate text-hub-muted underline-offset-4 hover:underline">{project.name}</Link>
               <span aria-hidden="true" className="text-hub-muted">/</span>
               <span className="font-semibold text-hub-text" aria-current="page">{crumb}</span>
             </>
@@ -62,7 +52,7 @@ export function ProjectPageHeader({ project, current, crumb, meta, actions, badg
           {actions}
         </div>
       </header>
-      <ProjectTabs project={project} current={current} badges={badges} onTabChange={onTabChange} />
+      <ProjectTabs project={project} current={current} counts={counts} />
     </>
   );
 }

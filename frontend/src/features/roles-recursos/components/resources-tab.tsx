@@ -3,9 +3,7 @@
 import {
   Award,
   Calendar,
-  CheckCircle2,
   CheckSquare,
-  Edit2,
   Eye,
   EyeOff,
   FileText,
@@ -13,6 +11,7 @@ import {
   FolderKanban,
   Inbox,
   LayoutDashboard,
+  Pencil,
   Plus,
   Repeat,
   Shield,
@@ -20,19 +19,25 @@ import {
   UserPlus,
   UserRound,
   Users,
-  XCircle,
+  type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form-field";
 import { Modal } from "@/components/ui/modal";
+import { OptionSelect } from "@/components/ui/option-select";
+import { iconButton, primaryButton } from "@/features/documents/components/document-ui";
+import { chip, neutralChip } from "@/features/tracking/components/dashboard-ui";
 import { apiRequest } from "@/lib/api/client";
 import { describeError } from "@/lib/api/errors";
 import type { ResourcePermissions } from "@/lib/auth/permissions";
 
 import type { ResourceItem } from "../types";
+import { ActiveChip, CheckField, fieldLabelClass, MessageRow, rowClass, TableCard, tableHeadClass, Toolbar } from "./rbac-ui";
 
-const AVAILABLE_ICONS = [
+const AVAILABLE_ICONS: { id: string; label: string; Icon: LucideIcon }[] = [
   { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { id: "folder", label: "Proyectos", Icon: FolderKanban },
   { id: "check-square", label: "Tareas", Icon: CheckSquare },
@@ -48,11 +53,11 @@ const AVAILABLE_ICONS = [
   { id: "user", label: "Perfil", Icon: UserRound },
 ];
 
-function renderIconPreview(iconName: string | null) {
-  const match = AVAILABLE_ICONS.find((i) => i.id === (iconName || "").toLowerCase());
-  if (!match) return <LayoutDashboard size={14} />;
-  const Comp = match.Icon;
-  return <Comp size={14} />;
+const ICON_OPTIONS = AVAILABLE_ICONS.map((icon) => ({ value: icon.id, label: `${icon.label} (${icon.id})` }));
+
+function ResourceIcon({ name }: { name: string | null }) {
+  const Icon = AVAILABLE_ICONS.find((item) => item.id === (name || "").toLowerCase())?.Icon ?? LayoutDashboard;
+  return <Icon aria-hidden="true" className="size-4" />;
 }
 
 type ResourcesTabProps = {
@@ -66,9 +71,9 @@ export function ResourcesTab({ resources, onRefresh, permissions }: ResourcesTab
   const canUpdate = permissions?.canUpdate ?? true;
   const canDelete = permissions?.canDelete ?? true;
   const [search, setSearch] = useState("");
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [modal, setModal] = useState<"create" | "edit" | null>(null);
   const [selectedResource, setSelectedResource] = useState<ResourceItem | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -82,15 +87,17 @@ export function ResourcesTab({ resources, onRefresh, permissions }: ResourcesTab
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const term = search.toLowerCase();
   const filteredResources = resources.filter(
     (r) =>
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.urlBackend.toLowerCase().includes(search.toLowerCase()) ||
-      (r.urlFrontend && r.urlFrontend.toLowerCase().includes(search.toLowerCase())) ||
-      (r.description && r.description.toLowerCase().includes(search.toLowerCase())),
+      r.name.toLowerCase().includes(term) ||
+      r.urlBackend.toLowerCase().includes(term) ||
+      (r.urlFrontend && r.urlFrontend.toLowerCase().includes(term)) ||
+      (r.description && r.description.toLowerCase().includes(term)),
   );
 
   const handleOpenCreate = () => {
+    setSelectedResource(null);
     setFormName("");
     setFormDescription("");
     setFormUrlBackend("/api/v1/");
@@ -100,7 +107,7 @@ export function ResourcesTab({ resources, onRefresh, permissions }: ResourcesTab
     setFormVisibleMenu(true);
     setFormIsActive(true);
     setFormError(null);
-    setCreateModalOpen(true);
+    setModal("create");
   };
 
   const handleOpenEdit = (res: ResourceItem) => {
@@ -114,60 +121,36 @@ export function ResourcesTab({ resources, onRefresh, permissions }: ResourcesTab
     setFormVisibleMenu(res.visibleMenu);
     setFormIsActive(res.isActive);
     setFormError(null);
-    setEditModalOpen(true);
+    setModal("edit");
   };
 
-  const handleCreateSubmit = async (e: React.FormEvent) => {
+  const payload = () =>
+    JSON.stringify({
+      name: formName.trim(),
+      description: formDescription.trim() || null,
+      urlBackend: formUrlBackend.trim(),
+      urlFrontend: formUrlFrontend.trim() || null,
+      icon: formIcon.trim() || null,
+      order: Number(formOrder) || 0,
+      visibleMenu: formVisibleMenu,
+      isActive: formIsActive,
+    });
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!formName.trim() || !formUrlBackend.trim()) {
+    const editing = modal === "edit" && selectedResource;
+
+    if (modal === "create" && (!formName.trim() || !formUrlBackend.trim())) {
       setFormError("El nombre y la URL backend son obligatorios.");
       return;
     }
-    setSubmitting(true);
-    setFormError(null);
-    try {
-      await apiRequest("/resources", {
-        method: "POST",
-        body: JSON.stringify({
-          name: formName.trim(),
-          description: formDescription.trim() || null,
-          urlBackend: formUrlBackend.trim(),
-          urlFrontend: formUrlFrontend.trim() || null,
-          icon: formIcon.trim() || null,
-          order: Number(formOrder) || 0,
-          visibleMenu: formVisibleMenu,
-          isActive: formIsActive,
-        }),
-      });
-      setCreateModalOpen(false);
-      onRefresh();
-    } catch (err) {
-      setFormError(describeError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    if (modal === "edit" && !selectedResource) return;
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedResource) return;
     setSubmitting(true);
     setFormError(null);
     try {
-      await apiRequest(`/resources/${selectedResource.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          name: formName.trim(),
-          description: formDescription.trim() || null,
-          urlBackend: formUrlBackend.trim(),
-          urlFrontend: formUrlFrontend.trim() || null,
-          icon: formIcon.trim() || null,
-          order: Number(formOrder) || 0,
-          visibleMenu: formVisibleMenu,
-          isActive: formIsActive,
-        }),
-      });
-      setEditModalOpen(false);
+      await apiRequest(editing ? `/resources/${selectedResource.id}` : "/resources", { method: editing ? "PATCH" : "POST", body: payload() });
+      setModal(null);
       onRefresh();
     } catch (err) {
       setFormError(describeError(err));
@@ -180,380 +163,147 @@ export function ResourcesTab({ resources, onRefresh, permissions }: ResourcesTab
     if (!window.confirm(`¿Estás seguro de eliminar el recurso "${res.name}"? Se eliminarán también sus permisos asociados en la matriz.`)) {
       return;
     }
+    setActionError(null);
     try {
       await apiRequest(`/resources/${res.id}`, { method: "DELETE" });
       onRefresh();
     } catch (err) {
-      alert(describeError(err));
+      setActionError(describeError(err));
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Barra de Búsqueda y Botón Nuevo Recurso */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar recursos por nombre o ruta..."
-            className="w-full rounded-xl border border-hub-border bg-hub-bg/60 px-3 py-2 text-xs text-hub-text placeholder:text-hub-muted focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-          />
-        </div>
-        {canCreate && (
-          <Button onClick={handleOpenCreate} className="gap-2">
-            <Plus size={16} />
-            Nuevo Recurso
-          </Button>
-        )}
-      </div>
+  const creating = modal === "create";
 
-      {/* Tabla de Recursos */}
-      <div className="overflow-hidden rounded-2xl border border-hub-border bg-hub-panel shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="border-b border-hub-border bg-hub-hover/40 text-[11px] font-semibold uppercase tracking-wider text-hub-muted">
-              <tr>
-                <th className="px-4 py-3">Recurso</th>
-                <th className="px-4 py-3">URL Backend / Frontend</th>
-                <th className="px-4 py-3 text-center">Orden</th>
-                <th className="px-4 py-3">Menú</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-hub-border/60">
-              {filteredResources.length > 0 ? (
-                filteredResources.map((res) => (
-                  <tr key={res.id} className="transition hover:bg-hub-hover/30">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-hub-accent-soft text-hub-accent">
-                          {renderIconPreview(res.icon)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-hub-text">{res.name}</p>
-                          <p className="text-[11px] text-hub-muted truncate max-w-[200px]">
-                            {res.description || "Sin descripción"}
-                          </p>
-                        </div>
+  return (
+    <>
+      <Toolbar label="Buscar recursos" value={search} onChange={setSearch} placeholder="Buscar recursos por nombre o ruta…">
+        {canCreate && (
+          <button type="button" onClick={handleOpenCreate} aria-haspopup="dialog" className={primaryButton}>
+            <Plus aria-hidden="true" className="size-4" />
+            Nuevo recurso
+          </button>
+        )}
+      </Toolbar>
+
+      {actionError && <Alert tone="error">{actionError}</Alert>}
+
+      <TableCard label="Recursos del sistema">
+        <table className="w-full min-w-208 border-collapse text-left text-[13px]">
+          <caption className="sr-only">Recursos con rutas, orden, visibilidad en el menú, estado y acciones</caption>
+          <thead>
+            <tr className={tableHeadClass}>
+              <th scope="col" className="px-4 py-3 font-semibold">Recurso</th>
+              <th scope="col" className="px-4 py-3 font-semibold">URL backend / frontend</th>
+              <th scope="col" className="px-4 py-3 text-center font-semibold">Orden</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Menú</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Estado</th>
+              <th scope="col" className="px-4 py-3 text-right font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-hub-border">
+            {filteredResources.length > 0 ? (
+              filteredResources.map((res) => (
+                <tr key={res.id} className={rowClass}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-hub-accent-soft text-hub-accent">
+                        <ResourceIcon name={res.icon} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-hub-text">{res.name}</p>
+                        <p className="max-w-52 truncate text-xs text-hub-muted">{res.description || "Sin descripción"}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-[11px]">
-                      <p className="text-hub-text">{res.urlBackend}</p>
-                      {res.urlFrontend && (
-                        <p className="text-hub-accent text-[10px]">{res.urlFrontend}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs">
+                    <p className="text-hub-text">{res.urlBackend}</p>
+                    {res.urlFrontend && <p className="text-hub-accent">{res.urlFrontend}</p>}
+                  </td>
+                  <td className="px-4 py-3 text-center font-mono text-hub-muted">{res.order}</td>
+                  <td className="px-4 py-3">
+                    {res.visibleMenu ? (
+                      <span className={`${chip} gap-1 rounded-full bg-hub-info-bg px-2.5 py-1 text-hub-info-text`}>
+                        <Eye aria-hidden="true" className="size-3" />
+                        Visible
+                      </span>
+                    ) : (
+                      <span className={`${neutralChip} gap-1 rounded-full px-2.5 py-1`}>
+                        <EyeOff aria-hidden="true" className="size-3" />
+                        Oculto
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <ActiveChip active={res.isActive} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      {canUpdate && (
+                        <button type="button" onClick={() => handleOpenEdit(res)} aria-haspopup="dialog" className={iconButton} aria-label={`Editar el recurso ${res.name}`} title="Editar recurso">
+                          <Pencil aria-hidden="true" className="size-4" />
+                        </button>
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-center font-mono text-hub-muted">{res.order}</td>
-                    <td className="px-4 py-3">
-                      {res.visibleMenu ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-500">
-                          <Eye size={12} /> Visible
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-hub-muted/10 px-2 py-0.5 text-[10px] font-medium text-hub-muted">
-                          <EyeOff size={12} /> Oculto
-                        </span>
+                      {canDelete && (
+                        <button type="button" onClick={() => handleDelete(res)} className={`${iconButton} hover:bg-hub-danger-bg hover:text-hub-danger-text`} aria-label={`Eliminar el recurso ${res.name}`} title="Eliminar recurso">
+                          <Trash2 aria-hidden="true" className="size-4" />
+                        </button>
                       )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {res.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500">
-                          <CheckCircle2 size={12} /> Activo
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-500">
-                          <XCircle size={12} /> Inactivo
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {canUpdate && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleOpenEdit(res)}
-                            title="Editar recurso"
-                            className="h-8 w-8 p-0 text-hub-muted hover:text-hub-text"
-                          >
-                            <Edit2 size={14} />
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleDelete(res)}
-                            title="Eliminar recurso"
-                            className="h-8 w-8 p-0 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600"
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-hub-muted">
-                    No se encontraron recursos con &ldquo;{search}&rdquo;.
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              ))
+            ) : (
+              <MessageRow colSpan={6}>{search ? <>No se encontraron recursos con «{search}».</> : "Aún no hay recursos."}</MessageRow>
+            )}
+          </tbody>
+        </table>
+      </TableCard>
 
-      {/* Modal Crear Recurso */}
       <Modal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        title="Crear Nuevo Recurso"
-        description="Registra una nueva vista o endpoint protegido por RBAC."
+        open={modal !== null}
+        onClose={() => setModal(null)}
+        title={creating ? "Crear nuevo recurso" : `Editar recurso: ${selectedResource?.name ?? ""}`}
+        description={creating ? "Registra una nueva vista o endpoint protegido por RBAC." : "Modifica las propiedades de navegación y URLs del recurso."}
         size="lg"
       >
-        <form onSubmit={handleCreateSubmit} className="space-y-4 py-2">
-          {formError && (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-500">
-              {formError}
-            </div>
-          )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Nombre del Recurso *</label>
-              <input
-                type="text"
-                required
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="Ej. Reportes"
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Ícono</label>
-              <select
-                value={formIcon}
-                onChange={(e) => setFormIcon(e.target.value)}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              >
-                {AVAILABLE_ICONS.map((ic) => (
-                  <option key={ic.id} value={ic.id}>
-                    {ic.label} ({ic.id})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {formError && <Alert tone="error">{formError}</Alert>}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label="Nombre del recurso *" required value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={creating ? "Ej. Reportes" : undefined} />
             <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">URL Backend *</label>
-              <input
-                type="text"
-                required
-                value={formUrlBackend}
-                onChange={(e) => setFormUrlBackend(e.target.value)}
-                placeholder="/api/v1/reportes"
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 font-mono text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">URL Frontend</label>
-              <input
-                type="text"
-                value={formUrlFrontend}
-                onChange={(e) => setFormUrlFrontend(e.target.value)}
-                placeholder="/hub/reportes"
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 font-mono text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Descripción</label>
-              <input
-                type="text"
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Breve explicación del recurso"
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Orden de aparición</label>
-              <input
-                type="number"
-                value={formOrder}
-                onChange={(e) => setFormOrder(Number(e.target.value))}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 pt-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="createVisibleMenu"
-                checked={formVisibleMenu}
-                onChange={(e) => setFormVisibleMenu(e.target.checked)}
-                className="size-4 rounded border-hub-border text-cyan-600 focus:ring-cyan-500"
-              />
-              <label htmlFor="createVisibleMenu" className="text-xs text-hub-text select-none cursor-pointer">
-                Visible en el menú de navegación principal
+              <label htmlFor="resource-icon" className={fieldLabelClass}>
+                Ícono
               </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="createIsActiveRes"
-                checked={formIsActive}
-                onChange={(e) => setFormIsActive(e.target.checked)}
-                className="size-4 rounded border-hub-border text-cyan-600 focus:ring-cyan-500"
-              />
-              <label htmlFor="createIsActiveRes" className="text-xs text-hub-text select-none cursor-pointer">
-                Recurso activo
-              </label>
+              <OptionSelect id="resource-icon" options={ICON_OPTIONS} value={formIcon} onValueChange={setFormIcon} />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setCreateModalOpen(false)}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label="URL backend *" required value={formUrlBackend} onChange={(e) => setFormUrlBackend(e.target.value)} placeholder={creating ? "/api/v1/reportes" : undefined} className="[&_input]:font-mono" />
+            <FormField label="URL frontend" value={formUrlFrontend} onChange={(e) => setFormUrlFrontend(e.target.value)} placeholder={creating ? "/hub/reportes" : undefined} className="[&_input]:font-mono" />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label="Descripción" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder={creating ? "Breve explicación del recurso" : undefined} />
+            <FormField label="Orden de aparición" type="number" value={formOrder} onChange={(e) => setFormOrder(Number(e.target.value))} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <CheckField id="resourceVisibleMenu" label="Visible en el menú de navegación principal" checked={formVisibleMenu} onChange={setFormVisibleMenu} />
+            <CheckField id="resourceIsActive" label="Recurso activo" checked={formIsActive} onChange={setFormIsActive} />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" className="w-auto px-4" onClick={() => setModal(null)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Creando..." : "Crear Recurso"}
+            <Button type="submit" pending={submitting} pendingLabel={creating ? "Creando…" : "Guardando…"}>
+              {creating ? "Crear recurso" : "Guardar cambios"}
             </Button>
           </div>
         </form>
       </Modal>
-
-      {/* Modal Editar Recurso */}
-      <Modal
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        title={`Editar Recurso: ${selectedResource?.name}`}
-        description="Modifica las propiedades de navegación y URLs del recurso."
-        size="lg"
-      >
-        <form onSubmit={handleEditSubmit} className="space-y-4 py-2">
-          {formError && (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-500">
-              {formError}
-            </div>
-          )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Nombre del Recurso *</label>
-              <input
-                type="text"
-                required
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Ícono</label>
-              <select
-                value={formIcon}
-                onChange={(e) => setFormIcon(e.target.value)}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              >
-                {AVAILABLE_ICONS.map((ic) => (
-                  <option key={ic.id} value={ic.id}>
-                    {ic.label} ({ic.id})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">URL Backend *</label>
-              <input
-                type="text"
-                required
-                value={formUrlBackend}
-                onChange={(e) => setFormUrlBackend(e.target.value)}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 font-mono text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">URL Frontend</label>
-              <input
-                type="text"
-                value={formUrlFrontend}
-                onChange={(e) => setFormUrlFrontend(e.target.value)}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 font-mono text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Descripción</label>
-              <input
-                type="text"
-                value={formDescription}
-                onChange={(e) => setFormDescription(e.target.value)}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-hub-text mb-1">Orden de aparición</label>
-              <input
-                type="number"
-                value={formOrder}
-                onChange={(e) => setFormOrder(Number(e.target.value))}
-                className="w-full rounded-xl border border-hub-border bg-hub-bg px-3 py-2 text-xs text-hub-text focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 pt-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="editVisibleMenu"
-                checked={formVisibleMenu}
-                onChange={(e) => setFormVisibleMenu(e.target.checked)}
-                className="size-4 rounded border-hub-border text-cyan-600 focus:ring-cyan-500"
-              />
-              <label htmlFor="editVisibleMenu" className="text-xs text-hub-text select-none cursor-pointer">
-                Visible en el menú de navegación principal
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="editIsActiveRes"
-                checked={formIsActive}
-                onChange={(e) => setFormIsActive(e.target.checked)}
-                className="size-4 rounded border-hub-border text-cyan-600 focus:ring-cyan-500"
-              />
-              <label htmlFor="editIsActiveRes" className="text-xs text-hub-text select-none cursor-pointer">
-                Recurso activo
-              </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setEditModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Guardando..." : "Guardar Cambios"}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
+    </>
   );
 }
